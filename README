@@ -1,0 +1,17 @@
+This directory contains a tool which traces syscalls in a fast
+way using eBPF linux kernel feature.
+
+** DEPENDENCIES: **
+The strace.ebpf depends on libbcc library:
+
+$ sudo apt-get install libbcc
+
+Bcc sources:
+
+https://github.com/iovisor/bcc
+
+** WARNING **
+
+Some old libbcc packages require manual coping of libbcc.pc from sources to
+appropriate place in a system. In case of Ubuntu 16.04 LTS appropriate place
+is /usr/lib/x86_64-linux-gnu/pkgconfig/libbcc.pc.

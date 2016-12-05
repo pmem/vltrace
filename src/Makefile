@@ -1,0 +1,166 @@
+# Copyright 2016, Intel Corporation
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in
+#       the documentation and/or other materials provided with the
+#       distribution.
+#
+#     * Neither the name of the copyright holder nor the names of its
+#       contributors may be used to endorse or promote products derived
+#       from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Makefile -- top Makefile for strace.ebpf
+#
+
+
+TARGET = strace.ebpf
+
+TOP = ../
+
+EXTRA_TARGETS += nondebug/libebpf.a nondebug/libstrace.a
+
+$(TARGET): nondebug/libebpf.a nondebug/libstrace.a
+$(TARGET).static-debug: nondebug/libebpf.a nondebug/libstrace.a
+$(TARGET).static-nondebug: nondebug/libebpf.a nondebug/libstrace.a
+
+nondebug/libebpf.a:
+	$(MAKE) -C ebpf
+
+nondebug/libstrace.a:
+	$(MAKE) -C libstrace
+
+nondebug/libebpf.a-clean:
+	$(MAKE) -C ebpf clean
+	$(RM) nondebug/libebpf.a
+
+nondebug/libstrace.a-clean:
+	$(MAKE) -C libstrace clean
+	$(RM) nondebug/libstrace.a
+
+nondebug/libebpf.a-clobber: nondebug/libebpf.a-clean
+nondebug/libstrace.a-clobber: nondebug/libstrace.a-clean
+
+.PHONY: nondebug/libebpf.a-clean nondebug/libstrace.a-clean
+.PHONY: nondebug/libebpf.a-clobber nondebug/libstrace.a-clobber
+
+OBJS = main.o \
+
+
+CFLAGS += $(shell $(PKG_CONFIG) --cflags libbcc)
+
+# XXX libbcc expects multi-treading safity. Currently it's required for
+# print_event_cb.o only, although we will apply it for overall application.
+CFLAGS += -pthread
+
+CFLAGS += -g -Wextra
+
+ifeq ($(CC),clang)
+CFLAGS += -Wno-initializer-overrides
+else
+CFLAGS += -Wno-override-init
+endif
+
+CFLAGS += -I compat
+CFLAGS += -I libstrace
+CFLAGS += -I ebpf
+
+LDFLAGS += -g -Wextra
+
+# XXX libbcc expects multi-treading safity.
+LDFLAGS += -pthread
+
+LIBS += $(shell $(PKG_CONFIG) --libs libbcc)
+LIBS += nondebug/libstrace.a
+LIBS += nondebug/libebpf.a
+
+
+INSTALL_TARGET=$(EXPERIMENTAL)
+
+
+include ../Makefile.inc
+
+
+# Local BenchMark
+PROGS = file_sc_bench
+PROGS_CFLAGS = -g -O2 -Wall -Wextra -D__USE_GNU
+
+
+$(PROGS).o: $(PROGS).c Makefile
+	$(CC) $(PROGS_CFLAGS) -c -o $@ $<
+
+$(PROGS): $(PROGS).o Makefile
+	$(CC) $(PROGS_CFLAGS) -o $@ $<
+
+.PHONY: run
+run: $(PROGS)
+	time -p -v sudo ./$(PROGS) 500000
+	@echo "Tracepoint's version is skipped because of this bug:"
+	@echo "\t - https://github.com/iovisor/bcc/issues/748"
+	#time -p -v sudo ./strace.ebpf -l hex -e trace=tp-all \
+	#	-o $(TMP)/$(PROGS).tp-all.trc ./$(PROGS) 50000
+	#ln -f -s $(TMP)/$(PROGS).tp-all.trc $(PROGS).tp-all.trc
+	@echo
+	time -p -v sudo ./strace.ebpf -l hex -e trace=kp-libc-all \
+		-o $(TMP)/$(PROGS).libc-all.trc ./$(PROGS) 50000
+	ln -f -s $(TMP)/$(PROGS).libc-all.trc $(PROGS).libc-all.trc
+	@echo
+	time -p -v sudo ./strace.ebpf -l hex -e trace=kp-kern-all  \
+		-o $(TMP)/$(PROGS).kern-all.trc ./$(PROGS) 50000
+	ln -f -s $(TMP)/$(PROGS).kern-all.trc $(PROGS).kern-all.trc
+	@echo
+	time -p -v sudo strace \
+		-o $(TMP)/$(PROGS).trc ./$(PROGS) 10000
+	ln -f -s $(TMP)/$(PROGS).trc $(PROGS).trc
+
+.PHONY: redis
+redis:
+	@echo ">>>>> WARNING: Please disable system redis service in advance"
+	-redis-cli shutdown
+	# Should be same as in make-redis.sh
+	$(ECHO) > redis-server.log
+	sudo ./make-redis.sh
+	@echo "Tracepoint's version is skipped because of this bug:"
+	@echo "\t - https://github.com/iovisor/bcc/issues/748"
+	#sudo ./make-redis.sh ./strace.ebpf -l hex -e trace=tp-all \
+	#	-o $(TMP)/redis-server.tp-all.trc
+	#ln -f -s $(TMP)/redis-server.tp-all.trc redis-server.tp-all.trc
+	@echo
+	sudo ./make-redis.sh ./strace.ebpf -l hex -e trace=kp-libc-all \
+		-o $(TMP)/redis-server.libc-all.trc
+	ln -f -s $(TMP)/redis-server.libc-all.trc redis-server.libc-all.trc
+	@echo
+	sudo ./make-redis.sh ./strace.ebpf -l hex -e trace=kp-kern-all  \
+		-o $(TMP)/redis-server.kern-all.trc
+	ln -f -s $(TMP)/redis-server.kern-all.trc redis-server.kern-all.trc
+	@echo
+	sudo ./make-redis.sh strace -f \
+		-o $(TMP)/redis-server.trc
+	ln -f -s $(TMP)/redis-server.trc redis-server.trc
+
+# XXX Valgrind is confused with bpf() syscall and behaves unexpectedly on it
+.PHONY: valgrind
+valgrind: $(PROGS)
+	sudo valgrind -v\
+		--leak-check=full \
+		--track-origins=yes \
+		--log-file=strace.ebpf.valgrind \
+		./strace.ebpf -d -o $(PROGS).ebpf.trc ./$(PROGS) 40

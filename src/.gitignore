@@ -1,0 +1,8 @@
+strace.ebpf
+file_sc_bench
+*.trc
+*.1.txt
+*.rst.build_temp
+*.png
+/trace.h
+/nondebug

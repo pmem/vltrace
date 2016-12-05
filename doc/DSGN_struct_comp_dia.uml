@@ -1,0 +1,43 @@
+@startuml
+skinparam componentStyle uml2
+scale 0.6
+package "User Space" {
+[Traced Application] as TA
+[Tracing Tool] as TT
+}
+cloud {
+() "Circular Buffer" as CB
+CB -left-> TT : events
+}
+package "Kernel Space" {
+folder "SysCalls table" {
+() "SC #1" as SC1
+() "..." as SC2
+() "SC #x" as SCx
+() "..." as SC4
+() "SC #n" as SCn
+TA -down-> SCx : SysCall
+}
+'1
+[EBPF VM #1] as VM1
+SC1 -down-> VM1 : KProbe
+VM1 -up->    CB : event
+
+[SC #1 Handler] as SCH1
+VM1 -down-> SCH1 : KProbe
+'x
+[EBPF VM #x] as VMx
+SCx -down-> VMx : KProbe
+VMx -up->    CB : event
+
+[SC #x Handler] as SCHx
+VMx -down-> SCHx : KProbe
+'n
+[EBPF VM #n] as VMn
+SCn -down-> VMn : KProbe
+VMn -up->    CB : event
+
+[SC #n Handler] as SCHn
+VMn -down-> SCHn : KProbe
+}
+@enduml
