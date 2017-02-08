@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,12 +31,11 @@
  */
 
 /*
- * bpf.h -- Key bpf_ctx structure and related functions
+ * strace_bpf.h -- Key bpf_ctx structure and related functions
  */
 
-/* PLEASE do not rename this macro to BPF_H. There is a conflict. */
-#ifndef __BPF_H
-#define __BPF_H
+#ifndef STRACE_BPF_H
+#define STRACE_BPF_H
 
 #include <stdint.h>
 #include <unistd.h>
@@ -44,22 +43,33 @@
 
 #include <bcc/libbpf.h>
 
+/* This struct represent perf reader object */
 struct bpf_pr {
+	/* A pointer to corresponding libbcc's perf reader object */
 	struct perf_reader *pr;
 
 	/*
+	 * The state of our perf reader.
+	 *
 	 * XXX May be we should replace this field with some
 	 *    enum perf_reader_type_t as soon as tracepoints
 	 *    will be fixed.
 	 */
 	bool  attached;
+
+	/* The unique key associated with our perf reader */
 	char  key[];
 };
 
+/* Context of libstrace library */
 struct bpf_ctx {
+	/* A pointer to compiled ebpf code */
 	void			 *module;
+	/* debug mode */
 	unsigned		  debug;
+	/* A pointer to array of perf readers */
 	struct bpf_pr   **pr_arr;
+	/* A qty of perf readers in array above */
 	unsigned		  pr_arr_qty;
 };
 
@@ -81,4 +91,4 @@ int load_fn_and_attach_to_tp(struct bpf_ctx *sbcp,
 
 void detach_all(struct bpf_ctx *b);
 
-#endif /* __BPF_H */
+#endif /* STRACE_BPF_H */

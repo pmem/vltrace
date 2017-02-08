@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,6 +36,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <assert.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -46,13 +47,15 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
+#include <ebpf/ebpf_file_set.h>
+
 #include "main.h"
 #include "utils.h"
 #include "generate_ebpf.h"
 
 /*
- * This function loads text file from disk and return malloc-ed,
- * null-terminated string
+ * load_file_from_disk -- This function loads text file from disk and return
+ * malloc-ed, null-terminated string
  */
 char *
 load_file_from_disk(const char *const fn)
@@ -65,7 +68,7 @@ load_file_from_disk(const char *const fn)
 	fd = open(fn, O_RDONLY);
 
 	if (fd == -1)
-		return buf;
+		return NULL;
 
 	res = fstat(fd, &st);
 
@@ -73,6 +76,9 @@ load_file_from_disk(const char *const fn)
 		goto out;
 
 	buf = calloc(1, (size_t)st.st_size + 1);
+
+	if (NULL == buf)
+		goto out;
 
 	res = read(fd, buf, (size_t)st.st_size);
 
@@ -88,9 +94,11 @@ out:
 }
 
 /*
- * Export embedded trace.h to file
+ * save_trace_h -- Export embedded trace.h to file
  */
-void save_trace_h(void) {
+void
+save_trace_h(void)
+{
 	int fd;
 
 	long res = access(ebpf_trace_h_file, R_OK);
@@ -109,45 +117,83 @@ void save_trace_h(void) {
 }
 
 /*
- * This function loads 'virtual' file.
+ * load_file -- This function loads 'virtual' file.
  */
 char *
 load_file(const char *const fn)
 {
-	char *f = load_file_from_disk(fn);
+	if (NULL != Args.ebpf_src_dir) {
+		char path[4096];
+		char *f;
+		int res;
 
-	if (NULL != f)
-		return f;
+		res = snprintf(path, sizeof(path), "%s/%s",
+				Args.ebpf_src_dir, fn);
 
-	/* fallback to embedded ones */
-	if (0 == strcmp(ebpf_head_file, fn)) {
-		return strndup(_binary_trace_head_c_start,
-				(size_t)_binary_trace_head_c_size);
-	} else if (0 == strcmp(ebpf_libc_tmpl_file, fn)) {
-		return strndup(_binary_trace_libc_tmpl_c_start,
-				(size_t)_binary_trace_libc_tmpl_c_size);
-	} else if (0 == strcmp(ebpf_file_tmpl_file, fn)) {
-		return strndup(_binary_trace_file_tmpl_c_start,
-				(size_t)_binary_trace_file_tmpl_c_size);
-	} else if (0 == strcmp(ebpf_fileat_tmpl_file, fn)) {
-		return strndup(_binary_trace_fileat_tmpl_c_start,
-				(size_t)_binary_trace_fileat_tmpl_c_size);
-	} else if (0 == strcmp(ebpf_kern_tmpl_file, fn)) {
-		return strndup(_binary_trace_kern_tmpl_c_start,
-				(size_t)_binary_trace_kern_tmpl_c_size);
-	} else if (0 == strcmp(ebpf_tp_all_file, fn)) {
-		return strndup(_binary_trace_tp_all_c_start,
-				(size_t)_binary_trace_tp_all_c_size);
-	} else if (0 == strcmp(ebpf_trace_h_file, fn)) {
-		return strndup(_binary_trace_h_start,
-				(size_t)_binary_trace_h_size);
+		assert(res > 0);
+
+		f = load_file_from_disk(path);
+
+		if (NULL != f)
+			return f;
 	}
 
-	return NULL;
+	/* fallback to embedded ones */
+	return ebpf_load_file(fn);
 }
 
 /*
- * This function reads status of eBPF JIT compiler.
+ * load_file_no_cr -- This function loads 'virtual' file and strip copyright.
+ */
+char *
+load_file_no_cr(const char *const fn)
+{
+	static const char *const eofcr_sep = " */\n";
+	char *f = load_file(fn);
+
+	if (NULL == f)
+		return NULL;
+
+	if (NULL == strcasestr(f, "Copyright"))
+		return f;
+
+	char *new_f = strcasestr(f, eofcr_sep);
+	if (NULL == new_f)
+		return f;
+
+	new_f = strdup(new_f + strlen(eofcr_sep));
+	if (NULL == new_f)
+		return f;
+
+	free(f);
+	f = NULL;
+
+	return new_f;
+}
+
+/*
+ * load_pid_check_hook -- This function loads 'pid_check_hook'
+ */
+char *
+load_pid_check_hook(enum ff_mode ff_mode)
+{
+	switch (ff_mode) {
+	case E_FF_DISABLED:
+		return load_file_no_cr(ebpf_pid_check_ff_disabled_hook_file);
+
+	case E_FF_FULL:
+		return load_file_no_cr(ebpf_pid_check_ff_full_hook_file);
+
+	case E_FF_FAST:
+		return load_file_no_cr(ebpf_pid_check_ff_fast_hook_file);
+
+	default:
+		return NULL;
+	}
+}
+
+/*
+ * load_bpf_jit_status -- This function reads status of eBPF JIT compiler.
  */
 static int
 load_bpf_jit_status(void)
@@ -175,8 +221,8 @@ load_bpf_jit_status(void)
 }
 
 /*
- * This function checks status of eBPF JIT compiler and prints appropriate
- * message.
+ * check_bpf_jit_status -- This function checks status of eBPF JIT compiler
+ * and prints appropriate message.
  */
 void
 check_bpf_jit_status(FILE *file)
@@ -218,7 +264,7 @@ check_bpf_jit_status(FILE *file)
 
 
 /*
- * This function recognises syscalls among in-kernel functions.
+ * is_a_sc -- This function recognises syscalls among in-kernel functions.
  */
 bool
 is_a_sc(const char *const line, const ssize_t size)
@@ -239,11 +285,11 @@ is_a_sc(const char *const line, const ssize_t size)
 	return true;
 }
 
-const char debug_tracing[] = DEBUG_TRACING;
-const char debug_tracing_aff[] = DEBUG_TRACING DT_AFF;
+const char Debug_tracing[] = DEBUG_TRACING;
+const char Debug_tracing_aff[] = DEBUG_TRACING DT_AFF;
 
 /*
- * This function fetch syscall's list from running kernel
+ * get_sc_list -- This function fetch syscall's list from running kernel
  */
 void
 get_sc_list(FILE *f, template_t template)
@@ -252,7 +298,7 @@ get_sc_list(FILE *f, template_t template)
 	size_t len = 0;
 	ssize_t read;
 
-	FILE *in = fopen(debug_tracing_aff, "r");
+	FILE *in = fopen(Debug_tracing_aff, "r");
 
 	if (NULL == in) {
 		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);
@@ -260,12 +306,16 @@ get_sc_list(FILE *f, template_t template)
 	}
 
 	while ((read = getline(&line, &len, in)) != -1) {
+		size_t fw_res;
+
 		if (NULL != template) {
 			if (!template(line, read - 1))
 				continue;
 		}
 
-		fwrite(line, (size_t)read, 1, f);
+		fw_res = fwrite(line, (size_t)read, 1, f);
+
+		assert(fw_res > 0);
 	}
 
 	free(line);
@@ -274,7 +324,7 @@ get_sc_list(FILE *f, template_t template)
 }
 
 /*
- * Replace all occurrence of 'templt' in 'text' with 'str'
+ * str_replace_all -- Replace all occurrence of 'templt' in 'text' with 'str'
  */
 void
 str_replace_all(char **const text, const char *templt, const char *str)
@@ -293,6 +343,11 @@ str_replace_all(char **const text, const char *templt, const char *str)
 
 		*text = calloc(1, text_len - templt_len + str_len + 1);
 
+		if (NULL == *text) {
+			free(p);
+			return;
+		}
+
 		strncpy(*text, p, ((uintptr_t)occ) - ((uintptr_t)p));
 		strcat(*text, str);
 		strcat(*text, occ + templt_len);
@@ -302,10 +357,11 @@ str_replace_all(char **const text, const char *templt, const char *str)
 }
 
 /*
- * This function runs traced command passed through command line.
+ * start_command -- This function runs traced command passed through
+ *    command line.
  */
 pid_t
-start_command(int argc, char *argv[])
+start_command(int argc, char *const argv[])
 {
 	pid_t pid = -1;
 
@@ -336,13 +392,58 @@ start_command(int argc, char *argv[])
 }
 
 /*
- * SIGCHLD handler. Is used if "command" was provided on command line.
+ * start_command_with_signals -- This function runs traced command passed
+ *    through command line and attach appropriate signal handlers.
+ */
+pid_t
+start_command_with_signals(int argc, char *const argv[])
+{
+	struct sigaction sa;
+
+	pid_t pid = start_command(argc, argv);
+
+	if (pid == -1) {
+		int err_no = errno;
+
+		fprintf(stderr, "ERROR: "
+			"Failed to run: '%s': %m. Exiting.\n",
+			*argv);
+
+		errno = err_no;
+		return -1;
+	}
+
+	sa.sa_sigaction = sig_chld_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART | SA_SIGINFO |
+		SA_NOCLDSTOP | SA_NOCLDWAIT;
+
+	(void) sigaction(SIGCHLD, &sa, NULL);
+
+	sa.sa_sigaction = sig_transmit_handler;
+	sa.sa_flags = SA_RESTART;
+
+	(void) sigaction(SIGINT, &sa, NULL);
+	(void) sigaction(SIGHUP, &sa, NULL);
+	(void) sigaction(SIGQUIT, &sa, NULL);
+	(void) sigaction(SIGTERM, &sa, NULL);
+
+	sa.sa_flags = (int)(SA_RESTART | SA_RESETHAND);
+	(void) sigaction(SIGSEGV, &sa, NULL);
+
+	return pid;
+}
+
+/*
+ * sig_chld_handler -- SIGCHLD handler.
+ *
+ * Is used if "command" was provided on command line.
  */
 void
 sig_chld_handler(int sig, siginfo_t *si, void *unused)
 {
-	if (si->si_code == CLD_EXITED && args.pid == si->si_pid) {
-		cont = false;
+	if (si->si_code == CLD_EXITED && Args.pid == si->si_pid) {
+		Cont = false;
 	}
 
 	(void) sig;
@@ -350,16 +451,88 @@ sig_chld_handler(int sig, siginfo_t *si, void *unused)
 }
 
 /*
- * Generic signal hendler. Is used for notification of traced process about
+ * sig_transmit_handler -- Generic signal handler.
+ *
+ * Is used for notification of traced process about
  * parent's death.
  */
 void
 sig_transmit_handler(int sig, siginfo_t *si, void *unused)
 {
-	kill(args.pid, SIGSEGV == sig ? SIGHUP : sig);
+	kill(Args.pid, SIGSEGV == sig ? SIGHUP : sig);
 
-	cont = false;
+	Cont = false;
 
 	(void) si;
 	(void) unused;
+}
+
+/*
+ * Setup Out_lf stream
+ */
+void
+setup_out_lf(void)
+{
+	int err_no;
+
+	if (NULL == Args.out_fn) {
+		Out_lf = stdout;
+
+		goto setup_buffer;
+	}
+
+	Out_lf = fopen(Args.out_fn, "w");
+
+	if (NULL != Out_lf)
+		goto setup_buffer;
+
+	err_no = errno;
+
+	fprintf(stderr, "ERROR: "
+		"Failed to open '%s' for appending: '%m'\n",
+		Args.out_fn);
+
+	errno = err_no;
+	return;
+
+setup_buffer:
+	/* XXX We should improve it. May be we should use fd directly */
+	/* setbuffer(Out_lf, NULL, Args.out_buf_size); */
+	(void) Args.out_buf_size;
+}
+
+/*
+ * Check main loop exit conditions
+ */
+void
+main_loop_check_exit_conditions(void)
+{
+	if (!Cont) {
+		fprintf(stderr, "INFO: Signaled.\n");
+
+		goto exit_message;
+	}
+
+	if (!Args.command && 0 < Args.pid) {
+		if (kill(Args.pid, 0) == -1) {
+			/*
+			 * XXX subject to rework during
+			 *     implementation of multi-process
+			 *     attaching.
+			 */
+			Cont = false;
+
+			fprintf(stderr,
+				"ERROR: Process with pid '%d'"
+				" has disappeared : '%m'.\n",
+				Args.pid);
+
+			goto exit_message;
+		}
+	}
+
+	return;
+
+exit_message:
+	fprintf(stderr, "Exiting.\n");
 }

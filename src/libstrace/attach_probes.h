@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,7 +39,7 @@
 
 #include <stdbool.h>
 
-#include "bpf.h"
+#include "strace_bpf.h"
 
 bool attach_probes(struct bpf_ctx *b);
 

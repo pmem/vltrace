@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -44,11 +44,11 @@
 #include "main.h"
 
 /* process event */
-extern perf_reader_raw_cb print_event_cb[EOF_QTY + 1];
+extern perf_reader_raw_cb Print_event_cb[EOF_QTY + 1];
 
-typedef void (*print_header_t)(int argc, char *argv[]);
-extern print_header_t print_header[EOF_QTY + 1];
+typedef void (*print_header_t)(int argc, char *const argv[]);
+extern print_header_t Print_header[EOF_QTY + 1];
 
-enum out_fmt out_fmt_str2enum(const char *str);
+enum out_lf_fmt out_fmt_str2enum(const char *str);
 
 #endif /* PRINT_EVENT_CB_H */

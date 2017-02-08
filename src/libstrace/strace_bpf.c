@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,10 +31,11 @@
  */
 
 /*
- * bpf.c -- functions related to struct bpf_ctx
+ * strace_bpf.c -- functions related to struct bpf_ctx
  */
 
 #include <stdio.h>
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,42 +47,57 @@
 #include <bcc/bpf_common.h>
 #include <bcc/perf_reader.h>
 
-#include "bpf.h"
 #include "main.h"
+#include "strace_bpf.h"
 
 
 /*
- * This function checks possibility of intercepting one more syscall.
+ * pr_arr_check_quota -- This function checks possibility of intercepting one
+ *     more syscall.
+ *
  * Should be actual if we will intercept something more low-level than regular
  * syscalls.
  */
-static bool pr_arr_check_quota(struct bpf_ctx *sbcp, unsigned new_pr_qty)
+static bool
+pr_arr_check_quota(struct bpf_ctx *sbcp, unsigned new_pr_qty)
 {
-	return sbcp->pr_arr_qty + new_pr_qty <= args.pr_arr_max;
+	return sbcp->pr_arr_qty + new_pr_qty <= Args.pr_arr_max;
 }
 
 /*
- * Save reference to hendler of intercepted syscall in pr_arr.
+ * append_item_to_pr_arr -- Save reference to handler of intercepted syscall
+ *     in pr_arr.
  */
-static void append_item_to_pr_arr(struct bpf_ctx *sbcp, const char *name,
+static void
+append_item_to_pr_arr(struct bpf_ctx *sbcp, const char *name,
 		struct perf_reader *probe, bool attached)
 {
 	struct bpf_pr *item =
 		calloc(1, sizeof(*item) + strlen(name) + 1);
+
+	if (NULL == item)
+		return;
+
 	item->pr = probe;
 	item->attached = attached;
 	strcpy(item->key, name);
 
 	if (NULL == sbcp->pr_arr)
 		sbcp->pr_arr =
-			calloc(args.pr_arr_max, sizeof(*sbcp->pr_arr));
+			calloc(Args.pr_arr_max, sizeof(*sbcp->pr_arr));
+
+	if (NULL == sbcp->pr_arr) {
+		free(item);
+		return;
+	}
 
 	sbcp->pr_arr[sbcp->pr_arr_qty] = item;
 	sbcp->pr_arr_qty += 1;
 }
 
 /*
- * Register callback to capture stream of events.
+ * attach_callback_to_perf_output -- Register callback to capture stream of
+ *     events.
  */
 int
 attach_callback_to_perf_output(struct bpf_ctx *sbcp,
@@ -115,7 +131,7 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 		fprintf(stderr,
 			"ERROR:%s:Number of perf readers would exceed"
 			" global quota: %d\n",
-			__func__, args.pr_arr_max);
+			__func__, Args.pr_arr_max);
 
 		return -1;
 	}
@@ -147,7 +163,11 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 				__func__, cpu);
 		}
 
-		snprintf(reader_name, sizeof(reader_name), "%p:%d", sbcp, cpu);
+		res = snprintf(reader_name, sizeof(reader_name),
+				"%p:%d", sbcp, cpu);
+
+		assert(res > 0);
+
 		append_item_to_pr_arr(sbcp, reader_name, reader, false);
 	}
 
@@ -155,7 +175,7 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 }
 
 /*
- * Overall resource cleanup.
+ * detach_all -- Overall resource cleanup.
  *
  * WARNING We really need explicit cleanup to prevent in-kernel memory leaks.
  *         Yes, there still are kernel bugs related to eBPF.
@@ -172,11 +192,7 @@ detach_all(struct bpf_ctx *b)
 
 		/* non-attached keys here include the perf_events reader */
 		if (b->pr_arr[i]->attached) {
-			char desc[256];
-
-			snprintf(desc, sizeof(desc),
-				"-:kprobes/%s", b->pr_arr[i]->key);
-			bpf_detach_kprobe(desc);
+			bpf_detach_kprobe(b->pr_arr[i]->key);
 		}
 
 		free(b->pr_arr[i]);
@@ -189,35 +205,45 @@ detach_all(struct bpf_ctx *b)
 }
 
 /*
- *  Load eBPF object code to kernel VM and obtaining a fd
+ * load_obj_code_into_ebpf_vm -- Load eBPF object code to kernel VM and
+ *     obtaining a fd
  */
 static int
 load_obj_code_into_ebpf_vm(struct bpf_ctx *sbcp, const char *func_name,
 		enum bpf_prog_type prog_type)
 {
-	int fd = -1;
 	void *bfs_res = bpf_function_start(sbcp->module, func_name);
 
 	if (NULL == bfs_res) {
-		fprintf(stderr, "%s: Unknown program %s\n",
+		fprintf(stderr, "ERROR:%s: Unknown program %s\n",
 				__func__, func_name);
 		return -1;
 	}
 
-	const unsigned log_buf_size = sbcp->debug ? 65536 : 0;
-	char *const log_buf = sbcp->debug ? calloc(1, log_buf_size) : NULL;
+	unsigned log_buf_size = 0;
+	char *log_buf = NULL;
 
-	fd = bpf_prog_load(prog_type,
+	if (sbcp->debug) {
+		log_buf_size = 65536;
+		log_buf = calloc(1, log_buf_size);
+
+		if (NULL == log_buf)
+			log_buf_size = 0;
+	}
+
+	int fd = bpf_prog_load(prog_type,
 			bfs_res,
 			(int)bpf_function_size(sbcp->module, func_name),
 			bpf_module_license(sbcp->module),
 			bpf_module_kern_version(sbcp->module),
 			log_buf, log_buf_size);
 
-	if (sbcp->debug) {
+	if (sbcp->debug && (NULL != log_buf)) {
 		/* XXX Command line options to save it to separate file */
 		fprintf(stderr, "DEBUG:%s('%s'):\n%s\n",
 				__func__, func_name, log_buf);
+
+		free(log_buf);
 	}
 
 	if (fd < 0) {
@@ -232,7 +258,8 @@ load_obj_code_into_ebpf_vm(struct bpf_ctx *sbcp, const char *func_name,
 }
 
 /*
- * This function replaces character 'tmpl' in string 'str' with 'ch'.
+ * chr_replace -- This function replaces character 'tmpl' in string 'str'
+ *     with 'ch'.
  */
 static void
 chr_replace(char *str, const char tmpl, const char ch)
@@ -246,15 +273,37 @@ chr_replace(char *str, const char tmpl, const char ch)
 }
 
 /*
- * Load ebpf function code into VM and attach it to syscall exit point using
- *    KProbe.
+ * event2ev_name -- Convert event to ev_name
+ */
+static char *
+event2ev_name(const char pref, const char *event)
+{
+	char *ev_name = calloc(1, 2 + strlen(event) + 1);
+
+	if (NULL == ev_name)
+		return NULL;
+
+	ev_name[0] = pref;
+	ev_name[1] = '_';
+	ev_name[2] = '\0';
+
+	strcat(ev_name, event);
+
+	chr_replace(ev_name, '+', '_');
+	chr_replace(ev_name, '.', '_');
+
+	return ev_name;
+}
+
+/*
+ * load_fn_and_attach_to_kp -- Load ebpf function code into VM and attach it
+ *    to syscall exit point using KProbe.
  */
 int
 load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
 		const char *event, const char *fn_name,
 		pid_t pid, unsigned cpu, int group_fd)
 {
-	char desc[256];
 	struct perf_reader *pr;
 	int fn_fd;
 
@@ -262,7 +311,7 @@ load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
 		fprintf(stderr,
 			"ERROR:%s:Number of perf readers would exceed"
 			" global quota: %d\n",
-			__func__, args.pr_arr_max);
+			__func__, Args.pr_arr_max);
 
 		return -1;
 	}
@@ -272,16 +321,13 @@ load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
 		return -1;
 	}
 
-	char *ev_name = calloc(1, 2 + strlen(event) + 1);
+	char *ev_name = event2ev_name('p', event);
 
-	strcpy(ev_name, "p_");
-	strcat(ev_name, event);
-	chr_replace(ev_name, '+', '_');
-	chr_replace(ev_name, '.', '_');
+	if (NULL == ev_name)
+		return -1;
 
-	snprintf(desc, sizeof(desc), "p:kprobes/%s %s", ev_name, event);
-
-	pr = bpf_attach_kprobe(fn_fd, ev_name, desc, pid, (int)cpu, group_fd,
+	pr = bpf_attach_kprobe(fn_fd, BPF_PROBE_ENTRY, ev_name, event,
+				pid, (int)cpu, group_fd,
 				NULL, NULL);
 
 	if (NULL == pr) {
@@ -303,15 +349,14 @@ load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
 }
 
 /*
- * Load ebpf function code into VM and attach it to syscall exit point using
- *    KProbe.
+ * load_fn_and_attach_to_kretp -- Load ebpf function code into VM and attach
+ *     it to syscall exit point using KProbe.
  */
 int
 load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 		const char *event, const char *fn_name,
 		pid_t pid, unsigned cpu, int group_fd)
 {
-	char desc[256];
 	struct perf_reader *pr;
 	int fn_fd;
 
@@ -319,7 +364,7 @@ load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 		fprintf(stderr,
 			"ERROR:%s:Number of perf readers would exceed"
 			" global quota: %d\n",
-			__func__, args.pr_arr_max);
+			__func__, Args.pr_arr_max);
 
 		return -1;
 	}
@@ -329,16 +374,13 @@ load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 		return -1;
 	}
 
-	char *ev_name = calloc(1, 2 + strlen(event) + 1);
+	char *ev_name = event2ev_name('r', event);
 
-	strcpy(ev_name, "r_");
-	strcat(ev_name, event);
-	chr_replace(ev_name, '+', '_');
-	chr_replace(ev_name, '.', '_');
+	if (NULL == ev_name)
+		return -1;
 
-	snprintf(desc, sizeof(desc), "r:kprobes/%s %s", ev_name, event);
-
-	pr = bpf_attach_kprobe(fn_fd, ev_name, desc, pid, (int)cpu, group_fd,
+	pr = bpf_attach_kprobe(fn_fd, BPF_PROBE_RETURN, ev_name, event,
+				pid, (int)cpu, group_fd,
 				NULL, NULL);
 
 	if (NULL == pr) {
@@ -358,8 +400,8 @@ load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 }
 
 /*
- * Load ebpf function code into VM and attach it to syscall exit point using
- *    TracePoint.
+ * load_fn_and_attach_to_tp -- Load ebpf function code into VM and attach it
+ *     to syscall exit point using TracePoint.
  */
 int
 load_fn_and_attach_to_tp(struct bpf_ctx *sbcp,
@@ -371,7 +413,7 @@ load_fn_and_attach_to_tp(struct bpf_ctx *sbcp,
 		fprintf(stderr,
 			"ERROR:%s:Number of perf readers would exceed"
 			" global quota: %d\n",
-			__func__, args.pr_arr_max);
+			__func__, Args.pr_arr_max);
 
 		return -1;
 	}
@@ -394,6 +436,9 @@ load_fn_and_attach_to_tp(struct bpf_ctx *sbcp,
 
 	char *ev_name = calloc(1,
 			strlen(tp_category) + 1 + strlen(tp_name) + 1);
+
+	if (NULL == ev_name)
+		return -1;
 
 	strcpy(ev_name, tp_category);
 	strcat(ev_name, ":");

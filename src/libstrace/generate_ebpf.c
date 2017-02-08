@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,68 +34,199 @@
  * generate_ebpf.h -- generate_ebpf() function
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <ebpf/ebpf_file_set.h>
 
 #include "main.h"
 #include "utils.h"
 #include "ebpf_syscalls.h"
 #include "generate_ebpf.h"
 
-const char *ebpf_trace_h_file = "trace.h";
-
-const char *ebpf_head_file = "trace_head.c";
-const char *ebpf_libc_tmpl_file = "trace_libc_tmpl.c";
-const char *ebpf_file_tmpl_file = "trace_file_tmpl.c";
-const char *ebpf_fileat_tmpl_file = "trace_fileat_tmpl.c";
-const char *ebpf_kern_tmpl_file = "trace_kern_tmpl.c";
-
-const char *ebpf_tp_all_file = "trace_tp_all.c";
 
 /*
- * This function returns syscall number by name according to libc knowledge.
+ * get_sc_num -- This function returns syscall number by name according to
+ *     libc knowledge.
  */
 static int
 get_sc_num(const char *sc_name)
 {
 	for (int i = 0; i < SC_TBL_SIZE; i++) {
-		if (NULL == sc_tbl[i].hlr_name)
+		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (!strcasecmp(sc_name, sc_tbl[i].hlr_name))
+		if (!strcasecmp(sc_name, Syscall_array[i].handler_name))
 			return i;
 	}
 
 	return -1;
 }
 
+static char *
+load_ebpf_fileat_tmpl(void)
+{
+	char *text = NULL;
+
+	switch (Args.fnr_mode) {
+	case E_FNR_FAST:
+		text = load_file_no_cr(ebpf_fileat_tmpl_sl_file);
+		break;
+	case E_FNR_NAME_MAX:
+		text = load_file_no_cr(ebpf_fileat_tmpl_ml_file);
+		break;
+	case E_FNR_FULL:
+		/* XXX */
+	default:
+		assert(false);
+		break;
+	}
+
+	return text;
+}
+
+static char *
+load_ebpf_file_tmpl(void)
+{
+	char *text = NULL;
+
+	switch (Args.fnr_mode) {
+	case E_FNR_FAST:
+		text = load_file_no_cr(ebpf_file_tmpl_sl_file);
+		break;
+	case E_FNR_NAME_MAX:
+		text = load_file_no_cr(ebpf_file_tmpl_ml_file);
+		break;
+	case E_FNR_FULL:
+		/* XXX */
+	default:
+		assert(false);
+		break;
+	}
+
+	return text;
+}
+
+static char *
+get_libc_tmpl(unsigned i)
+{
+	char *text = NULL;
+
+	if (NULL == Syscall_array[i].handler_name)
+		return NULL;
+
+	if (EM_fs_path_1_2_arg ==
+			(EM_fs_path_1_2_arg & Syscall_array[i].masks)) {
+		switch (Args.fnr_mode) {
+		case E_FNR_FAST:
+			text = load_file_no_cr(
+					ebpf_fs_path_1_2_arg_tmpl_sl_file);
+			break;
+		case E_FNR_NAME_MAX:
+			text = load_file_no_cr(
+					ebpf_fs_path_1_2_arg_tmpl_ml_file);
+			break;
+		case E_FNR_FULL:
+			/* XXX */
+		default:
+			assert(false);
+			break;
+		}
+	} else if (EM_fs_path_1_3_arg ==
+			(EM_fs_path_1_3_arg & Syscall_array[i].masks)) {
+		switch (Args.fnr_mode) {
+		case E_FNR_FAST:
+			text = load_file_no_cr(
+					ebpf_fs_path_1_3_arg_tmpl_sl_file);
+			break;
+		case E_FNR_NAME_MAX:
+			text = load_file_no_cr(
+					ebpf_fs_path_1_3_arg_tmpl_ml_file);
+			break;
+		case E_FNR_FULL:
+			/* XXX */
+		default:
+			assert(false);
+			break;
+		}
+	} else if (EM_fs_path_2_4_arg ==
+			(EM_fs_path_2_4_arg & Syscall_array[i].masks)) {
+		switch (Args.fnr_mode) {
+		case E_FNR_FAST:
+			text = load_file_no_cr(
+					ebpf_fs_path_2_4_arg_tmpl_sl_file);
+			break;
+		case E_FNR_NAME_MAX:
+			text = load_file_no_cr(
+					ebpf_fs_path_2_4_arg_tmpl_ml_file);
+			break;
+		case E_FNR_FULL:
+			/* XXX */
+		default:
+			assert(false);
+			break;
+		}
+	} else if (E_FF_FULL == Args.ff_mode &&
+			EM_rpid == (EM_rpid & Syscall_array[i].masks)) {
+		switch (i) {
+		case __NR_clone:
+			text = load_file_no_cr(ebpf_clone_tmpl_file);
+			break;
+		case __NR_vfork:
+			text = load_file_no_cr(ebpf_vfork_tmpl_file);
+			break;
+		case __NR_fork:
+			text = load_file_no_cr(ebpf_fork_tmpl_file);
+			break;
+
+		default:
+			assert(false);
+			break;
+		};
+	} else if (EM_file == (EM_file & Syscall_array[i].masks)) {
+		text = load_ebpf_file_tmpl();
+	} else if (EM_fileat == (EM_fileat & Syscall_array[i].masks)) {
+		text = load_ebpf_fileat_tmpl();
+	} else {
+		text = load_file_no_cr(ebpf_libc_tmpl_file);
+	}
+
+	if (NULL == text)
+		return NULL;
+
+	str_replace_all(&text, "SYSCALL_NR",
+			Syscall_array[i].num_name);
+
+	return text;
+}
+
 /*
- * This function generates eBPF handler for syscalls which are known to glibc.
+ * generate_ebpf_kp_libc_all -- This function generates eBPF handler for
+ *     syscalls which are known to glibc.
  */
 static void
 generate_ebpf_kp_libc_all(FILE *ts)
 {
-	char *text = NULL;
-
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		if (NULL == sc_tbl[i].hlr_name)
+		size_t fw_res;
+		char *text;
+
+		text = get_libc_tmpl(i);
+
+		if (NULL == text)
 			continue;
 
-		if (EM_file == (EM_file & sc_tbl[i].masks))
-			text = load_file(ebpf_file_tmpl_file);
-		else if (EM_fileat == (EM_fileat & sc_tbl[i].masks))
-			text = load_file(ebpf_fileat_tmpl_file);
-		else
-			text = load_file(ebpf_libc_tmpl_file);
-
-		str_replace_all(&text, "SYSCALL_NR",
-				sc_tbl[i].num_name);
 		str_replace_all(&text, "SYSCALL_NAME",
-				sc_tbl[i].hlr_name);
+				Syscall_array[i].handler_name);
 
-		fwrite(text, strlen(text), 1, ts);
+		fw_res = fwrite(text, strlen(text), 1, ts);
 
-		free(text); text = NULL;
+		assert(fw_res > 0);
+
+		free(text);
+
+		text = NULL;
 	}
 }
 
@@ -103,7 +234,8 @@ generate_ebpf_kp_libc_all(FILE *ts)
 static unsigned SyS_sigsuspend = 0;
 
 /*
- * This function generates universal default eBPF syscall handler.
+ * generate_ebpf_kp_kern_all -- This function generates universal default eBPF
+ *     syscall handler.
  *
  * Primer purpose of generated handler - new and unknown syscalls.
  */
@@ -117,7 +249,7 @@ generate_ebpf_kp_kern_all(FILE *ts)
 	size_t len = 0;
 	ssize_t read;
 
-	FILE *in = fopen(debug_tracing_aff, "r");
+	FILE *in = fopen(Debug_tracing_aff, "r");
 
 	if (NULL == in) {
 		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);
@@ -126,6 +258,7 @@ generate_ebpf_kp_kern_all(FILE *ts)
 
 	while ((read = getline(&line, &len, in)) != -1) {
 		int sc_num;
+		size_t fw_res;
 
 		if (!is_a_sc(line, read - 1))
 			continue;
@@ -144,25 +277,20 @@ generate_ebpf_kp_kern_all(FILE *ts)
 
 		/* Some optimization for glibc-supported syscalls */
 		if (0 <= sc_num) {
-			if (EM_file == (EM_file & sc_tbl[sc_num].masks))
-				text = load_file(ebpf_file_tmpl_file);
-			else if (EM_fileat ==
-					(EM_fileat & sc_tbl[sc_num].masks))
-				text = load_file(ebpf_fileat_tmpl_file);
-			else
-				text = load_file(ebpf_libc_tmpl_file);
-
-			str_replace_all(&text, "SYSCALL_NR",
-					sc_tbl[sc_num].num_name);
+			text = get_libc_tmpl((unsigned)sc_num);
 		} else {
-			text = load_file(ebpf_kern_tmpl_file);
+			text = load_file_no_cr(ebpf_kern_tmpl_file);
 		}
 
 		str_replace_all(&text, "SYSCALL_NAME", line);
 
-		fwrite(text, strlen(text), 1, ts);
+		fw_res = fwrite(text, strlen(text), 1, ts);
 
-		free(text); text = NULL;
+		assert(fw_res > 0);
+
+		free(text);
+
+		text = NULL;
 	}
 
 	free(line);
@@ -170,8 +298,8 @@ generate_ebpf_kp_kern_all(FILE *ts)
 }
 
 /*
- * This function generates eBPF syscall handlers specific for syscalls with
- * filename in arguments.
+ * generate_ebpf_kp_file -- This function generates eBPF syscall handlers
+ *     specific for syscalls with filename in arguments.
  */
 static void
 generate_ebpf_kp_file(FILE *ts)
@@ -179,28 +307,34 @@ generate_ebpf_kp_file(FILE *ts)
 	char *text = NULL;
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		if (NULL == sc_tbl[i].hlr_name)
+		size_t fw_res;
+
+		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_file != (EM_file & sc_tbl[i].masks))
+		if (EM_file != (EM_file & Syscall_array[i].masks))
 			continue;
 
-		text = load_file(ebpf_file_tmpl_file);
+		text = load_ebpf_file_tmpl();
 
 		str_replace_all(&text, "SYSCALL_NR",
-				sc_tbl[i].num_name);
+				Syscall_array[i].num_name);
 		str_replace_all(&text, "SYSCALL_NAME",
-				sc_tbl[i].hlr_name);
+				Syscall_array[i].handler_name);
 
-		fwrite(text, strlen(text), 1, ts);
+		fw_res = fwrite(text, strlen(text), 1, ts);
 
-		free(text); text = NULL;
+		assert(fw_res > 0);
+
+		free(text);
+
+		text = NULL;
 	}
 }
 
 /*
- * This function generates eBPF syscall handlers specific for syscalls with
- * relative filename in arguments.
+ * generate_ebpf_kp_fileat -- This function generates eBPF syscall handlers
+ *     specific for syscalls with relative filename in arguments.
  */
 static void
 generate_ebpf_kp_fileat(FILE *ts)
@@ -208,28 +342,34 @@ generate_ebpf_kp_fileat(FILE *ts)
 	char *text = NULL;
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		if (NULL == sc_tbl[i].hlr_name)
+		size_t fw_res;
+
+		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_fileat != (EM_fileat & sc_tbl[i].masks))
+		if (EM_fileat != (EM_fileat & Syscall_array[i].masks))
 			continue;
 
-		text = load_file(ebpf_fileat_tmpl_file);
+		text = load_ebpf_fileat_tmpl();
 
 		str_replace_all(&text, "SYSCALL_NR",
-				sc_tbl[i].num_name);
+				Syscall_array[i].num_name);
 		str_replace_all(&text, "SYSCALL_NAME",
-				sc_tbl[i].hlr_name);
+				Syscall_array[i].handler_name);
 
-		fwrite(text, strlen(text), 1, ts);
+		fw_res = fwrite(text, strlen(text), 1, ts);
 
-		free(text); text = NULL;
+		assert(fw_res > 0);
+
+		free(text);
+
+		text = NULL;
 	}
 }
 
 /*
- * This function generates eBPF syscall handlers specific for syscalls with
- * file-descriptor in arguments.
+ * generate_ebpf_kp_desc -- This function generates eBPF syscall handlers
+ *     specific for syscalls with file-descriptor in arguments.
  */
 static void
 generate_ebpf_kp_desc(FILE *ts)
@@ -237,31 +377,37 @@ generate_ebpf_kp_desc(FILE *ts)
 	char *text = NULL;
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		if (NULL == sc_tbl[i].hlr_name)
+		size_t fw_res;
+
+		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_desc != (EM_desc & sc_tbl[i].masks))
+		if (EM_desc != (EM_desc & Syscall_array[i].masks))
 			continue;
 
-		text = load_file(ebpf_libc_tmpl_file);
+		text = load_file_no_cr(ebpf_libc_tmpl_file);
 
 		str_replace_all(&text, "SYSCALL_NR",
-				sc_tbl[i].num_name);
+				Syscall_array[i].num_name);
 		str_replace_all(&text, "SYSCALL_NAME",
-				sc_tbl[i].hlr_name);
+				Syscall_array[i].handler_name);
 
-		fwrite(text, strlen(text), 1, ts);
+		fw_res = fwrite(text, strlen(text), 1, ts);
 
-		free(text); text = NULL;
+		assert(fw_res > 0);
+
+		free(text);
+
+		text = NULL;
 	}
 }
 
 /*
- * This function generates eBPF syscall handlers specific for syscalls which
- * operate on files.
+ * generate_ebpf_kp_fileio -- This function generates eBPF syscall handlers
+ *     specific for syscalls which operate on files.
  */
 static void
-generate_ebpf_kp_pmemfile(FILE *ts)
+generate_ebpf_kp_fileio(FILE *ts)
 {
 	generate_ebpf_kp_file(ts);
 	generate_ebpf_kp_desc(ts);
@@ -269,21 +415,25 @@ generate_ebpf_kp_pmemfile(FILE *ts)
 }
 
 /*
- * This function generates eBPF syscall handler specific for tracepoint
- * feature.
+ * generate_ebpf_tp_all -- This function generates eBPF syscall handler
+ *     specific for tracepoint feature.
  */
 static void
 generate_ebpf_tp_all(FILE *ts)
 {
-	char *text = load_file(ebpf_tp_all_file);
+	char *text = load_file_no_cr(ebpf_tp_all_file);
 
-	fwrite(text, strlen(text), 1, ts);
+	size_t fw_res = fwrite(text, strlen(text), 1, ts);
 
-	free(text); text = NULL;
+	assert(fw_res > 0);
+
+	free(text);
+
+	text = NULL;
 }
 
 /*
- * This function parses and process expression.
+ * generate_ebpf -- This function parses and process expression.
  */
 char *
 generate_ebpf()
@@ -295,28 +445,32 @@ generate_ebpf()
 
 	/* Let's from header */
 	char *head = load_file(ebpf_head_file);
-	fwrite(head, strlen(head), 1, ts);
-	free(head); head = NULL;
+	size_t fw_res = fwrite(head, strlen(head), 1, ts);
 
-	if (NULL == args.expr)
+	assert(fw_res > 0);
+	free(head);
+
+	head = NULL;
+
+	if (NULL == Args.expr)
 		goto DeFault;
 
-	if (!strcasecmp(args.expr, "trace=kp-libc-all")) {
+	if (!strcasecmp(Args.expr, "trace=kp-libc-all")) {
 		generate_ebpf_kp_libc_all(ts);
 		goto out;
-	} else if (!strcasecmp(args.expr, "trace=kp-kern-all")) {
+	} else if (!strcasecmp(Args.expr, "trace=kp-kern-all")) {
 		generate_ebpf_kp_kern_all(ts);
 		goto out;
-	} else if (!strcasecmp(args.expr, "trace=kp-file")) {
+	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
 		generate_ebpf_kp_file(ts);
 		goto out;
-	} else if (!strcasecmp(args.expr, "trace=kp-desc")) {
+	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
 		generate_ebpf_kp_desc(ts);
 		goto out;
-	} else if (!strcasecmp(args.expr, "trace=kp-pmemfile")) {
-		generate_ebpf_kp_pmemfile(ts);
+	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
+		generate_ebpf_kp_fileio(ts);
 		goto out;
-	} else if (!strcasecmp(args.expr, "trace=tp-all")) {
+	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
 		generate_ebpf_tp_all(ts);
 		goto out;
 	}
@@ -331,4 +485,65 @@ DeFault:
 out:
 	fclose(ts);
 	return text;
+}
+
+/*
+ * This function apply process-attach code to generated code with handlers
+ */
+void
+apply_process_attach_code(char **const pbpf_str)
+{
+	if (0 < Args.pid) {
+		char str[64];
+		int snp_res;
+		char *pid_check_hook;
+
+		snp_res = snprintf(str, sizeof(str), "%d", 	Args.pid);
+
+		assert(snp_res > 0);
+
+		pid_check_hook = load_pid_check_hook(Args.ff_mode);
+
+		assert(NULL != pid_check_hook);
+
+		str_replace_all(&pid_check_hook, "TRACED_PID", str);
+
+		str_replace_all(pbpf_str, "PID_CHECK_HOOK", pid_check_hook);
+
+		free(pid_check_hook);
+	} else {
+		str_replace_all(pbpf_str, "PID_CHECK_HOOK", "");
+	}
+}
+
+/*
+ * This function apply trace.h because this way is the safest.
+ */
+void
+apply_trace_h_header(char **const pbpf_str)
+{
+	char *trace_h = load_file_no_cr(ebpf_trace_h_file);
+
+	str_replace_all(pbpf_str, "#include \"trace.h\"\n", trace_h);
+
+	free(trace_h);
+}
+
+/*
+ * Print ebpf code with marks for debug reason
+ */
+void
+fprint_ebpf_code_with_debug_marks(FILE *f, const char *bpf_str)
+{
+	fprintf(f, "\t>>>>> Generated eBPF code <<<<<\n");
+
+	if (bpf_str) {
+		size_t fw_res;
+
+		fw_res = fwrite(bpf_str, strlen(bpf_str), 1, f);
+
+		assert(fw_res > 0);
+	}
+
+	fprintf(f, "\t>>>>> EndOf generated eBPF code <<<<<<\n");
 }

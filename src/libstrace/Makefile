@@ -1,4 +1,4 @@
-# Copyright 2016, Intel Corporation
+# Copyright 2016-2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -36,8 +36,8 @@
 
 LIBRARY_NAME = strace
 
-OBJS = bpf.o\
-	   utils.o\
+OBJS = strace_bpf.o \
+	   utils.o \
 	   attach_probes.o \
 	   ebpf_syscalls.o \
 	   generate_ebpf.o \
@@ -46,9 +46,10 @@ OBJS = bpf.o\
 
 CFLAGS += $(shell $(PKG_CONFIG) --cflags libbcc)
 
-# XXX libbcc expects multi-treading safity. Currently it's required for
+# XXX libbcc expects multi-treading safety. Currently it's required for
 # print_event_cb.o only, although we will apply it for overall application.
 CFLAGS += -pthread
+CFLAGS += -D_GNU_SOURCE
 
 CFLAGS += -g -Wextra
 
@@ -59,6 +60,9 @@ CFLAGS += -Wno-override-init
 endif
 
 CFLAGS += -I ../compat
-CFLAGS += -I ../ebpf
+CFLAGS += -I ..
+
+
+%.o: %.c %.h Makefile
 
 include ../Makefile.inc

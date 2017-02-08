@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,8 +41,11 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-enum out_fmt {
-	EOF_HEX = 0,
+enum out_lf_fmt {
+	/* Write syscall's data packets "as is" */
+	EOF_HEX_RAW = 0,
+	/* Assemble multi-packet syscall data into single line */
+	EOF_HEX_SL,
 	EOF_BIN,
 	EOF_STRACE,
 
@@ -50,30 +53,76 @@ enum out_fmt {
 	EOF_QTY, /* Should be last */
 };
 
-struct args_t {
-	bool timestamp;
-	bool failed;
-	bool command;
-
-	unsigned debug;
-
-	pid_t pid;
-	const char *out_fn;
-	const char *out_fmt_str;
-	char out_sep_ch;
-	const char *expr;
-/*
- * XXX Set this variable using args and
- *    command line options
- */
-	unsigned pr_arr_max;
+/* follow fork modes */
+enum ff_mode {
+	E_FF_DISABLED = 0,
+	E_FF_FULL,
+	E_FF_FAST,
 };
 
-extern struct args_t args;
-extern bool cont;
+/* filenames reading modes */
+enum fnr_mode {
+	E_FNR_FAST = 0,
+	E_FNR_NAME_MAX,
+	E_FNR_FULL,
+};
 
-/* Output log */
-extern FILE *out;
-extern enum out_fmt out_fmt;
+/* 8 Megabytes should be something close to reasonable */
+enum { OUT_BUF_SIZE = 8 * 1024 * 1024 };
+
+/*
+ * This structure contains default and parsed values for command-line options
+ */
+struct cl_options {
+	/* Mark output lines with timestamp */
+	bool timestamp;
+	/* Print only failed syscalls */
+	bool failed;
+	/* We have command to run on command line */
+	bool command;
+
+	/* We run in debug mode */
+	unsigned debug;
+
+	/* Pid of process to trace */
+	pid_t pid;
+
+	/* The name of output log file */
+	const char *out_fn;
+	/* string constant with type of output log format */
+	const char *out_fmt_str;
+	/* Field separator for hexadecimal logs */
+	char out_lf_fld_sep_ch;
+	/* Expression */
+	const char *expr;
+
+	/*
+	 * XXX Set this variable using Args and
+	 *    command line options
+	 */
+	unsigned pr_arr_max;
+	/* follow-fork mode */
+	enum ff_mode ff_mode;
+	/*
+	 * Split logs in per-pid way or, may be, in per pid_tid way,
+	 * like strace does.
+	 */
+	bool ff_separate_logs;
+	/* filenames reading mode */
+	enum fnr_mode fnr_mode;
+
+	/* XXX Should be configurable through command line */
+	unsigned out_buf_size;
+
+	const char *ebpf_src_dir;
+};
+
+extern struct cl_options Args;
+extern bool Cont;
+
+/* Output logfile */
+extern FILE *Out_lf;
+/* Output logfile format */
+extern enum out_lf_fmt Out_lf_fmt;
 
 #endif /* MAIN_H */

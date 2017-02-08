@@ -1,1 +1,2 @@
-This directory contains libstrace code.
+This directory contains libstrace source code. Libstrace contains all key
+functionality which is runned in userspace.

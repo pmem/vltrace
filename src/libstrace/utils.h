@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -40,7 +40,11 @@
 #include <stdio.h>
 #include <signal.h>
 
+#include "main.h"
+
 char *load_file(const char *fn);
+char *load_file_no_cr(const char *const fn);
+char *load_pid_check_hook(enum ff_mode ff_mode);
 char *load_file_from_disk(const char *const fn);
 void check_bpf_jit_status(FILE *file);
 
@@ -52,15 +56,19 @@ void get_sc_list(FILE *f, template_t template);
 
 void str_replace_all(char **text, const char *templt, const char *str);
 
-pid_t start_command(int argc, char *argv[]);
+pid_t start_command(int argc, char *const argv[]);
+pid_t start_command_with_signals(int argc, char *const argv[]);
+void main_loop_check_exit_conditions(void);
 
 void sig_chld_handler(int sig, siginfo_t *si, void *unused);
 void sig_transmit_handler(int sig, siginfo_t *si, void *unused);
 
+void setup_out_lf(void);
+
 #define DEBUG_TRACING "/sys/kernel/debug/tracing"
 #define DT_AFF "/available_filter_functions"
 
-extern const char debug_tracing[];
-extern const char debug_tracing_aff[];
+extern const char Debug_tracing[];
+extern const char Debug_tracing_aff[];
 
 #endif /* UTILS_H */

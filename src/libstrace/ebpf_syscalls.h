@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,34 +37,105 @@
 #ifndef EBPF_SYSCALLS_H
 #define EBPF_SYSCALLS_H
 
+#include <stdio.h>
+
 #include <sys/syscall.h>
 
+
+enum sc_arg_type {
+	/* Syscall does not have this argument */
+	EAT_absent = 0,
+	/* This argument is a pointer */
+	EAT_pointer,
+	/* This argument is a file descriptor */
+	EAT_file_descriptor,
+	/* This argument is a fs path */
+	EAT_path,
+	/* This argument is generic integer */
+	EAT_int,
+};
+
+
+/* XXX Subject to re-develop */
 enum masks_t {
-	/* syscall returns an fd */
-	EM_rdesc = 1 << 0,
+	/* syscall has fs path as a first arg */
+	EM_fs_path_1_arg = 1 << 0,
+	/* syscall has fs path as second arg */
+	EM_fs_path_2_arg = 1 << 1,
+	/* syscall has fs path as third arg */
+	EM_fs_path_3_arg = 1 << 2,
+	/* syscall has fs path as fourth arg */
+	EM_fs_path_4_arg = 1 << 3,
+	/* syscall has fs path as fifth arg. For future syscalls. */
+	EM_fs_path_5_arg = 1 << 4,
+	/* syscall has fs path as sixth arg. For future syscalls. */
+	EM_fs_path_6_arg = 1 << 5,
+
+	/* syscall fd path as a first arg */
+	EM_fd_1_arg = 1 << 6,
+	/* syscall fd path as second arg */
+	EM_fd_2_arg = 1 << 7,
+	/* syscall fd path as third arg */
+	EM_fd_3_arg = 1 << 8,
+	/* syscall fd path as fourth arg */
+	EM_fd_4_arg = 1 << 9,
+	/* syscall fd path as fifth arg. For future syscalls. */
+	EM_fd_5_arg = 1 << 10,
+	/* syscall fd path as sixth arg. For future syscalls. */
+	EM_fd_6_arg = 1 << 11,
+
+	/* syscall returns a fd */
+	EM_rdesc = 1 << 12,
+	/* syscall returns a pid */
+	EM_rpid = 1 << 13,
+	/* syscall returns a ptr */
+	EM_rptr = 1 << 14,
+
+	/* syscall should be traced in 'kern-all' mode only */
+	EM_kern_all = 1 << 15,
+	/* syscall should be traced in 'kern-all' and 'libc-all' modes */
+	EM_libc_all = 1 << 16,
+	/*
+	 * syscall should be traced in 'kern-all', 'libc-all' and 'fileio'
+	 *    modes
+	 */
+	EM_fileio = 1 << 17,
+
+
 	/* syscall accepts fd as a first arg */
-	EM_desc = 1 << 1,
+	EM_desc = EM_fd_1_arg,
 	/* syscall accepts fs path as a first arg */
-	EM_file = 1 << 2,
+	EM_file = EM_fs_path_1_arg,
 	/* syscall accepts dir fd as a first arg and path as a second */
-	EM_fileat = 1 << 3,
-	/* syscall is actual for PMemFile */
-	EM_pmemfile = 1 << 4,
-	EM_kern_all = 1 << 5,
-	EM_libc_all = 1 << 6,
+	EM_fileat = EM_fd_1_arg | EM_fs_path_2_arg,
+	/* syscall has fs paths as first and second Args. rename() */
+	EM_fs_path_1_2_arg = EM_fs_path_1_arg | EM_fs_path_2_arg,
+	/* syscall has fs paths as first and third Args. linkat() */
+	EM_fs_path_1_3_arg = EM_fs_path_1_arg | EM_fs_path_3_arg,
+	/* syscall has fs paths as second and forth Args. renameat() */
+	EM_fs_path_2_4_arg = EM_fs_path_2_arg | EM_fs_path_4_arg,
 
 	EM_ALL = -1,
 };
 
-struct sc_t {
+/* Properties of syscall with number 'num' */
+struct syscall_descriptor {
+	/* Number of syscall */
 	unsigned num;
+	/* Number of syscall as string */
 	const char *num_name;
-	const char *hlr_name;
+	/* The name of in-kernel syscall's handler */
+	const char *handler_name;
+	/* Qty of args for this syscall */
+	unsigned args_qty;
+	/* Flags */
 	unsigned masks;
 };
 
 /* Currently glibc does not have appropriate macro for it */
 enum { SC_TBL_SIZE = 1024 };
-extern struct sc_t sc_tbl[SC_TBL_SIZE];
+extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
+
+int fprint_sc_tbl(FILE *f);
 
 #endif /* EBPF_SYSCALLS_H */

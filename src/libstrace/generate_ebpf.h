@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,36 +37,11 @@
 #ifndef GENERATE_EBPF_H
 #define GENERATE_EBPF_H
 
-extern const char *ebpf_trace_h_file;
-
-extern const char *ebpf_head_file;
-extern const char *ebpf_libc_tmpl_file;
-extern const char *ebpf_file_tmpl_file;
-extern const char *ebpf_fileat_tmpl_file;
-extern const char *ebpf_kern_tmpl_file;
-extern const char *ebpf_tp_all_file;
 
 char *generate_ebpf(void);
 
-extern const char _binary_trace_fileat_tmpl_c_size[];
-extern const char _binary_trace_fileat_tmpl_c_start[];
-
-extern const char _binary_trace_file_tmpl_c_size[];
-extern const char _binary_trace_file_tmpl_c_start[];
-
-extern const char _binary_trace_head_c_size[];
-extern const char _binary_trace_head_c_start[];
-
-extern const char _binary_trace_h_size[];
-extern const char _binary_trace_h_start[];
-
-extern const char _binary_trace_kern_tmpl_c_size[];
-extern const char _binary_trace_kern_tmpl_c_start[];
-
-extern const char _binary_trace_libc_tmpl_c_size[];
-extern const char _binary_trace_libc_tmpl_c_start[];
-
-extern const char _binary_trace_tp_all_c_size[];
-extern const char _binary_trace_tp_all_c_start[];
+void apply_process_attach_code(char **const pbpf_str);
+void apply_trace_h_header(char **const pbpf_str);
+void fprint_ebpf_code_with_debug_marks(FILE *f, const char *bpf_str);
 
 #endif

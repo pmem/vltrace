@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,20 +34,88 @@
  * attach_probes.c -- attach_probes() function
  */
 
+#include <assert.h>
 #include <string.h>
 
 #include <bcc/bpf_common.h>
 
-#include "bpf.h"
 #include "main.h"
 #include "utils.h"
+#include "strace_bpf.h"
 #include "attach_probes.h"
 #include "ebpf_syscalls.h"
 
 enum { HANDLER_NAME_MAX_SIZE = 128 };
 
+static void
+print_kprobe_name(char *str, size_t size, const char *name)
+{
+	int res;
+
+	res = snprintf(str, size, "kprobe__%s", name);
+
+	assert(res > 0);
+}
+
+static void
+print_kretprobe_name(char *str, size_t size, const char *name)
+{
+	int res;
+
+	res = snprintf(str, size, "kretprobe__%s", name);
+
+	assert(res > 0);
+}
+
+static int
+attach_single_sc(struct bpf_ctx *b, const char *handler_name)
+{
+	int res = -1;
+	char kprobe[HANDLER_NAME_MAX_SIZE];
+	char kretprobe[HANDLER_NAME_MAX_SIZE];
+
+	if (NULL == handler_name)
+		return -1;
+
+	print_kprobe_name(kprobe, sizeof(kprobe),
+		handler_name);
+
+	print_kretprobe_name(kretprobe, sizeof(kretprobe),
+		handler_name);
+
+	/* KRetProbe should be first to prevent race condition */
+	res = load_fn_and_attach_to_kretp(b,
+			handler_name, kretprobe,
+			Args.pid, 0, -1);
+
+	if (res == -1) {
+		fprintf(stderr,
+			"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
+			__func__, kretprobe,
+			handler_name);
+
+		/* Kretprobe fails. There is no reason to try probe */
+		return res;
+	}
+
+	res = load_fn_and_attach_to_kp(b, handler_name,
+			kprobe,
+			Args.pid, 0, -1);
+
+	if (res == -1) {
+		fprintf(stderr,
+			"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
+			__func__, kprobe,
+			handler_name);
+	}
+
+	return res;
+}
+
+
 /*
- * This function attaches eBPF handler to each syscall known to libc.
+ * attach_kp_libc_all -- This function attaches eBPF handler to each syscall
+ *     known to libc.
  *
  * It can be useful because kernel has a lot of "unused" syscalls.
  */
@@ -58,46 +126,11 @@ attach_kp_libc_all(struct bpf_ctx *b)
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		int res;
-		char kprobe[HANDLER_NAME_MAX_SIZE];
-		char kretprobe[HANDLER_NAME_MAX_SIZE];
 
-		if (NULL == sc_tbl[i].hlr_name)
-			continue;
+		res = attach_single_sc(b, Syscall_array[i].handler_name);
 
-		snprintf(kprobe, sizeof(kprobe),
-			"kprobe__%s",
-			sc_tbl[i].hlr_name);
-
-		snprintf(kretprobe, sizeof(kretprobe),
-			"kretprobe__%s",
-			sc_tbl[i].hlr_name);
-
-		/* KRetProbe should be first to prevent race condition */
-		res = load_fn_and_attach_to_kretp(b,
-				sc_tbl[i].hlr_name, kretprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kretprobe, sc_tbl[i].hlr_name);
-
-			/* Kretprobe fails. There is no reason to try probe */
-			continue;
-		}
-
-		res = load_fn_and_attach_to_kp(b, sc_tbl[i].hlr_name, kprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kprobe, sc_tbl[i].hlr_name);
-
-			continue;
-		}
-
-		succ_counter ++;
+		if (res >= 0)
+			succ_counter++;
 	}
 
 	return succ_counter > 0;
@@ -107,8 +140,10 @@ attach_kp_libc_all(struct bpf_ctx *b)
 static unsigned SyS_sigsuspend = 0;
 
 /*
- * This function attaches eBPF handler to all existing syscalls in running
- * kernel. It consume more time than attach_kp_libc_all().
+ * attach_kp_kern_all -- This function attaches eBPF handler to all existing
+ *     syscalls in running kernel.
+ *
+ * It consume more time than attach_kp_libc_all().
  */
 static bool
 attach_kp_kern_all(struct bpf_ctx *b)
@@ -119,7 +154,7 @@ attach_kp_kern_all(struct bpf_ctx *b)
 	size_t len = 0;
 	ssize_t read;
 
-	FILE *in = fopen(debug_tracing_aff, "r");
+	FILE *in = fopen(Debug_tracing_aff, "r");
 
 	if (NULL == in) {
 		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);
@@ -128,8 +163,6 @@ attach_kp_kern_all(struct bpf_ctx *b)
 
 	while ((read = getline(&line, &len, in)) != -1) {
 		int res;
-		char kprobe[HANDLER_NAME_MAX_SIZE];
-		char kretprobe[HANDLER_NAME_MAX_SIZE];
 
 		if (!is_a_sc(line, read - 1))
 			continue;
@@ -144,37 +177,10 @@ attach_kp_kern_all(struct bpf_ctx *b)
 			SyS_sigsuspend ++;
 		}
 
-		snprintf(kprobe, sizeof(kprobe),
-			"kprobe__%s", line);
+		res = attach_single_sc(b, line);
 
-		snprintf(kretprobe, sizeof(kretprobe),
-			"kretprobe__%s", line);
-
-		/* KRetProbe should be first to prevent race condition */
-		res = load_fn_and_attach_to_kretp(b, line, kretprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kretprobe, line);
-
-			/* Kretprobe fails. There is no reason to try probe */
-			continue;
-		}
-
-		res = load_fn_and_attach_to_kp(b, line, kprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kprobe, line);
-
-			continue;
-		}
-
-		succ_counter ++;
+		if (res >= 0)
+			succ_counter ++;
 	}
 
 	free(line);
@@ -184,8 +190,10 @@ attach_kp_kern_all(struct bpf_ctx *b)
 }
 
 /*
- * This function attaches eBPF handler to each syscall which operates on file
- * descriptor. Inspired by: 'strace -e trace=desc'
+ * attach_kp_desc -- This function attaches eBPF handler to each syscall which
+ *     operates on file descriptor.
+ *
+ * Inspired by: 'strace -e trace=desc'
  */
 static bool
 attach_kp_desc(struct bpf_ctx *b)
@@ -194,57 +202,27 @@ attach_kp_desc(struct bpf_ctx *b)
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		int res;
-		char kprobe[HANDLER_NAME_MAX_SIZE];
-		char kretprobe[HANDLER_NAME_MAX_SIZE];
 
-		if (NULL == sc_tbl[i].hlr_name)
+		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_desc != (EM_desc & sc_tbl[i].masks))
+		if (EM_desc != (EM_desc & Syscall_array[i].masks))
 			continue;
 
-		snprintf(kprobe, sizeof(kprobe),
-			"kprobe__%s",
-			sc_tbl[i].hlr_name);
+		res = attach_single_sc(b, Syscall_array[i].handler_name);
 
-		snprintf(kretprobe, sizeof(kretprobe),
-			"kretprobe__%s",
-			sc_tbl[i].hlr_name);
-
-		/* KRetProbe should be first to prevent race condition */
-		res = load_fn_and_attach_to_kretp(b,
-				sc_tbl[i].hlr_name, kretprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kretprobe, sc_tbl[i].hlr_name);
-
-			/* Kretprobe fails. There is no reason to try probe */
-			continue;
-		}
-
-		res = load_fn_and_attach_to_kp(b, sc_tbl[i].hlr_name, kprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kprobe, sc_tbl[i].hlr_name);
-
-			continue;
-		}
-
-		succ_counter ++;
+		if (res >= 0)
+			succ_counter ++;
 	}
 
 	return succ_counter > 0;
 }
 
 /*
- * This function attaches eBPF handler to each syscall which operates on
- * filenames. Inspired by 'strace -e trace=file'.
+ * attach_kp_file -- This function attaches eBPF handler to each syscall which
+ *     operates on filenames.
+ *
+ * Inspired by 'strace -e trace=file'.
  */
 static bool
 attach_kp_file(struct bpf_ctx *b)
@@ -253,57 +231,27 @@ attach_kp_file(struct bpf_ctx *b)
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		int res;
-		char kprobe[HANDLER_NAME_MAX_SIZE];
-		char kretprobe[HANDLER_NAME_MAX_SIZE];
 
-		if (NULL == sc_tbl[i].hlr_name)
+		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_file != (EM_file & sc_tbl[i].masks))
+		if (EM_file != (EM_file & Syscall_array[i].masks))
 			continue;
 
-		snprintf(kprobe, sizeof(kprobe),
-			"kprobe__%s",
-			sc_tbl[i].hlr_name);
+		res = attach_single_sc(b, Syscall_array[i].handler_name);
 
-		snprintf(kretprobe, sizeof(kretprobe),
-			"kretprobe__%s",
-			sc_tbl[i].hlr_name);
-
-		/* KRetProbe should be first to prevent race condition */
-		res = load_fn_and_attach_to_kretp(b,
-				sc_tbl[i].hlr_name, kretprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kretprobe, sc_tbl[i].hlr_name);
-
-			/* Kretprobe fails. There is no reason to try probe */
-			continue;
-		}
-
-		res = load_fn_and_attach_to_kp(b, sc_tbl[i].hlr_name, kprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kprobe, sc_tbl[i].hlr_name);
-
-			continue;
-		}
-
-		succ_counter ++;
+		if (res >= 0)
+			succ_counter ++;
 	}
 
 	return succ_counter > 0;
 }
 
 /*
- * This function attaches eBPF handler to each syscall which operates on
- * relative file path. There are no equivalents in strace.
+ * attach_kp_fileat -- This function attaches eBPF handler to each syscall
+ *     which operates on relative file path.
+ *
+ * There are no equivalents in strace.
  */
 static bool
 attach_kp_fileat(struct bpf_ctx *b)
@@ -312,60 +260,29 @@ attach_kp_fileat(struct bpf_ctx *b)
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		int res;
-		char kprobe[HANDLER_NAME_MAX_SIZE];
-		char kretprobe[HANDLER_NAME_MAX_SIZE];
 
-		if (NULL == sc_tbl[i].hlr_name)
+		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_fileat != (EM_fileat & sc_tbl[i].masks))
+		if (EM_fileat != (EM_fileat & Syscall_array[i].masks))
 			continue;
 
-		snprintf(kprobe, sizeof(kprobe),
-			"kprobe__%s",
-			sc_tbl[i].hlr_name);
+		res = attach_single_sc(b, Syscall_array[i].handler_name);
 
-		snprintf(kretprobe, sizeof(kretprobe),
-			"kretprobe__%s",
-			sc_tbl[i].hlr_name);
-
-		/* KRetProbe should be first to prevent race condition */
-		res = load_fn_and_attach_to_kretp(b,
-				sc_tbl[i].hlr_name, kretprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kretprobe, sc_tbl[i].hlr_name);
-
-			/* Kretprobe fails. There is no reason to try probe */
-			continue;
-		}
-
-		res = load_fn_and_attach_to_kp(b, sc_tbl[i].hlr_name, kprobe,
-				args.pid, 0, -1);
-
-		if (res == -1) {
-			fprintf(stderr,
-				"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-				__func__, kprobe, sc_tbl[i].hlr_name);
-
-			continue;
-		}
-
-		succ_counter ++;
+		if (res >= 0)
+			succ_counter ++;
 	}
 
 	return succ_counter > 0;
 }
 
 /*
- * Attach eBPF handlers to all file-related syscalls. Inspired by:
- * 'strace -e trace=desc,file'
+ * attach_kp_fileio -- Attach eBPF handlers to all file-related syscalls.
+ *
+ * Inspired by: 'strace -e trace=desc,file'
  */
 static bool
-attach_kp_pmemfile(struct bpf_ctx *b)
+attach_kp_fileio(struct bpf_ctx *b)
 {
 	bool res = false;
 
@@ -383,8 +300,10 @@ static const char tp_all_enter_fn[] = "tracepoint__sys_enter";
 static const char tp_all_exit_fn[]  = "tracepoint__sys_exit";
 
 /*
- * Intercept all syscalls of running kernel using TracePoint way.
- * Should be faster and better but require at kernel at least 4.6.
+ * attach_tp_all -- Intercept all syscalls of running kernel using TracePoint
+ *     way.
+ *
+ * Should be faster and better but requires kernel at least 4.6.
  *
  * XXX Not tested.
  */
@@ -395,7 +314,7 @@ attach_tp_all(struct bpf_ctx *b)
 
 	/* 'sys_exit' should be first to prevent race condition */
 	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_enter_name,
-			tp_all_enter_fn, args.pid, 0, -1);
+			tp_all_enter_fn, Args.pid, 0, -1);
 
 	if (res == -1) {
 		fprintf(stderr,
@@ -408,7 +327,7 @@ attach_tp_all(struct bpf_ctx *b)
 	}
 
 	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_exit_name,
-			tp_all_exit_fn, args.pid, 0, -1);
+			tp_all_exit_fn, Args.pid, 0, -1);
 
 	if (res == -1) {
 		fprintf(stderr,
@@ -421,7 +340,7 @@ attach_tp_all(struct bpf_ctx *b)
 }
 
 /*
- * This function parses and processes expression.
+ * attach_probes -- This function parses and processes expression.
  *
  * XXX Think about applying 'fn_name' via str_replace_all()
  *     to be more consistent
@@ -429,20 +348,20 @@ attach_tp_all(struct bpf_ctx *b)
 bool
 attach_probes(struct bpf_ctx *b)
 {
-	if (NULL == args.expr)
+	if (NULL == Args.expr)
 		goto DeFault;
 
-	if (!strcasecmp(args.expr, "trace=kp-libc-all")) {
+	if (!strcasecmp(Args.expr, "trace=kp-libc-all")) {
 		return attach_kp_libc_all(b);
-	} else if (!strcasecmp(args.expr, "trace=kp-kern-all")) {
+	} else if (!strcasecmp(Args.expr, "trace=kp-kern-all")) {
 		return attach_kp_kern_all(b);
-	} else if (!strcasecmp(args.expr, "trace=kp-file")) {
+	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
 		return attach_kp_file(b);
-	} else if (!strcasecmp(args.expr, "trace=kp-desc")) {
+	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
 		return attach_kp_desc(b);
-	} else if (!strcasecmp(args.expr, "trace=kp-pmemfile")) {
-		return attach_kp_pmemfile(b);
-	} else if (!strcasecmp(args.expr, "trace=tp-all")) {
+	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
+		return attach_kp_fileio(b);
+	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
 		return attach_tp_all(b);
 	}
 
