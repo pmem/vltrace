@@ -56,3 +56,6 @@ all:
 
 %.png: %.uml Makefile
 	plantuml $<
+
+.PHONY: clean
+clean:
