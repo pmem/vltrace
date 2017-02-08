@@ -1,0 +1,95 @@
+Output format:
+    -o, --output <file>
+        log filename
+    -t, --timestamp
+        include timestamp in output
+    -l, --format <fmt>
+        output logs format. Possible values:
+        'bin', 'binary', 'hex', 'hex_raw', 'hex_sl', 'strace', 'list' & 'help'.
+        - 'bin'/'binary' file format is the fastest one and is described
+              in trace.h.
+        - 'hex'/'hex_raw' is the fastest text format.
+        - 'hex_sl' is compromized single-line text format. If used with
+              '--filenames name_max' or '--filenames full' could be slow.
+              Implementation is not finished.
+        - 'strace' is going to emulate usual strace output, but is the
+              slowest one.
+              Implementation is not finished.
+        Default: 'hex'
+    -K, --hex-separator <sep>
+        set field separator for hex logs. Default is '\t'.
+
+Filtering:
+    -X, --failed
+        only show failed syscalls
+    -e, --expr   <expr>
+        expression, 'help' or 'list' for supported list.
+        Default: trace=kp-kern-all.
+
+Tracing:
+    -f, --full-follow-fork
+        Follow new processes created with fork()/vfork()/clone() syscall as
+        regular strace does.
+    -ff, --full-follow-fork=f
+        Same as above, but put logs for each process in separate file with
+        name <file>.pid
+        Implementation is not finished and is postponned.
+    -fff, --full-follow-fork=ff
+        Same as above, but put logs for each thread in separate file with
+        name <file>.tid.pid
+        Implementation is not finished and is postponned.
+    -F, --fast-follow-fork
+        Follow new processes created with fork()/vfork()/clone() in fast, but
+        limited, way using kernel 4.8 feature bpf_get_current_task(). This mode
+        assume "level 1" tracing only: no grandchildren or other descendants
+        will be traced.
+        Implementation is not debugged and is postponned.
+    -FF, --fast-follow-fork=F
+        Same as above, but put logs for each process in separate file with
+        name <file>.pid
+        Implementation is not finished and is postponned.
+    -FFF, --fast-follow-fork=FF
+        Same as above, but put logs for each thread in separate file with
+        name <file>.tid.pid
+        Implementation is not finished and is postponned.
+	-n, --filenames <mode>
+        Mode of fetching filenames:
+        - 'fast' - everything what we could not fit into single packet will
+            be truncated.
+        - 'name_max' - fetch-up NAME_MAX bytes of name. Every name will be sent
+            via separate packet. Processing of that packets is controlled by
+            output log format
+        - 'number' - fetch-up 'number * NAME_MAX' bytes of name. Every part of
+            name will be sent via separate packet. Processing of that packets
+            is controlled by output log format. Minimal accepted value: 1.
+            Implementation is not finished and is postponned.
+        - 'full' - will be implemented as soon as this issue will be fixed:
+              https://github.com/iovisor/bcc/issues/900
+        Default: fast
+
+Startup:
+    -p, --pid    <pid>
+        trace this PID only. Command arg should be missing
+        Press (CTRL-C) to send interrupt signal to exit.
+        Note -p "`pidof PROG`" syntax.
+    -N, --ebpf-src-dir <dir>
+        Enable checking of updated ebpf templates in directory <dir>
+
+
+Miscellaneous:
+    -d, --debug
+        enable debug output
+    -h, --help
+        print help
+    -L, --list
+        Print a list of all traceable syscalls of the running kernel.
+    -R, --ll-list
+        Print a list of all traceable low-level funcs of the running kernel.
+        WARNING: really long. ~45000 functions.
+    -B, --builtin-list
+        Print a list of all syscalls known by glibc.
+
+examples:
+    ./strace.ebpf           # trace all syscalls in the system
+    ./strace.ebpf ls        # trace syscalls of ls command
+    ./strace.ebpf -p 342    # only trace PID 342

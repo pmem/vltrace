@@ -1,0 +1,31 @@
+List of supported sets:
+	* Help:
+		- 'help', 'list'    This list.
+
+	* Intercepting using KProbe:
+		- 'kp-fileio'          FileIO - any syscall related to file IO
+		- 'kp-file'            SCs with path in args
+		- 'kp-desc'            SCs with fdesd in args
+		- 'kp-kern-all'        All syscalls provided by kernel.
+		-                      A bit slower.
+		- 'kp-libc-all'        All syscalls provided by glibc.
+		                       This list is 36% shorter
+		                       than previous and loads faster.
+		- 'kp-sc_glob:*'       Choose SCs by glob pattern, such as 'set*'
+		- 'kp-sc_re:.*'        Choose SCs by re pattern, such as 'set.*'
+		- 'kp-raw_glob:*'      Choose low-level funcs by glob pattern,
+		                       such as 'raw_glob:ext4_*'
+		- 'kp-raw_re:.*'       Choose low-level funcs by re pattern,
+		                       such as 'raw_glob:ext4_*'
+		- 'kp-XXXX'            Choose exact single SC by name,
+		                       such as 'open'
+		- 'kp-raw:XXXX'        Choose exact single low-level func by
+		                       name, such as 'raw:ext4_mkdir'
+
+	 * Intercepting using TracePoints:
+	   Currently malfunctions because of this bug:
+	   https://github.com/iovisor/bcc/issues/748
+		- 'tp-all'             All syscalls provided by kernel.
+	                           This option starts many times faster than
+	                           corresponding kprobe ones, but can eat
+	                           more of CPU resource.

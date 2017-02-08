@@ -1,4 +1,4 @@
-# Copyright 2016, Intel Corporation
+# Copyright 2016-2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -59,15 +59,39 @@ nondebug/libstrace.a-clean:
 nondebug/libebpf.a-clobber: nondebug/libebpf.a-clean
 nondebug/libstrace.a-clobber: nondebug/libstrace.a-clean
 
+nondebug/libebpf.a-cstyle:
+	$(MAKE) -C ebpf cstyle
+
+nondebug/libstrace.a-cstyle:
+	$(MAKE) -C libstrace cstyle
+
 .PHONY: nondebug/libebpf.a-clean nondebug/libstrace.a-clean
 .PHONY: nondebug/libebpf.a-clobber nondebug/libstrace.a-clobber
+.PHONY: nondebug/libebpf.a-cstyle nondebug/libstrace.a-cstyle
 
-OBJS = main.o \
+
+# .txt sources
+TXT_SRCS = \
+	help_text.txt \
+	usage_text.txt \
+	trace_list_text.txt \
+
+
+TXT_OBJS = $(addsuffix .o,$(TXT_SRCS))
+
+%.txt.o: %.txt Makefile
+	$(LD) -r -b binary -o $@ $<
+
+OBJS = \
+	   txt.o \
+	   main.o \
+	   cl_parser.o \
+	$(TXT_OBJS)
 
 
 CFLAGS += $(shell $(PKG_CONFIG) --cflags libbcc)
 
-# XXX libbcc expects multi-treading safity. Currently it's required for
+# XXX libbcc expects multi-treading safety. Currently it's required for
 # print_event_cb.o only, although we will apply it for overall application.
 CFLAGS += -pthread
 
@@ -81,11 +105,10 @@ endif
 
 CFLAGS += -I compat
 CFLAGS += -I libstrace
-CFLAGS += -I ebpf
 
 LDFLAGS += -g -Wextra
 
-# XXX libbcc expects multi-treading safity.
+# XXX libbcc expects multi-treading safety.
 LDFLAGS += -pthread
 
 LIBS += $(shell $(PKG_CONFIG) --libs libbcc)
@@ -110,47 +133,67 @@ $(PROGS).o: $(PROGS).c Makefile
 $(PROGS): $(PROGS).o Makefile
 	$(CC) $(PROGS_CFLAGS) -o $@ $<
 
-.PHONY: run
-run: $(PROGS)
+.PHONY: run run-direct run-tp run-libc run-kern run-strace
+run: $(PROGS) run-direct run-tp run-libc run-kern run-strace
+run-direct: $(PROGS)
 	time -p -v sudo ./$(PROGS) 500000
+
+run-tp: $(PROGS)
 	@echo "Tracepoint's version is skipped because of this bug:"
 	@echo "\t - https://github.com/iovisor/bcc/issues/748"
 	#time -p -v sudo ./strace.ebpf -l hex -e trace=tp-all \
-	#	-o $(TMP)/$(PROGS).tp-all.trc ./$(PROGS) 50000
+	#	-o $(TMP)/$(PROGS).tp-all.trc ./$(PROGS) 500000
 	#ln -f -s $(TMP)/$(PROGS).tp-all.trc $(PROGS).tp-all.trc
+
+run-libc: $(PROGS)
 	@echo
 	time -p -v sudo ./strace.ebpf -l hex -e trace=kp-libc-all \
-		-o $(TMP)/$(PROGS).libc-all.trc ./$(PROGS) 50000
+		-o $(TMP)/$(PROGS).libc-all.trc ./$(PROGS) 500000
 	ln -f -s $(TMP)/$(PROGS).libc-all.trc $(PROGS).libc-all.trc
+
+run-kern: $(PROGS)
 	@echo
 	time -p -v sudo ./strace.ebpf -l hex -e trace=kp-kern-all  \
-		-o $(TMP)/$(PROGS).kern-all.trc ./$(PROGS) 50000
+		-o $(TMP)/$(PROGS).kern-all.trc ./$(PROGS) 500000
 	ln -f -s $(TMP)/$(PROGS).kern-all.trc $(PROGS).kern-all.trc
+
+run-strace: $(PROGS)
 	@echo
 	time -p -v sudo strace \
-		-o $(TMP)/$(PROGS).trc ./$(PROGS) 10000
+		-o $(TMP)/$(PROGS).trc ./$(PROGS) 100000
 	ln -f -s $(TMP)/$(PROGS).trc $(PROGS).trc
 
-.PHONY: redis
-redis:
+.PHONY: redis redis-prepare redis-direct redis-tp redis-libc redis-kern redis-strace
+redis: redis-direct redis-tp redis-libc redis-kern redis-strace
+redis-prepare:
 	@echo ">>>>> WARNING: Please disable system redis service in advance"
 	-redis-cli shutdown
 	# Should be same as in make-redis.sh
 	$(ECHO) > redis-server.log
+
+redis-direct: redis-prepare
 	sudo ./make-redis.sh
+
+redis-tp: redis-prepare
 	@echo "Tracepoint's version is skipped because of this bug:"
 	@echo "\t - https://github.com/iovisor/bcc/issues/748"
-	#sudo ./make-redis.sh ./strace.ebpf -l hex -e trace=tp-all \
+	#sudo ./make-redis.sh ./strace.ebpf -l hex -f -e trace=tp-all \
 	#	-o $(TMP)/redis-server.tp-all.trc
 	#ln -f -s $(TMP)/redis-server.tp-all.trc redis-server.tp-all.trc
+
+redis-libc: redis-prepare
 	@echo
-	sudo ./make-redis.sh ./strace.ebpf -l hex -e trace=kp-libc-all \
+	sudo ./make-redis.sh ./strace.ebpf -l hex -f -e trace=kp-libc-all \
 		-o $(TMP)/redis-server.libc-all.trc
 	ln -f -s $(TMP)/redis-server.libc-all.trc redis-server.libc-all.trc
+
+redis-kern: redis-prepare
 	@echo
-	sudo ./make-redis.sh ./strace.ebpf -l hex -e trace=kp-kern-all  \
+	sudo ./make-redis.sh ./strace.ebpf -l hex -f -e trace=kp-kern-all  \
 		-o $(TMP)/redis-server.kern-all.trc
 	ln -f -s $(TMP)/redis-server.kern-all.trc redis-server.kern-all.trc
+
+redis-strace: redis-prepare
 	@echo
 	sudo ./make-redis.sh strace -f \
 		-o $(TMP)/redis-server.trc
