@@ -1,5 +1,5 @@
 @startuml
-scale 0.50
+scale 2.0
 start
 :Command Line Parsing;
 :Loading "command";
@@ -13,7 +13,10 @@ end note
 note right
 Optional
 end note
-while (cont?)
+while (cont?) is (true)
 partition libbcc {
 	:poll() - wait for events;
 }
+endwhile (false)
+stop
+@enduml

@@ -32,12 +32,27 @@
 # Makefile -- Makefile for documentation
 #
 
+all:
+.PHONY: all
 
-DESIGN.pdf: DESIGN.rst Makefile DSGN_rst_style.yaml *.uml
+%.c.o: %.c Makefile
+	$(LD) -r -b binary -o $@ $<
+
+%.pdf: %.rst Makefile DSGN_rst_style.yaml \
+		DSGN_beh_act_dia.png \
+		DSGN_struct_comp_dia.png
 	rst2pdf -c -b 1 \
 		--verbose \
 		--default-dpi=300 \
 		-l en \
-		-e preprocess -e plantuml \
+		-e preprocess \
 		-s DSGN_rst_style.yaml \
 		$<
+
+%.pdf: %.md Makefile \
+		DSGN_beh_act_dia.png \
+		DSGN_struct_comp_dia.png
+	pandoc -t beamer -o $@ $<
+
+%.png: %.uml Makefile
+	plantuml $<

@@ -1,6 +1,6 @@
 @startuml
 skinparam componentStyle uml2
-scale 0.6
+scale 2.0
 package "User Space" {
 [Traced Application] as TA
 [Tracing Tool] as TT
