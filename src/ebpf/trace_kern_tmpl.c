@@ -36,12 +36,12 @@
  */
 
 /*
- * SYSCALL_NAME() entry handler
+ * kprobe__SYSCALL_NAME -- SYSCALL_NAME() entry handler
  */
 int
 kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct first_step_t fs = {};
+	struct first_step_t fs;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
@@ -52,7 +52,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	fs.arg_3 = PT_REGS_PARM3(ctx);
 	fs.arg_4 = PT_REGS_PARM4(ctx);
 	fs.arg_5 = PT_REGS_PARM5(ctx);
-	fs.arg_5 = PT_REGS_PARM6(ctx);
+	fs.arg_6 = PT_REGS_PARM6(ctx);
 
 	tmp_i.update(&pid_tid, &fs);
 
@@ -60,13 +60,13 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 };
 
 /*
- * SYSCALL_NAME() exit handler
+ * kretprobe__SYSCALL_NAME -- SYSCALL_NAME() exit handler
  */
 int
 kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
 	struct first_step_t *fsp;
-	struct ev_dt_t ev = {};
+	struct ev_dt_t ev;
 
 	u64 cur_nsec = bpf_ktime_get_ns();
 
@@ -75,6 +75,7 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	if (fsp == 0)
 		return 0;
 
+	ev.packet_type = 0; /* No additional packets */
 	ev.sc_id = -2; /* SysCall ID */
 	ev.arg_1 = fsp->arg_1;
 	ev.arg_2 = fsp->arg_2;
@@ -86,10 +87,11 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.start_ts_nsec = fsp->start_ts_nsec;
 	ev.finish_ts_nsec = cur_nsec;
 	ev.ret = PT_REGS_RC(ctx);
+	memset(ev.sc_name, 0, sizeof(ev.sc_name));
 	strcpy(ev.sc_name, "SYSCALL_NAME");
 
-	const size_t ev_size = offsetof(struct ev_dt_t, sc_name) +
-		sizeof(ev.sc_name);
+	enum { ev_size = offsetof(struct ev_dt_t, sc_name) +
+		sizeof(ev.sc_name) };
 	events.perf_submit(ctx, &ev, ev_size);
 
 	tmp_i.delete(&pid_tid);

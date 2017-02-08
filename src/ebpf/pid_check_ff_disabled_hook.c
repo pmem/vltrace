@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,28 +31,11 @@
  */
 
 /*
- * trace_head.c -- The head for generated eBPF code. Uses BCC, eBPF.
+ * pid_check_ff_disabled_hook.c -- Pid check hook for no-follow-fork mode.
  */
 
-#include <uapi/linux/ptrace.h>
-#include <uapi/linux/limits.h>
-#include <linux/sched.h>
-
-#include "trace.h"
-
-struct first_step_t {
-    s64 arg_1;
-    s64 arg_2;
-    s64 arg_3;
-    s64 arg_4;
-    s64 arg_5;
-    s64 arg_6;
-    u64 start_ts_nsec;
-};
-
-/* The set of our children_pid */
-BPF_HASH(children_map, u64, u64);
-
-
-BPF_HASH(tmp_i, u64, struct first_step_t);
-BPF_PERF_OUTPUT(events);
+{
+	if ((pid_tid >> 32) != TRACED_PID) {
+		return 0;
+	}
+}

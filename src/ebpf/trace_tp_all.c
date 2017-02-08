@@ -35,12 +35,12 @@
  */
 
 /*
- * Syscall's entry handler.
+ * tracepoint__sys_enter -- Syscall's entry handler.
  */
 int
 tracepoint__sys_enter(struct pt_regs *ctx)
 {
-	struct first_step_t fs = {};
+	struct first_step_t fs;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
@@ -55,13 +55,13 @@ tracepoint__sys_enter(struct pt_regs *ctx)
 };
 
 /*
- * Syscall's exit handler.
+ * tracepoint__sys_exit -- Syscall's exit handler.
  */
 int
 tracepoint__sys_exit(struct pt_regs *ctx)
 {
 	struct first_step_t *fsp;
-	struct ev_dt_t ev = {};
+	struct ev_dt_t ev;
 
 	u64 cur_nsec = bpf_ktime_get_ns();
 
@@ -71,9 +71,11 @@ tracepoint__sys_exit(struct pt_regs *ctx)
 		return 0;
 
 	bpf_probe_read(&ev.comm, sizeof(ev.comm), fsp->comm);
-	bpf_probe_read(&ev.open.fl_nm,
-			sizeof(ev.open.fl_nm),
-			(void *)fsp->fl_nm);
+	bpf_probe_read(&ev.open.str,
+			sizeof(ev.open.str),
+			(void *)fsp->str);
+
+	ev.packet_type = 0; /* No additional packets */
 	/* SysCall ID */
 	/* ev.sc_id = __NR_open; */
 	ev.pid_tid = pid_tid;

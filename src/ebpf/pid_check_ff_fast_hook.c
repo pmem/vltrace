@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,28 +31,41 @@
  */
 
 /*
- * trace_head.c -- The head for generated eBPF code. Uses BCC, eBPF.
+ * pid_check_ff_fast_hook.c -- Pid check hook for fast-follow-fork mode.
  */
 
-#include <uapi/linux/ptrace.h>
-#include <uapi/linux/limits.h>
-#include <linux/sched.h>
+{
+	bool t = false;
 
-#include "trace.h"
+	if ((pid_tid >> 32) == TRACED_PID) {
+		t |= true;
+	} else {
+		struct task_struct *task;
+		struct task_struct *real_parent_task;
+		u64 ppid;
 
-struct first_step_t {
-    s64 arg_1;
-    s64 arg_2;
-    s64 arg_3;
-    s64 arg_4;
-    s64 arg_5;
-    s64 arg_6;
-    u64 start_ts_nsec;
-};
+		task = (struct task_struct *)bpf_get_current_task();
 
-/* The set of our children_pid */
-BPF_HASH(children_map, u64, u64);
+		/*
+		 * XXX Something wrong is here with real_parent. Probably we
+		 *    should use another parent pointer.
+		 *
+		 * - https://github.com/iovisor/bcc/issues/799
+		 * - http://lxr.free-electrons.com/source/kernel/sys.c?v=4.8#L847
+		 */
+		bpf_probe_read(&real_parent_task,
+				sizeof(real_parent_task),
+				&task->real_parent);
 
+		bpf_probe_read(&ppid,
+			   sizeof(ppid),
+			   &real_parent_task->pid);
 
-BPF_HASH(tmp_i, u64, struct first_step_t);
-BPF_PERF_OUTPUT(events);
+		if (ppid == TRACED_PID)
+			t |= true;
+	}
+
+	if (!t) {
+		return 0;
+	}
+}

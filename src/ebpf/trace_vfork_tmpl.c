@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,28 +31,66 @@
  */
 
 /*
- * trace_head.c -- The head for generated eBPF code. Uses BCC, eBPF.
+ * trace_vfork_tmpl.c -- Trace vfork() syscall in full-follow-fork mode.
+ *                       Uses BCC, eBPF.
  */
 
-#include <uapi/linux/ptrace.h>
-#include <uapi/linux/limits.h>
-#include <linux/sched.h>
+/*
+ * kprobe__SYSCALL_NAME -- SYSCALL_NAME() entry handler
+ */
+int
+kprobe__SYSCALL_NAME(struct pt_regs *ctx)
+{
+	struct first_step_t fs;
+	u64 pid_tid = bpf_get_current_pid_tgid();
 
-#include "trace.h"
+	PID_CHECK_HOOK
 
-struct first_step_t {
-    s64 arg_1;
-    s64 arg_2;
-    s64 arg_3;
-    s64 arg_4;
-    s64 arg_5;
-    s64 arg_6;
-    u64 start_ts_nsec;
+	fs.start_ts_nsec = bpf_ktime_get_ns();
+	fs.arg_1 = PT_REGS_PARM1(ctx);
+	fs.arg_2 = PT_REGS_PARM2(ctx);
+	fs.arg_3 = PT_REGS_PARM3(ctx);
+	fs.arg_4 = PT_REGS_PARM4(ctx);
+	fs.arg_5 = PT_REGS_PARM5(ctx);
+	fs.arg_6 = PT_REGS_PARM6(ctx);
+
+	tmp_i.update(&pid_tid, &fs);
+
+	return 0;
 };
 
-/* The set of our children_pid */
-BPF_HASH(children_map, u64, u64);
+/*
+ * kretprobe__SYSCALL_NAME -- SYSCALL_NAME() exit handler
+ */
+int
+kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
+{
+	struct first_step_t *fsp;
+	struct ev_dt_t ev;
 
+	u64 cur_nsec = bpf_ktime_get_ns();
 
-BPF_HASH(tmp_i, u64, struct first_step_t);
-BPF_PERF_OUTPUT(events);
+	u64 pid_tid = bpf_get_current_pid_tgid();
+	fsp = tmp_i.lookup(&pid_tid);
+	if (fsp == 0)
+		return 0;
+
+	ev.packet_type = 0; /* No additional packets */
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.pid_tid = pid_tid;
+	ev.start_ts_nsec = fsp->start_ts_nsec;
+	ev.finish_ts_nsec = cur_nsec;
+	ev.ret = PT_REGS_RC(ctx);
+
+	if (0 < ev.ret) {
+		/* const */ u64 one = 1;
+
+		children_map.update(&ev.ret, &one);
+	}
+
+	events.perf_submit(ctx, &ev, offsetof(struct ev_dt_t, arg_1));
+
+	tmp_i.delete(&pid_tid);
+
+	return 0;
+}

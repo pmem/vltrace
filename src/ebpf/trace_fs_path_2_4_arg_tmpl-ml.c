@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,7 +31,8 @@
  */
 
 /*
- * trace_libc_tmpl.c -- Trace syscalls with numbers known from libc.
+ * trace_fs_path_2_4_arg_tmpl-ml.c -- Trace syscalls with numbers known from
+ *    libc and filename as first argument. Multi-packet version.
  *    Uses BCC, eBPF.
  */
 
@@ -66,7 +67,13 @@ int
 kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
 	struct first_step_t *fsp;
-	struct ev_dt_t ev;
+
+	enum { _pad_size = offsetof(struct ev_dt_t, str) + NAME_MAX };
+
+	union {
+		struct ev_dt_t ev;
+		char _pad[_pad_size];
+	} u;
 
 	u64 cur_nsec = bpf_ktime_get_ns();
 
@@ -75,21 +82,30 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	if (fsp == 0)
 		return 0;
 
-	ev.packet_type = 0; /* No additional packets */
-	ev.sc_id = SYSCALL_NR; /* SysCall ID */
-	ev.arg_1 = fsp->arg_1;
-	ev.arg_2 = fsp->arg_2;
-	ev.arg_3 = fsp->arg_3;
-	ev.arg_4 = fsp->arg_4;
-	ev.arg_5 = fsp->arg_5;
-	ev.arg_6 = fsp->arg_6;
-	ev.pid_tid = pid_tid;
-	ev.start_ts_nsec = fsp->start_ts_nsec;
-	ev.finish_ts_nsec = cur_nsec;
-	ev.ret = PT_REGS_RC(ctx);
+	u.ev.packet_type = 2; /* 2 additional packets */
+	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	u.ev.arg_1 = fsp->arg_1;
+	u.ev.arg_2 = fsp->arg_2;
+	u.ev.arg_3 = fsp->arg_3;
+	u.ev.arg_4 = fsp->arg_4;
+	u.ev.arg_5 = fsp->arg_5;
+	u.ev.arg_6 = fsp->arg_6;
+	u.ev.pid_tid = pid_tid;
+	u.ev.start_ts_nsec = fsp->start_ts_nsec;
+	u.ev.finish_ts_nsec = cur_nsec;
+	u.ev.ret = PT_REGS_RC(ctx);
+	/* XXX enum ??? */
+	// const size_t ev_size = offsetof(struct ev_dt_t, sc_name);
+	// events.perf_submit(ctx, &u.ev, ev_size);
+	events.perf_submit(ctx, &u.ev, offsetof(struct ev_dt_t, sc_name));
 
-	enum { ev_size = offsetof(struct ev_dt_t, sc_name) };
-	events.perf_submit(ctx, &ev, ev_size);
+	u.ev.packet_type = -1; /* first additional packet */
+	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp->arg_2);
+	events.perf_submit(ctx, &u.ev, _pad_size);
+
+	u.ev.packet_type = -2; /* second additional packet */
+	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp->arg_4);
+	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	tmp_i.delete(&pid_tid);
 
