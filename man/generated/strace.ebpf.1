@@ -2,7 +2,7 @@
 .\"
 .TH "strace" "1" "pmem Tools version 1.0.2" "" "" ""
 .hy
-.\" Copyright 2014-2016, Intel Corporation
+.\" Copyright 2014-2017, Intel Corporation
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -33,8 +33,8 @@
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .SH NAME
 .PP
-\f[B]strace.ebpf\f[] \-\- extreamely fast strace\-like tool builded on
-top of eBPF and KProbe technologies.
+\f[B]strace.ebpf\f[] \-\- extreamely fast strace\-like tool built on top
+of eBPF and KProbe technologies.
 .SH SYNOPSIS
 .IP
 .nf
@@ -46,85 +46,211 @@ $\ strace.ebpf\ [options]\ [command\ [arg\ ...]]
 .PP
 strace.ebpf is a limited functional strace equivalent for Linux but
 based on eBPF and KProbe technologies and libbcc library.
-.IP \[bu] 2
-Pros:
-.RS 2
+.SH FEATURES
 .IP \[bu] 2
 Used combination of technologies allow tool to be about one order faster
 than regular system strace.
 .IP \[bu] 2
 This tool consume much less amount of CPU resource
 .IP \[bu] 2
-Output of this tool is designed to be suiteable for processing with
+Output of this tool is designed to be suitable for processing with
 classical tools and technologies, like awk.
 .IP \[bu] 2
 Could trace syscalls system\-wide.
-.RE
 .IP \[bu] 2
-Cons:
-.RS 2
+Could trace init (process with \[aq]pid == 1\[aq]).
+Finally we have a proper tool for debugging systemd ;\-)
+.PP
+WARNING: System\-wide tracing can fill out your disk really fast.
+.SH LIMITATIONS
 .IP \[bu] 2
 Limited functionality
 .IP \[bu] 2
 Slow attaching and detaching
 .IP \[bu] 2
-Asyncronity.
-If user will not provide enough system resources for performace tool
+Asynchronity.
+If user will not provide enough system resources for performance tool
 will skip some calls.
 Tool does not assume to try any work\-around behind the scene.
+.IP \[bu] 2
+Depend on modern kernel features
+.IP \[bu] 2
+Underlaing eBPF technology still is in active development.
+So we should expect hangs and crashes more often as for regular strace,
+especially on low\-res systems.
+.IP \[bu] 2
+Truncating of very long filenames (longer then ~NAME_MAX bytes) to
+~NAME_MAX.
+Details:
+.RS 2
+.IP \[bu] 2
+https://github.com/iovisor/bcc/issues/900
 .RE
+.SH Outdated limitations
 .PP
-WARNING: System\-wide tracing can fill out your disk really fast.
+Could be useful with old libbcc versions.
+.IP \[bu] 2
+Limited possibility to run few instances simultaneously.
+Details:
+.RS 2
+.IP \[bu] 2
+https://github.com/iovisor/bcc/pull/918
+.IP \[bu] 2
+https://github.com/iovisor/bcc/issues/872
+.RE
+.SH SYSTEM REQUIREMENTS
+.IP \[bu] 2
+libbcc after commit e1f7462ceea60297b8ceb8e4dd9927069fce46de
+.IP \[bu] 2
+Linux Kernel 4.4 or later (for Perf Event Circular Buffer)
+.IP \[bu] 2
+CAP_SYS_ADMIN capability for bpf() syscall
+.IP \[bu] 2
+mounted tracefs
 .SH OPTIONS
+.SH Output format:
+.PP
+\f[C]\-o,\ \-\-output\ <file>\f[]
+.PP
+filename
 .PP
 \f[C]\-t,\ \-\-timestamp\f[]
 .PP
 include timestamp in output
 .PP
-\f[C]\-X,\ \-\-failed\f[]
-.PP
-only show failed syscalls
-.PP
-\f[C]\-d,\ \-\-debug\f[]
-.PP
-enable debug output
-.PP
-\f[C]\-p,\ \-\-pid\f[]
-.PP
-this PID only.
-Command arg should be missing
-.PP
-\f[C]\-o,\ \-\-output\f[]
-.PP
-filename
-.PP
-\f[C]\-l,\ \-\-format\f[]
+\f[C]\-l,\ \-\-format\ <fmt>\f[]
 .PP
 output logs format.
 Possible values:
 .IP
 .nf
 \f[C]
-\[aq]bin\[aq],\ \[aq]binary\[aq],\ \[aq]hex\[aq],\ \[aq]strace\[aq],\ \[aq]list\[aq]\ &\ \[aq]help\[aq].
+\[aq]bin\[aq],\ \[aq]binary\[aq],\ \[aq]hex\[aq],\ \[aq]hex_raw\[aq],\ \[aq]hex_sl\[aq],\ \[aq]strace\[aq],\ \[aq]list\[aq]\ &\ \[aq]help\[aq].
 \f[]
 .fi
-.PP
-\[aq]bin\[aq]/\[aq]binary\[aq] file format is described in generated
-trace.h.
-If current directory is not writable generating is skipped.
+.IP \[bu] 2
+\[aq]bin\[aq]/\[aq]binary\[aq] file format is the fastest one and is
+described in generated trace.h.
+If current directory is not writable generating of trace.h is skipped.
+.IP \[bu] 2
+\[aq]hex\[aq]/\[aq]hex_raw\[aq] the fastest text log format.
+Records for some calls could be splitted in few lines if used with
+\[aq]\-\-filenames name_max\[aq] or like.
+.IP \[bu] 2
+\[aq]hex_sl\[aq] one\-line text log format.
+Assembling syscall\[aq]s record into one line by this tool will improove
+readability and simplify processing but could slowdown this tool if used
+with \[aq]\-\-filenames name_max\[aq] or \[aq]\-\-filenames full\[aq].
+Implementation is not finished and is postponned.
+.IP \[bu] 2
+\[aq]strace\[aq] is going to emulate usual strace output, but is the
+slowest one.
+Assume assembling syscall\[aq]s packets into one line.
+Implementation is not finished and is postponned.
 .PP
 Default: \[aq]hex\[aq]
 .PP
-\f[C]\-K,\ \-\-hex\-separator\f[]
+\f[C]\-K,\ \-\-hex\-separator\ <sep>\f[]
 .PP
 set field separator for hex logs.
-Default is \[aq]\[aq].
+Default is \[aq]\\t\[aq].
+.SH Filtering:
 .PP
-\f[C]\-e,\ \-\-expr\f[]
+\f[C]\-X,\ \-\-failed\f[]
+.PP
+only show failed syscalls
+.PP
+\f[C]\-e,\ \-\-expr\ <expr>\f[]
 .PP
 expression, \[aq]help\[aq] or \[aq]list\[aq] for supported list.
 .PP
 Default: trace=kp\-kern\-all.
+.SH Tracing:
+.PP
+\f[C]\-f,\ \-\-full\-follow\-fork\f[]
+.PP
+Follow new processes created with fork()/vfork()/clone() syscall as
+regular strace does.
+.PP
+\f[C]\-ff,\ \-\-full\-follow\-fork=f\f[]
+.PP
+Same as above, but put logs for each process in separate file with name
+<file>.pid Implementation is not finished and is postponned.
+.PP
+\f[C]\-fff,\ \-\-full\-follow\-fork=ff\f[]
+.PP
+Same as above, but put logs for each thread in separate file with name
+<file>.tid.pid Implementation is not finished and is postponned.
+.PP
+\f[C]\-F,\ \-\-fast\-follow\-fork\f[]
+.PP
+Follow new processes created with fork()/vfork()/clone() in fast, but
+limited, way using kernel 4.8 feature bpf_get_current_task().
+This mode assume "level 1" tracing only: no grandchildren or other
+descendants will be traced.
+Implementation is not debugged and is postponned.
+Details: \- https://github.com/iovisor/bcc/issues/799 \-
+http://lxr.free\-electrons.com/source/kernel/sys.c?v=4.8#L847
+.PP
+\f[C]\-FF,\ \-\-fast\-follow\-fork=F\f[]
+.PP
+Same as above, but put logs for each process in separate file with name
+<file>.pid Implementation is not finished and is postponned.
+.PP
+\f[C]\-FFF,\ \-\-fast\-follow\-fork=FF\f[]
+.PP
+Same as above, but put logs for each process in separate file with name
+<file>.tid.pid Implementation is not finished and is postponned.
+.PP
+\f[C]\-n,\ \-\-filenames\ <mode>\f[]
+.PP
+eBPF virtual machine is extremely limited in available memory.
+Also currently there are no ways to calculate a len of strings.
+For this reason we introduced four modes of fetching file\-names: \-
+\[aq]fast\[aq] \- everything what we could not fit into single packet
+will be truncated.
+\- \[aq]name_max\[aq] \- fetch\-up NAME_MAX bytes of name.
+Every name will be sent via separate packet.
+Processing of that packets is controlled by output log format.
+\- \[aq]number\[aq] \- fetch\-up \[aq]number * NAME_MAX\[aq] bytes of
+name.
+Every part of name will be sent via separate packet.
+Processing of that packets is controlled by output log format.
+Minimal accepted value: 1.
+Implementation is not finished and is postponned.
+\- \[aq]full\[aq] \- will be implemented as soon as this issue will be
+fixed: https://github.com/iovisor/bcc/issues/900
+.PP
+Default: fast
+.SH Startup:
+.PP
+\f[C]\-p,\ \-\-pid\ <pid>\f[]
+.PP
+trace this PID only.
+In current version \f[C]command\f[] arg should be missing.
+Press (CTRL\-C) to send interrupt signal to exit.
+Note
+.IP
+.nf
+\f[C]
+\-p\ "`pidof\ PROG`"
+\f[]
+.fi
+.PP
+syntax.
+.PP
+\f[C]\-N,\ \-\-ebpf\-src\-dir\ <dir>\f[]
+.PP
+Enable checking of updated ebpf templates in directory <dir>.
+.SH Miscellaneous:
+.PP
+\f[C]\-d,\ \-\-debug\f[]
+.PP
+enable debug output
+.PP
+\f[C]\-h,\ \-\-help\f[]
+.PP
+print help
 .PP
 \f[C]\-L,\ \-\-list\f[]
 .PP
@@ -137,18 +263,22 @@ Print a list of all traceable low\-level funcs of the running kernel.
 WARNING: really long.
 ~45000 functions for 4.4 kernel.
 .PP
-\f[C]\-b,\ \-\-builtin\-list\f[]
+\f[C]\-B,\ \-\-builtin\-list\f[]
 .PP
 Print a list of all syscalls known by glibc.
-.PP
-\f[C]\-h,\ \-\-help\f[]
-.PP
-print help
 .SH CONFIGURATION
 .PP
 ** System Configuring **
 .IP "1." 3
-You should provide permissions to access tracefs for final user.
+You should provide permissions to access tracefs for final user
+according to your distro documentation.
+Some of possible options:
+.RS 4
+.IP \[bu] 2
+In /etc/fstab add mode=755 option for debugfs AND tracefs.
+.IP \[bu] 2
+Use sudo
+.RE
 .IP "2." 3
 It\[aq]s good to put this command in init scripts such as local.rc:
 .RS 4
@@ -159,33 +289,35 @@ It will significantly improve performance and avoid \[aq]Lost
 events\[aq]
 .RE
 .IP "3." 3
-You should increase "Open File Limit", for example according to this
-instruction:
+You should increase "Open File Limit" according to your distro
+documentation.
+Few common ways you can find in this instruction:
 .RS 4
 .PP
 https://easyengine.io/tutorials/linux/increase\-open\-files\-limit/
 .RE
+.IP "4." 3
+Kernel headers for running kernel should be installed.
+.IP "5." 3
+CAP_SYS_ADMIN capability should be provided for user for bpf() syscall.
+In the newest kernel (4.10 ?) there is alternate option, but your should
+found it youself.
 .SH FILES
 .PP
-Putting into current directory following files allow to customize eBPF
-code for supporting more newer eBPF VM features in newer kernels.
-Also if current directory does not contain trace.h strace.ebpf on first
-start saves built\-in trace.h into current directory.
+Putting into directory, supplied with \-N option, modified template
+files allow to customize eBPF code for supporting more newer eBPF VM
+features in newer kernels.
+.PP
+Also if current directory does not contain trace.h file, strace.ebpf on
+first start saves built\-in trace.h into current directory.
 Saved built\-in describe binary log\[aq]s format.
 .IP \[bu] 2
 trace.h
 .IP \[bu] 2
-trace_head.c
-.IP \[bu] 2
-trace_tp_all.c
-.IP \[bu] 2
-trace_kern_tmpl.c
-.IP \[bu] 2
-trace_libc_tmpl.c
-.IP \[bu] 2
-trace_file_tmpl.c
-.IP \[bu] 2
-trace_fileat_tmpl.c
+\&...
+.PP
+The rest of files could be figured out by looking into debug output,
+into eBPF source code.
 .SH EXAMPLES
 .SH Example output:
 .PP
