@@ -15,3 +15,9 @@ https://github.com/iovisor/bcc
 Some old libbcc packages require manual coping of libbcc.pc from sources to
 appropriate place in a system. In case of Ubuntu 16.04 LTS appropriate place
 is /usr/lib/x86_64-linux-gnu/pkgconfig/libbcc.pc.
+
+** CONTACTS **
+
+For more information on this library, contact
+Vitalii Chernookyi (vitalii.chernookyi@intel.com),
+or create an issue at https://github.com/vitalyvch/strace.ebpf/issues
