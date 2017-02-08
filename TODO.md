@@ -1,37 +1,40 @@
-TODO
-#####
+# TODO
 
 1. Performance improovement
 ============================
 
 Currently we require a bit more than 1000 nsec for tracing single syscall.
 It is not bad but there are at least few places which could allow us to
-reduce that values may be to 600 nsec. Every syscall itself currently require
-a bit more than 100 nsec for entering, and close value for returning. So a bit
-more then 200 nsec together.
+reduce this value may be to 600 nsec. Every syscall itself currently requires
+a bit more than 100 nsec for entering, and close to the same value for
+returning. So a bit more than 200 nsec together.
 
 1.1 Extra poll()
 -----------------
 
-Currently libbcc do two same poll() syscalls per iter. There are no reason for
+_Currently libbcc does two poll() same syscalls per iter. There are no reason for
 it and we should drop it. It will improove our time for about 200 nsec, but it
-is a libbcc bug. Back trace for one of that poll() syscalls:
+is a libbcc bug. Back trace for one of that poll() syscalls:_
 
+```
 (gdb) bt
 #0  poll () at ../sysdeps/unix/syscall-template.S:84
 #1  0x00007f9c40a07566 in perf_reader_poll () from /usr/lib/x86_64-linux-gnu/libbcc.so.0
 #2  0x0000000000401a7b in kprobe_poll (b=<optimized out>, timeout=<optimized out>) at BPF.c:82
 #3  0x000000000040175d in main (argc=<optimized out>, argv=0x7fffe635c888) at snoop.c:228
+```
+
+GitHub issue: https://github.com/iovisor/bcc/issues/779
 
 1.2 Tracepoints support
 ------------------------
 
-Currently kernel provide a way for fast intercepting of all syscalls together.
+Currently kernel provides a way for fast intercepting of all syscalls together.
 But we temporarily can't use it because of this bug:
 
     - https://github.com/iovisor/bcc/issues/748
 
-As soon as bug will be fixed we should try it one time more.
+As soon as this bug will be fixed we should try it one time more.
 
 1.3 out buffering
 ------------------
@@ -40,14 +43,15 @@ Optimization of this place is critical to achieve maximum possible log
 bandwidth. Most likely we should use fd directly.
 
 
-2. Debuging
-============
+2. Debugging
+=============
 
 2.1 Enable Valgrind
 --------------------
 
-Currently Valgrind fails with a message like:
+_Currently Valgrind fails with a message like:_
 
+```
 --12470-- WARNING: unhandled amd64-linux syscall: 321
 ==12470==    at 0x77F7C19: syscall (syscall.S:38)
 ==12470==    by 0x5129133: bpf_create_map (in /usr/lib/x86_64-linux-gnu/libbcc.so.0.1.8)
@@ -65,6 +69,8 @@ Currently Valgrind fails with a message like:
 --12470-- Read the file README_MISSING_SYSCALL_OR_IOCTL.
 --12470-- Nevertheless we consider this a bug.  Please report
 --12470-- it at http://valgrind.org/support/bug_reports.html.
+```
+
 
 3. Extra features
 ==================
@@ -73,7 +79,8 @@ Currently Valgrind fails with a message like:
 --------------------------
 
 It is not difficult to attach to few PIDs simultaneously. Maybe we should do
-it for parrallel applications like apache, nginx and like.
+it for parallel applications like apache, nginx and like. Most likelly we
+should simulate -p option from `man 1 strace`.
 
 3.2 Attaching by name
 ----------------------
@@ -81,15 +88,54 @@ it for parrallel applications like apache, nginx and like.
 It is good to have ability to attach to processes not only by PIDs but also by
 names.
 
-3.3 eBPF sources
------------------
+3.3 Read full file name
+------------------------
 
-It is good to have embedded copies of these files as fallback.
+We should implement it as soon as this bug will be closed:
+ - https://github.com/iovisor/bcc/issues/900
 
-4. Documentation
-=================
+3.4 Simultaneous running of multiple instances
+------------------------------------------------
 
-4.1 Doc format
----------------
+Could be solved in way like this:
 
-It is good to convert rst to md for consistency
+Details:
+ - https://github.com/iovisor/bcc/pull/918
+ - https://github.com/iovisor/bcc/issues/872
+
+
+4. Output logs
+============================
+
+4.1 Binary log format: packet-counter field
+--------------------------------------------
+
+We should think about writting 64-bit packet number before length
+of packet, because it will enlarge reliability of logs. But there is
+probabilty that counting packets will be very expensive, because we run
+in multi-threading environment.
+
+4.2 Splitting log-files per-pid
+--------------------------------
+
+We already have an option for it, but we need to finish implemantation.
+
+4.3 Splitting log-files per-tid
+--------------------------------
+
+We already have an option for it, but we need to finish implemantation.
+
+4.4 Finish implementation of print_event_hex_sl()
+---------------------------------------------------
+
+It will improove usability in sl mode
+
+
+5. Improovemetns
+==================
+
+5.1 enum masks_t
+------------------
+
+It looks like current version is not enough scallable for full-features
+immitation of strace. Subject to redevelop.
