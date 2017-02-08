@@ -1,5 +1,7 @@
 strace.ebpf
 file_sc_bench
+*.static-debug
+*.static-nondebug
 *.trc
 *.1.txt
 *.rst.build_temp
