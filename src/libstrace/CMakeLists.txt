@@ -30,6 +30,21 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 2.8.7)
-project(syscall_intercept C ASM)
+project(libstrace C)
 
 
+find_package(PkgConfig)
+pkg_check_modules(LIBBCC REQUIRED libbcc)
+
+set(SOURCES
+	strace_bpf.c
+	utils.c
+	attach_probes.c
+	ebpf_syscalls.c
+	generate_ebpf.c
+	print_event_cb.c)
+
+include_directories(.. ../compat)
+include_directories(${LIBBCC_INCLUDE_DIRS})
+
+add_library(strace STATIC ${SOURCES})
