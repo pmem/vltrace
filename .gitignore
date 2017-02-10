@@ -20,3 +20,7 @@ dpkg/
 *.db
 *.htmp
 *.hpptmp
+CMakeFiles
+CMakeCache.txt
+*.cmake
+Makefile

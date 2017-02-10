@@ -8,3 +8,4 @@ file_sc_bench
 *.png
 /trace.h
 /nondebug
+config.h
