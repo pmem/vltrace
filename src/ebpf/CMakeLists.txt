@@ -30,6 +30,55 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 2.8.7)
-project(syscall_intercept C ASM)
+project(libebpf C)
 
 
+# eBPF sources
+set (BIN_SRCS
+	trace.h
+	trace_head.c
+	trace_tp_all.c
+	trace_kern_tmpl.c
+	trace_libc_tmpl.c
+	trace_file_tmpl-ml.c
+	trace_fileat_tmpl-ml.c
+	trace_file_tmpl-sl.c
+	trace_fileat_tmpl-sl.c
+	trace_clone_tmpl.c
+	trace_fork_tmpl.c
+	trace_vfork_tmpl.c
+	trace_fs_path_1_2_arg_tmpl-ml.c
+	trace_fs_path_1_3_arg_tmpl-ml.c
+	trace_fs_path_2_4_arg_tmpl-ml.c
+	trace_fs_path_1_2_arg_tmpl-sl.c
+	trace_fs_path_1_3_arg_tmpl-sl.c
+	trace_fs_path_2_4_arg_tmpl-sl.c
+	pid_check_ff_disabled_hook.c
+	pid_check_ff_fast_hook.c
+	pid_check_ff_full_hook.c
+)
+
+
+set(BIN_OBJS "")
+foreach(FILE_SRC ${BIN_SRCS})
+	get_filename_component(FILENAME ${FILE_SRC} NAME)
+	get_filename_component(FILEPATH ${FILE_SRC} PATH)
+	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${FILENAME}.o 
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/${FILEPATH} 
+		COMMAND ${CMAKE_LINKER} -r -b binary
+		-o ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${FILENAME}.o ${FILENAME})
+	list(APPEND BIN_OBJS ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${FILENAME}.o)
+	#message(STATUS "Linking ${FILE_SRC}")
+endforeach(FILE_SRC)
+
+
+add_library(ebpf STATIC ${BIN_OBJS} ebpf_file_set.c)
+set_target_properties(ebpf PROPERTIES
+	ARCHIVE_OUTPUT_DIRECTORY ../nondebug)
+
+# XXX libbcc expects multi-treading safety. Currently it's required for
+# print_event_cb.o only, although we will apply it for overall application.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -D_GNU_SOURCE")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wextra")
