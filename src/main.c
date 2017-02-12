@@ -53,7 +53,7 @@
 #include <bcc/bpf_common.h>
 #include <bcc/perf_reader.h>
 
-#include <ebpf/ebpf_file_set.h>
+#include "ebpf/ebpf_file_set.h"
 
 #include "strace_bpf.h"
 
