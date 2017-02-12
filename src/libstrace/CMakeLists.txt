@@ -48,3 +48,20 @@ include_directories(.. ../compat)
 include_directories(${LIBBCC_INCLUDE_DIRS})
 
 add_library(strace STATIC ${SOURCES})
+set_target_properties(strace PROPERTIES
+	ARCHIVE_OUTPUT_DIRECTORY ../nondebug)
+
+# XXX libbcc expects multi-treading safety. Currently it's required for
+# print_event_cb.o only, although we will apply it for overall application.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -D_GNU_SOURCE")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wextra")
+
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+# using Clang
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-initializer-overrides")
+else()
+# using GCC
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-override-init")
+endif()
