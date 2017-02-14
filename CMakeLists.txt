@@ -63,6 +63,9 @@ add_custom_target(check_whitespace
 
 add_executable(check_license_executable utils/check_license/check-license.c)
 set_property(TARGET check_license_executable PROPERTY C_STANDARD 99)
+set_property(TARGET check_license_executable PROPERTY
+	RUNTIME_OUTPUT_DIRECTORY
+	${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY})
 
 add_custom_target(check-license
 	COMMAND
