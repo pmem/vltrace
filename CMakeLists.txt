@@ -51,3 +51,24 @@ add_subdirectory(gtest)
 add_subdirectory(man)
 add_subdirectory(src)
 add_subdirectory(utils)
+
+add_custom_target(cstyle
+	COMMAND perl ${PROJECT_SOURCE_DIR}/utils/cstyle
+	-pP ${PROJECT_SOURCE_DIR}/src/*.h
+	${PROJECT_SOURCE_DIR}/src/*.c)
+
+add_custom_target(check_whitespace
+	COMMAND perl ${PROJECT_SOURCE_DIR}/utils/check_whitespace
+	-r ${PROJECT_SOURCE_DIR}/src)
+
+add_executable(check_license_executable utils/check_license/check-license.c)
+set_property(TARGET check_license_executable PROPERTY C_STANDARD 99)
+
+add_custom_target(check-license
+	COMMAND
+	${PROJECT_SOURCE_DIR}/utils/check_license/check-headers.sh
+	${PROJECT_SOURCE_DIR}
+	$<TARGET_FILE:check_license_executable>
+	${PROJECT_SOURCE_DIR}/LICENSE -a)
+
+add_dependencies(check-license check_license_executable)
