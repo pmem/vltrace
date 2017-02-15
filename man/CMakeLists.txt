@@ -30,6 +30,31 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 2.8.7)
-project(syscall_intercept C ASM)
 
+find_program(PANDOC pandoc)
+if (NOT PANDOC)
+        message(WARNING "pandoc not found")
+endif()
 
+add_custom_target(manpages)
+
+function(generate_manpage name)
+        add_custom_command(
+                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/${name}
+                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}.md
+                COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/generated/
+                COMMAND ${CMAKE_SOURCE_DIR}/utils/md2man.sh ${CMAKE_CURRENT_SOURCE_DIR}/${name}.md ${CMAKE_CURRENT_SOURCE_DIR}/default.man ${CMAKE_CURRENT_BINARY_DIR}/generated/${name}
+        )
+        add_custom_target(manpage-${name} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/generated/${name})
+        add_dependencies(manpages manpage-${name})
+endfunction()
+
+generate_manpage(strace.ebpf.1)
+
+if(PANDOC)
+        set(DIR ${CMAKE_CURRENT_BINARY_DIR})
+else()
+        set(DIR ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
+install(FILES ${DIR}/generated/strace.ebpf.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 CONFIGURATIONS Release None)
