@@ -88,3 +88,5 @@ add_subdirectory(ebpf)
 add_subdirectory(libstrace)
 
 target_link_libraries(strace.ebpf strace ebpf ${LIBBCC_LIBRARIES})
+
+add_executable(file_sc_bench file_sc_bench.c)

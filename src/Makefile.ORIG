@@ -28,110 +28,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Makefile -- top Makefile for strace.ebpf
+# Makefile -- Makefile for BenchMark
 #
-
-
-TARGET = strace.ebpf
-
-TOP = ../
-
-EXTRA_TARGETS += nondebug/libebpf.a nondebug/libstrace.a
-
-$(TARGET): nondebug/libebpf.a nondebug/libstrace.a
-$(TARGET).static-debug: nondebug/libebpf.a nondebug/libstrace.a
-$(TARGET).static-nondebug: nondebug/libebpf.a nondebug/libstrace.a
-
-nondebug/libebpf.a:
-	$(MAKE) -C ebpf
-
-nondebug/libstrace.a:
-	$(MAKE) -C libstrace
-
-nondebug/libebpf.a-clean:
-	$(MAKE) -C ebpf clean
-	$(RM) nondebug/libebpf.a
-
-nondebug/libstrace.a-clean:
-	$(MAKE) -C libstrace clean
-	$(RM) nondebug/libstrace.a
-
-nondebug/libebpf.a-clobber: nondebug/libebpf.a-clean
-nondebug/libstrace.a-clobber: nondebug/libstrace.a-clean
-
-nondebug/libebpf.a-cstyle:
-	$(MAKE) -C ebpf cstyle
-
-nondebug/libstrace.a-cstyle:
-	$(MAKE) -C libstrace cstyle
-
-.PHONY: nondebug/libebpf.a-clean nondebug/libstrace.a-clean
-.PHONY: nondebug/libebpf.a-clobber nondebug/libstrace.a-clobber
-.PHONY: nondebug/libebpf.a-cstyle nondebug/libstrace.a-cstyle
-
-
-# .txt sources
-TXT_SRCS = \
-	help_text.txt \
-	usage_text.txt \
-	trace_list_text.txt \
-
-
-TXT_OBJS = $(addsuffix .o,$(TXT_SRCS))
-
-%.txt.o: %.txt Makefile
-	$(LD) -r -b binary -o $@ $<
-
-OBJS = \
-	   txt.o \
-	   main.o \
-	   cl_parser.o \
-	$(TXT_OBJS)
-
-
-CFLAGS += $(shell $(PKG_CONFIG) --cflags libbcc)
-
-# XXX libbcc expects multi-treading safety. Currently it's required for
-# print_event_cb.o only, although we will apply it for overall application.
-CFLAGS += -pthread
-
-CFLAGS += -g -Wextra
-
-ifeq ($(CC),clang)
-CFLAGS += -Wno-initializer-overrides
-else
-CFLAGS += -Wno-override-init
-endif
-
-CFLAGS += -I compat
-CFLAGS += -I libstrace
-
-LDFLAGS += -g -Wextra
-
-# XXX libbcc expects multi-treading safety.
-LDFLAGS += -pthread
-
-LIBS += $(shell $(PKG_CONFIG) --libs libbcc)
-LIBS += nondebug/libstrace.a
-LIBS += nondebug/libebpf.a
-
-
-INSTALL_TARGET=$(EXPERIMENTAL)
-
-
-include ../Makefile.inc
-
 
 # Local BenchMark
 PROGS = file_sc_bench
-PROGS_CFLAGS = -g -O2 -Wall -Wextra -D__USE_GNU
-
-
-$(PROGS).o: $(PROGS).c Makefile
-	$(CC) $(PROGS_CFLAGS) -c -o $@ $<
-
-$(PROGS): $(PROGS).o Makefile
-	$(CC) $(PROGS_CFLAGS) -o $@ $<
 
 .PHONY: run run-direct run-tp run-libc run-kern run-strace
 run: $(PROGS) run-direct run-tp run-libc run-kern run-strace
