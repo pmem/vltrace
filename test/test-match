@@ -1,0 +1,88 @@
+#!/bin/bash -e
+#
+# Copyright 2017, Intel Corporation
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in
+#       the documentation and/or other materials provided with the
+#       distribution.
+#
+#     * Neither the name of the copyright holder nor the names of its
+#       contributors may be used to endorse or promote products derived
+#       from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#
+# test/test-match -- test for strace.ebpf
+#
+
+
+TEST_FILE=./test_basic
+
+TEST_NUM=$1
+if [ "$TEST_NUM" == "" ]; then
+	echo "Usage: $0 <test-number>"
+	exit 1
+fi
+
+if [ ! -f $TEST_FILE ]; then
+	echo "Error: test file '$TEST_FILE' does not exist"
+	exit 1
+fi
+
+TEST_DIR=$(dirname $0)
+ROOT_DIR=$(dirname $TEST_DIR)
+SRC_DIR=$ROOT_DIR/src
+[ ! -d $SRC_DIR ] \
+	&& echo "Error: wrong project directory" \
+	&& exit 1
+
+SETUP=$TEST_DIR/setup.sh
+FUNCT=$TEST_DIR/helper_functions.sh
+COMMON=$TEST_DIR/common.sh
+[ ! -f $SETUP -o ! -f $COMMON -o ! -f $FUNCT ] \
+	&& echo "Error: one of files is missing: $SETUP, $COMMON or $FUNCT" \
+	&& exit 1
+
+source $SETUP
+source $COMMON
+source $FUNCT
+
+require_superuser
+
+OUT=output$TEST_NUM.log
+
+sudo -n bash -c "$RUN_STRACE -o $OUT $TEST_FILE $TEST_NUM"
+
+case $TEST_NUM in
+# tests without fork()
+0|2)
+	cut_part_file $OUT "$PATTERN_START" "$PATTERN_END" > cut$TEST_NUM.log
+	;;
+# tests with one fork()
+1)
+	split_forked_file $OUT outA$TEST_NUM.log outB$TEST_NUM.log cutF$TEST_NUM.log
+	cut_part_file outA$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutA$TEST_NUM.log
+	cut_part_file outB$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutB$TEST_NUM.log
+	;;
+esac
+
+check

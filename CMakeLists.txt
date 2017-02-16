@@ -46,6 +46,8 @@ set(STRACE_EBPF_VERSION
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
+enable_testing()
+add_subdirectory(test)
 add_subdirectory(doc)
 add_subdirectory(gtest)
 add_subdirectory(man)

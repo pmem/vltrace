@@ -1,0 +1,246 @@
+#!/bin/bash
+#
+# Copyright 2017, Intel Corporation
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in
+#       the documentation and/or other materials provided with the
+#       distribution.
+#
+#     * Neither the name of the copyright holder nor the names of its
+#       contributors may be used to endorse or promote products derived
+#       from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#
+# test/test-trace-command -- test for strace.ebpf
+#
+
+# strace prints raw arguments for all except these syscalls (-e raw=!...):
+OPT_STRACE="open,access,stat,lstat,statfs,execve,unlink,chroot,listxattr,\
+llistxattr,getxattr,lgetxattr,removexattr,lremovexattr,setxattr,\
+lsetxattr,mknod,mount,swapon,swapoff,umount2"
+
+TEST_DIR=$(dirname $0)
+ROOT_DIR=$(dirname $TEST_DIR)
+PATH_STRACE=$ROOT_DIR/src
+PATTERN=/tmp/strace
+OUT_NATIVE=$PATTERN-native.log
+OUT_NATIVE_ALL=$PATTERN-native-all.log
+OUT_EBPF=$PATTERN-ebpf.log
+OUT_EBPF_ALL=$PATTERN-ebpf-all.log
+DIFF_ALL=$PATTERN-diff-all.log
+TMP=$(mktemp)
+
+FD="(fd)"
+ADDR="(addr)"
+
+COMMON=$TEST_DIR/common.sh
+[ ! -f $COMMON ] \
+	&& echo "Error: missing file $COMMON" \
+	&& exit 1
+source $COMMON
+
+#
+# convert_args -- convert arguments
+#
+function convert_args() {
+	SYSCALL=$1
+	ARG1=$2
+
+	# 1st argument
+	case "$SYSCALL" in
+	# file descriptor can be different
+	close|read|write|lseek|fstat|newfstat|ioctl|connect|setsockopt|\
+	getsockname|getsockopt|sendto|recvmsg|getdents|fcntl|readlinkat|\
+	dup|dup2|fsetxattr|fremovexattr|fadvise64|fstatat|openat|newfstatat)
+		echo $FD
+		return
+		;;
+	# address can be different
+	brk|capget|capset|mmap|mprotect|munmap|set_robust_list|\
+	set_tid_address|futex|uname)
+		echo $ADDR
+		return
+		;;
+	# /proc/(pid) can be different
+	open|stat|lstat|readlink)
+		[[ $ARG1 =~ ^pipe:\[[0-9]+\]$ ]] && ARG1="pipe:[(number)]"
+		[[ $ARG1 =~ ^/proc/[0-9]+$ ]] && ARG1="/proc/(pid)"
+		[[ $ARG1 =~ ^/proc/[0-9]+/.*$ ]] && ARG1="/proc/(pid)/..."
+		echo "$ARG1"
+		return
+		;;
+	# XXX remove it when the following bug will be fixed:
+	# following functions should print no arguments at all:
+	getuid|geteuid|getpid|gettid)
+		echo ""
+		return
+		;;
+	# XXX remove it when the following bug will be fixed:
+	# execve prints pointer instead of path
+	#execve)
+	#	echo ""
+	#	return
+	#	;;
+	*)
+		echo "$ARG1"
+		return
+		;;
+	esac
+}
+
+#
+# convert_native -- convert output of system strace
+#
+function convert_native() {
+	FILE=$1
+
+	cat $FILE | \
+	while IFS='' read -r line || [[ -n "$line" ]]; do
+		# syscall's name
+		NAME=$(echo $line | cut -d"(" -f1)
+		[ "$NAME" == "umount2" ] && NAME="umount"
+		# remove 'new' prefix
+		[[ $NAME =~ ^new ]] \
+			&& NAME=$(echo $NAME | sed 's/new//g')
+
+		# result
+		#n=2
+		#TMP="any-string";
+		#while [ "$TMP" != "" ]; do
+		#	RES=$TMP
+		#	TMP=$(echo $line | cut -d"=" -f$n);
+		#	n=$(( $n + 1 ))
+		#done
+		#RES=$(echo $RES | cut -d' ' -f1)
+
+		ARG1=$(echo $line | cut -d"(" -f2 | cut -d")" -f1)
+		[[ $ARG1 =~ ^\{ ]] && ARG1=$(echo $ARG1 | cut -d'}' -f1)
+		[[ $ARG1 =~ ^\[ ]] && ARG1=$(echo $ARG1 | cut -d']' -f1)
+		[[ $ARG1 =~ ^\" ]] \
+			&& ARG1=$(echo $ARG1 | cut -d'"' -f2 | cut -d'"' -f1) \
+			|| ARG1=$(echo $ARG1 | cut -d"," -f1)
+
+		[ "$ARG1" != "" ] && ARG1=$(convert_args $NAME $ARG1)
+		[[ $ARG1 =~ ^0x ]] && ARG1=$(( $ARG1 + 0))
+		[ "$ARG1" == "NULL" ] && ARG1=0
+		echo "$NAME $ARG1"
+	done
+}
+
+#
+# convert_ebpf -- convert output of strace.ebpf
+#
+function convert_ebpf() {
+	FILE=$1
+
+	cat $FILE | \
+	while IFS='' read -r line || [[ -n "$line" ]]; do
+		NAME=$(echo $line | cut -d" " -f4)
+		# remove 'new' prefix
+		[[ $NAME =~ ^new ]] \
+			&& NAME=$(echo $NAME | sed 's/new//g')
+		# remove '_pgoff' suffix
+		[[ $NAME =~ _pgoff$ ]] \
+			&& NAME=$(echo $NAME | sed 's/_pgoff//g')
+
+		# RES=$(echo $line | cut -d" " -f3)
+
+		ARG1=$(echo $line | cut -d" " -f5)
+		[ -n $ARG1 ] && ARG1=$(convert_args $NAME $ARG1)
+		[[ $ARG1 =~ ^0[0]+ ]] && ARG1=$(( 0x$ARG1 + 0))
+		echo "$NAME $ARG1"
+	done
+}
+
+#
+# test_if_exists -- test if a command exists
+#
+function test_if_exists() {
+	which $1 > /dev/null
+	[ $? -ne 0 ] && exit 1
+	return 0
+}
+
+# temporary debug option for testing converting of outputs
+SKIP=0
+if [ "$1" == "s" ]; then
+	SKIP=1
+	shift 1
+fi
+
+COMMAND="$*"
+if [ "$COMMAND" == "" ]; then
+	echo "Usage: $0 <command-to-be-tested>"
+	exit 1
+fi
+
+test_if_exists $COMMAND 
+
+require_superuser
+
+if [ $SKIP -eq 0 ]; then
+	echo "Running system strace ..." >&2
+	echo "# sudo strace raw=!$OPT_STRACE $COMMAND" >&2
+	sudo strace -e raw=\!$OPT_STRACE $COMMAND 2>&1 1>/dev/null | grep -v -e "exit_group" -e "exited with" | grep "(" > $OUT_NATIVE_ALL
+	[ $(cat $OUT_NATIVE_ALL | wc -l) -eq 0 ] && echo "Error: no output of strace" >&2 && exit 1
+
+	echo "Running strace.ebpf ..." >&2
+	echo "# sudo $PATH_STRACE/strace.ebpf -f -K' ' -e trace=kp-kern-all $COMMAND" >&2
+	sudo bash -c "ulimit -l 10240 && ulimit -n 10240 && $PATH_STRACE/strace.ebpf -f -K' ' -e trace=kp-kern-all -o $TMP $COMMAND" >/dev/null
+	grep -v -e "PID_TID" -e "strace.ebpf" $TMP > $OUT_EBPF_ALL
+	[ $(cat $OUT_EBPF_ALL | wc -l) -eq 0 ] && echo "Error: no output of strace.ebpf" >&2 && exit 1
+fi
+
+echo "Converting strace's log ..." >&2
+convert_native $OUT_NATIVE_ALL > $OUT_NATIVE
+
+echo "Converting strace.ebpf's log ..." >&2
+convert_ebpf $OUT_EBPF_ALL > $OUT_EBPF
+
+diff -y $OUT_NATIVE $OUT_EBPF > $DIFF_ALL
+ERRORS=$(grep -e '|' -e '<' -e '>' $DIFF_ALL | tee $TMP | wc -l)
+
+if [ $ERRORS -eq 0 ]; then
+	echo "Passed."
+	RV=0
+else
+	echo "FAILED !"
+	echo
+	echo "Following $ERRORS line(s) differ:"
+	echo "--- (system strace) -------------------------------------- | --- (strace.ebpf) ----------------------------------------"
+	cat $TMP
+	echo "--- (system strace) -------------------------------------- | --- (strace.ebpf) ----------------------------------------"
+	echo "($ERRORS line(s) differ)"
+	echo
+	echo "Full diff: $DIFF_ALL"
+	echo "Full strace log: $OUT_NATIVE_ALL"
+	echo "Full strace.ebpf log: $OUT_EBPF_ALL"
+	echo
+	echo "Tracing of the command '$COMMAND' FAILED."
+	echo
+	RV=1
+fi
+
+rm -f $TMP
+
+exit $RV
