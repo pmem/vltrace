@@ -94,14 +94,12 @@ names.
 We should implement it as soon as this bug will be closed:
  - https://github.com/iovisor/bcc/issues/900
 
-3.4 Simultaneous running of multiple instances
-------------------------------------------------
+3.4 Implement one more way to attach, using hack with seccomp
+--------------------------------------------------------------
 
-Could be solved in way like this:
+It will improve the time of attaching and detaching.
 
-Details:
- - https://github.com/iovisor/bcc/pull/918
- - https://github.com/iovisor/bcc/issues/872
+ - https://github.com/vitalyvch/strace.ebpf/issues/44
 
 
 4. Output logs
