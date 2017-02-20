@@ -106,6 +106,13 @@ function get_files() {
 # check -- check test results (using .match files)
 #
 function check() {
+	local TEMP_OUT=$(mktemp)
 	cp -v $TEST_DIR/*${TEST_NUM}.log.match .
-	$TEST_DIR/match $(get_files "[^0-9w]*${TEST_NUM}\.log\.match") 2>&1 | tail -n11
+	set +e
+	$TEST_DIR/match $(get_files "[^0-9w]*${TEST_NUM}\.log\.match") >$TEMP_OUT 2>&1
+	RV=$?
+	set -e
+	tail -n11 $TEMP_OUT
+	rm -f $TEMP_OUT
+	return $RV
 }
