@@ -112,7 +112,18 @@ function check() {
 	$TEST_DIR/match $(get_files "[^0-9w]*${TEST_NUM}\.log\.match") >$TEMP_OUT 2>&1
 	RV=$?
 	set -e
+	[ $RV -eq 0 ] && rm -f $TEMP_OUT && return
+
+	# match failed
 	tail -n11 $TEMP_OUT
+	OUT=$(tail -n3 $TEMP_OUT | head -n2 | cut -c21- | cut -d" " -f4)
 	rm -f $TEMP_OUT
+	SC_MATCH=$(echo $OUT | cut -d" " -f1)
+	SC_IS=$(echo $OUT | cut -d" " -f2)
+	echo "------"
+	[ "$SC_MATCH" != "$SC_IS" ] \
+		&& echo "Error: missed syscall '$SC_MATCH'" \
+		|| echo "Error: wrong arguments of syscall '$SC_MATCH'"
+	echo "------"
 	return $RV
 }
