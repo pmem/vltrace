@@ -74,7 +74,7 @@ sudo -n bash -c "$RUN_STRACE -o $OUT $TEST_FILE $TEST_NUM"
 
 case $TEST_NUM in
 # tests with one fork()
-1)
+1|3)
 	split_forked_file $OUT outA$TEST_NUM.log outB$TEST_NUM.log cutF$TEST_NUM.log
 	cut_part_file outA$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutA$TEST_NUM.log
 	cut_part_file outB$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutB$TEST_NUM.log

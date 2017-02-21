@@ -71,6 +71,9 @@
 #define NON_EXIST_PATH_1	"111_non_exist"
 #define NON_EXIST_PATH_2	"222_non_exist"
 
+/*
+ * test_basic_syscalls -- test basic syscalls
+ */
 static void
 test_basic_syscalls(void)
 {
@@ -112,8 +115,11 @@ test_basic_syscalls(void)
 	syscall(SYS_futex, 1, 2, 3, 4, 5, 6); /* futex */
 }
 
+/*
+ * test_unsupported_syscalls -- test unsupported syscalls
+ */
 static void
-test_not_supported_syscalls(void)
+test_unsupported_syscalls(void)
 {
 	chroot(NON_EXIST_PATH_1);
 	epoll_ctl(0x101, 0x102, 0x103, (struct epoll_event *)0x104);
@@ -121,10 +127,6 @@ test_not_supported_syscalls(void)
 	epoll_pwait(0x103, (struct epoll_event *)0x104, 0x105, 0x106,
 			(const sigset_t *)0x107);
 	fcntl(0x104, 0x105, 0x106);
-
-	listxattr(NON_EXIST_PATH_1, (char *)0x101, 0x102);
-	llistxattr(NON_EXIST_PATH_2, (char *)0x103, 0x104);
-	flistxattr(0x105, (char *)0x106, 0x107);
 
 	flock(0x108, 0x109);
 
@@ -158,25 +160,6 @@ test_not_supported_syscalls(void)
 	pselect(0, (fd_set *)0x105, (fd_set *)0x106, (fd_set *)0x107, &time2,
 		(const sigset_t *)0x108);
 
-	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
-		(const void *)0x101, 0x102, 0x103);
-	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
-		(const void *)0x104, 0x105, 0x106);
-	fsetxattr(0x107, NON_EXIST_PATH_2,
-		(const void *)0x108, 0x109, 0x110);
-
-	getxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, (void *)0x101, 0x102);
-	lgetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, (void *)0x103, 0x104);
-	fgetxattr(0x105, NON_EXIST_PATH_2, (void *)0x106, 0x107);
-
-	listxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, 0x101);
-	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x102);
-	flistxattr(0x103, NON_EXIST_PATH_2, 0x104);
-
-	removexattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
-	lremovexattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1);
-	fremovexattr(0x101, NON_EXIST_PATH_2);
-
 	swapon(NON_EXIST_PATH_1, 0x101);
 	swapoff(NON_EXIST_PATH_2);
 
@@ -191,9 +174,13 @@ test_not_supported_syscalls(void)
 
 	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, NON_EXIST_PATH_1,
 		0x101, (void *)0x102);
+
+	/* // (moved to test_5)
 	umount(NON_EXIST_PATH_2);
 	umount2(NON_EXIST_PATH_1, 0x103);
+	*/
 
+	/* // (moved to test_6)
 	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
 		 (const void *)0x101, 0x102, 0x103);
 	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
@@ -212,8 +199,12 @@ test_not_supported_syscalls(void)
 	removexattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
 	lremovexattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1);
 	fremovexattr(0x101, NON_EXIST_PATH_2);
+	*/
 }
 
+/*
+ * test_0 -- test basic syscalls
+ */
 static void test_0(void)
 {
 	MARK_START();
@@ -221,6 +212,9 @@ static void test_0(void)
 	MARK_END();
 }
 
+/*
+ * test_1 -- test basic syscalls with fork()
+ */
 static void test_1(void)
 {
 	close(0xFFFF);
@@ -228,17 +222,85 @@ static void test_1(void)
 	test_0();
 }
 
+/*
+ * test_2 -- test unsupported syscalls
+ */
 static void test_2(void)
 {
 	MARK_START();
-	test_not_supported_syscalls();
+	test_unsupported_syscalls();
 	MARK_END();
 }
 
+/*
+ * test_3 -- test unsupported syscalls with fork()
+ */
+static void test_3(void)
+{
+	close(0xFFFF);
+	syscall(SYS_fork);
+	test_2();
+}
+
+/*
+ * test_4 -- test execve()
+ */
+static void test_4(void)
+{
+	MARK_START();
+	execve(NON_EXIST_PATH_1, (char * const*)0x1234, (char * const*)0x4321);
+	MARK_END();
+}
+
+/*
+ * test_5 -- test umount()
+ */
+static void test_5(void)
+{
+	MARK_START();
+	umount(NON_EXIST_PATH_1);
+	umount2(NON_EXIST_PATH_2, 0x123);
+	MARK_END();
+}
+
+/*
+ * test_6 -- test *xattr()
+ */
+static void test_6(void)
+{
+	MARK_START();
+	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
+		 (const void *)0x101, 0x102, 0x103);
+	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
+		  (const void *)0x104, 0x105, 0x106);
+	fsetxattr(0x107, NON_EXIST_PATH_2,
+		  (const void *)0x108, 0x109, 0x110);
+
+	getxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, (void *)0x101, 0x102);
+	lgetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, (void *)0x103, 0x104);
+	fgetxattr(0x105, NON_EXIST_PATH_2, (void *)0x106, 0x107);
+
+	listxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, 0x101);
+	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x102);
+	flistxattr(0x103, NON_EXIST_PATH_2, 0x104);
+
+	removexattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
+	lremovexattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1);
+	fremovexattr(0x101, NON_EXIST_PATH_2);
+	MARK_END();
+}
+
+/*
+ * run_test -- array of tests
+ */
 static void (*run_test[])(void) = {
 	test_0,
 	test_1,
-	test_2
+	test_2,
+	test_3,
+	test_4,
+	test_5,
+	test_6
 };
 
 int
@@ -247,14 +309,16 @@ main(int argc, char *argv[])
 	int max = sizeof(run_test) / sizeof(run_test[0]) - 1;
 
 	if (argc < 2) {
-		fprintf(stderr, "usage: %s <test-number: 0..%i>\n", argv[0], max);
+		fprintf(stderr, "usage: %s <test-number: 0..%i>\n",
+				argv[0], max);
 		return -1;
 	}
 
 	int n = atoi(argv[1]);
 	if (n > max) {
-		fprintf(stderr, "Error: test number can take only following values:"
-			" 0..%i (%i is not allowed)\n", max, n);
+		fprintf(stderr, "Error: test number can take only following"
+				" values: 0..%i (%i is not allowed)\n",
+				max, n);
 		return -1;
 	}
 

@@ -47,6 +47,7 @@ OUT_NATIVE=$PATTERN-native.log
 OUT_NATIVE_ALL=$PATTERN-native-all.log
 OUT_EBPF=$PATTERN-ebpf.log
 OUT_EBPF_ALL=$PATTERN-ebpf-all.log
+DIFF=$PATTERN-diff.log
 DIFF_ALL=$PATTERN-diff-all.log
 TMP=$(mktemp)
 
@@ -96,7 +97,7 @@ function convert_args() {
 		return
 		;;
 	# XXX remove it when the following bug will be fixed:
-	# execve prints pointer instead of path
+	# execve sometimes prints pointer instead of path as the 1st argument
 	#execve)
 	#	echo ""
 	#	return
@@ -228,7 +229,7 @@ else
 	echo
 	echo "Following $ERRORS line(s) differ:"
 	echo "--- (system strace) -------------------------------------- | --- (strace.ebpf) ----------------------------------------"
-	cat $TMP
+	cat $TMP | tee $DIFF
 	echo "--- (system strace) -------------------------------------- | --- (strace.ebpf) ----------------------------------------"
 	echo "($ERRORS line(s) differ)"
 	echo
