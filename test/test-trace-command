@@ -168,7 +168,7 @@ function convert_ebpf() {
 
 		ARG1=$(echo $line | cut -d" " -f5)
 		[ -n $ARG1 ] && ARG1=$(convert_args $NAME $ARG1)
-		[[ $ARG1 =~ ^0[0]+ ]] && ARG1=$(( 0x$ARG1 + 0))
+		[[ $ARG1 =~ ^0 ]] && ARG1=$(( 0x$ARG1 + 0))
 		echo "$NAME $ARG1"
 	done
 }

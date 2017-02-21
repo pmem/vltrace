@@ -71,6 +71,9 @@
 #define NON_EXIST_PATH_1	"111_non_exist"
 #define NON_EXIST_PATH_2	"222_non_exist"
 
+/* used to test unsupported flags (almost all bits are set) */
+#define FLAGS_SET		0x0FFFFFFFFFFFFFFF
+
 /*
  * test_basic_syscalls -- test basic syscalls
  */
@@ -122,11 +125,22 @@ static void
 test_unsupported_syscalls(void)
 {
 	chroot(NON_EXIST_PATH_1);
+
+	/* open - unsupported flags */
+	syscall(SYS_open, NON_EXIST_PATH_2, FLAGS_SET, FLAGS_SET, FLAGS_SET,
+		FLAGS_SET, FLAGS_SET);
+
+	/* clone - unsupported flags */
+	syscall(SYS_clone, FLAGS_SET, FLAGS_SET, FLAGS_SET, FLAGS_SET,
+		FLAGS_SET, FLAGS_SET);
+
 	epoll_ctl(0x101, 0x102, 0x103, (struct epoll_event *)0x104);
 	epoll_wait(0x102, (struct epoll_event *)0x103, 0x104, 0x105);
 	epoll_pwait(0x103, (struct epoll_event *)0x104, 0x105, 0x106,
 			(const sigset_t *)0x107);
-	fcntl(0x104, 0x105, 0x106);
+
+	/* fcntl - unsupported flags */
+	syscall(SYS_fcntl, 0x104, FLAGS_SET, FLAGS_SET, 0x105, 0x106, 0x107);
 
 	flock(0x108, 0x109);
 
