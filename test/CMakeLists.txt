@@ -69,6 +69,15 @@ add_test(NAME "xattr-match"
 add_test(NAME "xattr-strace"
 	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 6)
 
+add_test(NAME "date-no-path-strace"
+	COMMAND ${TEST_DIR}/test-trace-command date)
+
+add_test(NAME "clear-no-path-strace"
+	COMMAND ${TEST_DIR}/test-trace-command clear)
+
+add_test(NAME "ls-no-path-strace"
+	COMMAND ${TEST_DIR}/test-trace-command ls)
+
 foreach(CMD date clear ls ping cat dir du uname free df)
 	execute_process(COMMAND which ${CMD}
 			OUTPUT_VARIABLE PATH
