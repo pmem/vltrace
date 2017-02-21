@@ -36,29 +36,38 @@ add_executable(test_basic test_basic.c)
 add_test(NAME "basic-match"
 	COMMAND ${TEST_DIR}/test-match 0)
 
-add_test(NAME "basic-match-FORK"
-	COMMAND ${TEST_DIR}/test-match 1)
-
 add_test(NAME "basic-strace"
 	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 0)
+
+add_test(NAME "basic-match-FORK"
+	COMMAND ${TEST_DIR}/test-match 1)
 
 add_test(NAME "unsupported-match"
 	COMMAND ${TEST_DIR}/test-match 2)
 
-add_test(NAME "unsupported-match-FORK"
-	COMMAND ${TEST_DIR}/test-match 3)
-
 add_test(NAME "unsupported-strace"
 	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 2)
+
+add_test(NAME "unsupported-match-FORK"
+	COMMAND ${TEST_DIR}/test-match 3)
 
 add_test(NAME "execve-match"
 	COMMAND ${TEST_DIR}/test-match 4)
 
+add_test(NAME "execve-strace"
+	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 4)
+
 add_test(NAME "umount-match"
 	COMMAND ${TEST_DIR}/test-match 5)
 
+add_test(NAME "umount-strace"
+	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 5)
+
 add_test(NAME "xattr-match"
 	COMMAND ${TEST_DIR}/test-match 6)
+
+add_test(NAME "xattr-strace"
+	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 6)
 
 foreach(CMD date clear ls ping cat dir du uname free df)
 	execute_process(COMMAND which ${CMD}
