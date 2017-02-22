@@ -30,8 +30,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-FORK_PATTERN="FFFFFFFFFFFFFFFF close 000000000000FFFF"
-
 #
 # get_line_of_pattern -- get a line number of the pattern in the file
 #                        get_line_of_pattern <file> <pattern>
@@ -83,9 +81,14 @@ function split_forked_file() {
 	OUT3=$4
 
 	PID=$(tail -n1 $INPUT | cut -d" " -f1)
+
+	set +e
+
 	grep    $PID $INPUT > $OUT1
 	grep -v $PID $INPUT > $OUT2
-	grep -A1 "$FORK_PATTERN" $INPUT | grep fork > $OUT3
+	grep    fork $INPUT | grep -v vfork > $OUT3
+
+	set -e
 }
 
 #

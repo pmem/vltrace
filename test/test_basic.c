@@ -231,7 +231,6 @@ static void test_0(void)
  */
 static void test_1(void)
 {
-	close(0xFFFF);
 	syscall(SYS_fork);
 	test_0();
 }
@@ -251,7 +250,6 @@ static void test_2(void)
  */
 static void test_3(void)
 {
-	close(0xFFFF);
 	syscall(SYS_fork);
 	test_2();
 }
