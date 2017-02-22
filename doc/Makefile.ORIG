@@ -35,10 +35,7 @@
 all:
 .PHONY: all
 
-%.c.o: %.c Makefile
-	$(LD) -r -b binary -o $@ $<
-
-%.pdf: %.rst Makefile DSGN_rst_style.yaml \
+%.pdf: %.rst Makefile.ORIG DSGN_rst_style.yaml \
 		DSGN_beh_act_dia.png \
 		DSGN_struct_comp_dia.png
 	rst2pdf -c -b 1 \
@@ -49,12 +46,12 @@ all:
 		-s DSGN_rst_style.yaml \
 		$<
 
-%.pdf: %.md Makefile \
+%.pdf: %.md Makefile.ORIG \
 		DSGN_beh_act_dia.png \
 		DSGN_struct_comp_dia.png
 	pandoc -t beamer -o $@ $<
 
-%.png: %.uml Makefile
+%.png: %.uml Makefile.ORIG
 	plantuml $<
 
 .PHONY: clean

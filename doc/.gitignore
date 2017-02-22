@@ -1,2 +1,3 @@
 *.rst.build_temp
 *.png
+*.pdf
