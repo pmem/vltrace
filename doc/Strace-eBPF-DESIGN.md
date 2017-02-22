@@ -70,10 +70,10 @@ Cons
 
 ******
 
-Structural Component Diagram
+Data Flow Diagram
 -----------------------------
 
-![DSGN_struct_comp_dia.png](DSGN_struct_comp_dia.png)
+![DSGN_data_flow_dia.png](DSGN_data_flow_dia.png)
 
 ******
 

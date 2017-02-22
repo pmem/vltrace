@@ -37,7 +37,7 @@ all:
 
 %.pdf: %.rst Makefile.ORIG DSGN_rst_style.yaml \
 		DSGN_beh_act_dia.png \
-		DSGN_struct_comp_dia.png
+		DSGN_data_flow_dia.png
 	rst2pdf -c -b 1 \
 		--verbose \
 		--default-dpi=300 \
@@ -48,7 +48,7 @@ all:
 
 %.pdf: %.md Makefile.ORIG \
 		DSGN_beh_act_dia.png \
-		DSGN_struct_comp_dia.png
+		DSGN_data_flow_dia.png
 	pandoc -t beamer -o $@ $<
 
 %.png: %.uml Makefile.ORIG
