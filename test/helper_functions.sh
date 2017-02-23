@@ -57,7 +57,7 @@ function cut_part_file() {
 
 	local LINE1=$(get_line_of_pattern $FILE "$PATTERN1")
 	[ "$LINE1" == "" ] \
-		&& echo "cut_part_file(): no pattern \"$PATTERN1\" in file $FILE" >&2 \
+		&& echo "Error: cut_part_file(): no pattern \"$PATTERN1\" found in file $FILE" >&2 \
 		&& exit 1
 
 	NLINES=$(($NLINES - $LINE1 + 1))
@@ -65,7 +65,7 @@ function cut_part_file() {
 
 	local LINE2=$(get_line_of_pattern $TEMP "$PATTERN2")
 	[ "$LINE2" == "" ] \
-		&& echo "cut_part_file(): no pattern \"$PATTERN2\" in file $FILE" >&2 \
+		&& echo "Error: cut_part_file(): no pattern \"$PATTERN2\" found in file $FILE" >&2 \
 		&& exit 1
 
 	head -n$LINE2 $TEMP

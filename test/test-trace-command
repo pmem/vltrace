@@ -37,9 +37,10 @@
 # strace prints raw arguments for all except these syscalls (-e raw=!...):
 OPT_STRACE="open,access,stat,lstat,statfs,execve,unlink,chroot,listxattr,\
 llistxattr,getxattr,lgetxattr,removexattr,lremovexattr,setxattr,\
-lsetxattr,mknod,mount,swapon,swapoff,umount2"
+lsetxattr,mknod,mknodat,mount,swapon,swapoff,umount2,openat,newfstatat"
 
 TEST_DIR=$(dirname $0)
+[ "$TEST_DIR" == "." ] && TEST_DIR=$(pwd)
 ROOT_DIR=$(dirname $TEST_DIR)
 PATH_STRACE=$ROOT_DIR/src
 PATTERN=/tmp/strace
@@ -53,6 +54,7 @@ TMP=$(mktemp)
 
 FD="(fd)"
 ADDR="(addr)"
+FLAGS="(flags)"
 
 COMMON=$TEST_DIR/common.sh
 [ ! -f $COMMON ] \
@@ -61,9 +63,9 @@ COMMON=$TEST_DIR/common.sh
 source $COMMON
 
 #
-# convert_args -- convert arguments
+# convert_arg_1 -- convert 1st argument
 #
-function convert_args() {
+function convert_arg_1() {
 	SYSCALL=$1
 	ARG1=$2
 
@@ -78,7 +80,7 @@ function convert_args() {
 		;;
 	# address can be different
 	brk|capget|capset|mmap|mprotect|munmap|set_robust_list|\
-	set_tid_address|futex|uname)
+	set_tid_address|futex|uname|poll)
 		echo $ADDR
 		return
 		;;
@@ -90,8 +92,7 @@ function convert_args() {
 		echo "$ARG1"
 		return
 		;;
-	# XXX remove it when the following bug will be fixed:
-	# following functions should print no arguments at all:
+	# have no arguments at all:
 	getuid|geteuid|getpid|gettid)
 		echo ""
 		return
@@ -107,6 +108,54 @@ function convert_args() {
 		return
 		;;
 	esac
+}
+
+#
+# convert_arg_2 -- convert 2nd argument
+#
+function convert_arg_2() {
+	SYSCALL=$1
+	ARG2=$2
+
+	# 1st argument
+	case "$SYSCALL" in
+	# have no 2nd argument:
+	getuid|geteuid|getpid|gettid|\
+	brk|uname|chroot|io_destroy|swapoff|set_tid_address|setuid|unlink)
+		echo ""
+		return
+		;;
+	# address can be different
+	write|read|fstat|arch_prctl|execve|getdents|getrlimit|rt_sigprocmask|\
+	rt_sigaction|capset|capget|connect|getsockname|sendto|setitimer|recvmsg)
+		echo $ADDR
+		return
+		;;
+	# cannot decode flags
+	open|access|stat|lstat|statfs|futex|mknod|umount)
+		echo "$FLAGS"
+		return
+		;;
+	*)
+		echo "$ARG2"
+		return
+		;;
+	esac
+}
+
+#
+# convert_n_arg -- convert native argument
+#
+function convert_n_arg() {
+	ARG1=$1
+	[[ $ARG1 =~ ^\{ ]] && ARG1=$(echo $ARG1 | cut -d'}' -f1)
+	[[ $ARG1 =~ ^\[ ]] && ARG1=$(echo $ARG1 | cut -d']' -f1)
+	[[ $ARG1 =~ ^\" ]] \
+		&& ARG1=$(echo $ARG1 | cut -d'"' -f2 | cut -d'"' -f1) \
+		|| ARG1=$(echo $ARG1 | cut -d"," -f1)
+	[[ $ARG1 =~ ^0x ]] && ARG1=$(( $ARG1 + 0))
+	[ "$ARG1" == "NULL" ] && ARG1=0
+	echo "$ARG1"
 }
 
 #
@@ -135,16 +184,20 @@ function convert_native() {
 		#RES=$(echo $RES | cut -d' ' -f1)
 
 		ARG1=$(echo $line | cut -d"(" -f2 | cut -d")" -f1)
-		[[ $ARG1 =~ ^\{ ]] && ARG1=$(echo $ARG1 | cut -d'}' -f1)
-		[[ $ARG1 =~ ^\[ ]] && ARG1=$(echo $ARG1 | cut -d']' -f1)
-		[[ $ARG1 =~ ^\" ]] \
-			&& ARG1=$(echo $ARG1 | cut -d'"' -f2 | cut -d'"' -f1) \
-			|| ARG1=$(echo $ARG1 | cut -d"," -f1)
 
-		[ "$ARG1" != "" ] && ARG1=$(convert_args $NAME $ARG1)
-		[[ $ARG1 =~ ^0x ]] && ARG1=$(( $ARG1 + 0))
-		[ "$ARG1" == "NULL" ] && ARG1=0
-		echo "$NAME $ARG1"
+		[[ $line =~ , ]] \
+			&& ARG2=$(echo $line | cut -d"," -f2 | cut -d" " -f2 | cut -d")" -f1) \
+			|| ARG2=""
+
+		[ "$ARG1" != "" ] \
+			&& ARG1=$(convert_n_arg $ARG1) \
+			&& ARG1=$(convert_arg_1 $NAME $ARG1)
+
+		[ "$ARG2" != "" ] \
+			&& ARG2=$(convert_n_arg $ARG2) \
+			&& ARG2=$(convert_arg_2 $NAME $ARG2)
+
+		echo "$NAME $ARG1 $ARG2"
 	done
 }
 
@@ -167,9 +220,15 @@ function convert_ebpf() {
 		# RES=$(echo $line | cut -d" " -f3)
 
 		ARG1=$(echo $line | cut -d" " -f5)
-		[ -n $ARG1 ] && ARG1=$(convert_args $NAME $ARG1)
-		[[ $ARG1 =~ ^0 ]] && ARG1=$(( 0x$ARG1 + 0))
-		echo "$NAME $ARG1"
+		ARG2=$(echo $line | cut -d" " -f6)
+
+		[[ $ARG1 =~ ^[0F] ]] && ARG1=$(( 0x$ARG1 + 0))
+		[[ $ARG2 =~ ^[0F] ]] && ARG2=$(( 0x$ARG2 + 0))
+
+		[ "$ARG1" != "" ] && ARG1=$(convert_arg_1 $NAME $ARG1)
+		[ "$ARG2" != "" ] && ARG2=$(convert_arg_2 $NAME $ARG2)
+
+		echo "$NAME $ARG1 $ARG2"
 	done
 }
 
