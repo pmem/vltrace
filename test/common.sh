@@ -31,6 +31,19 @@
 #
 
 #
+# test/common.sh -- common setup for strace.ebpf tests
+#
+
+OPT_STRACE_EBPF="-f -K' ' -e trace=kp-kern-all"
+
+STRACE_EBPF=../src/strace.ebpf
+[ ! -x $STRACE_EBPF ] \
+	&& echo "Error: executable file '$STRACE_EBPF' does not exist" \
+	&& exit 1
+
+RUN_STRACE="ulimit -l 10240 && ulimit -n 10240 && $STRACE_EBPF $OPT_STRACE_EBPF"
+
+#
 # require_superuser -- require superuser capabilities
 #
 function require_superuser() {

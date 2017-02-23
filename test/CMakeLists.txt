@@ -29,54 +29,63 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+set(TEST_APP "./test_basic")
+
 set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
 
 add_executable(test_basic test_basic.c)
 
-add_test(NAME "basic-match"
-	COMMAND ${TEST_DIR}/test-match 0)
+#
+# TESTS
+#
 
-add_test(NAME "basic-strace"
-	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 0)
+#
+# 1) tests using match and *.match files
+#
 
-add_test(NAME "basic-match-FORK"
-	COMMAND ${TEST_DIR}/test-match 1)
+add_test(NAME "[match]-basic"
+	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 0)
 
-add_test(NAME "unsupported-match"
-	COMMAND ${TEST_DIR}/test-match 2)
+add_test(NAME "[match][fork]-basic"
+	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 1)
 
-add_test(NAME "unsupported-strace"
-	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 2)
+add_test(NAME "[match]-unsupported"
+	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 2)
 
-add_test(NAME "unsupported-match-FORK"
-	COMMAND ${TEST_DIR}/test-match 3)
+add_test(NAME "[match][fork]-unsupported"
+	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 3)
 
-add_test(NAME "execve-match"
-	COMMAND ${TEST_DIR}/test-match 4)
+add_test(NAME "[match]-execve"
+	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4)
 
-add_test(NAME "execve-strace"
-	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 4)
+add_test(NAME "[match]-umount"
+	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 5)
 
-add_test(NAME "umount-match"
-	COMMAND ${TEST_DIR}/test-match 5)
+add_test(NAME "[match]-xattr"
+	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 6)
 
-add_test(NAME "umount-strace"
-	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 5)
+#
+# 2) tests comparing strace.ebpf with system strace
+#
 
-add_test(NAME "xattr-match"
-	COMMAND ${TEST_DIR}/test-match 6)
+# a) tests of the dedicated app
 
-add_test(NAME "xattr-strace"
-	COMMAND ${TEST_DIR}/test-trace-command ./test_basic 6)
+add_test(NAME "[strace]-basic"
+	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 0)
 
-add_test(NAME "date-no-path-strace"
-	COMMAND ${TEST_DIR}/test-trace-command date)
+add_test(NAME "[strace]-unsupported"
+	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 2)
 
-add_test(NAME "clear-no-path-strace"
-	COMMAND ${TEST_DIR}/test-trace-command clear)
+add_test(NAME "[strace]-execve"
+	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 4)
 
-add_test(NAME "ls-no-path-strace"
-	COMMAND ${TEST_DIR}/test-trace-command ls)
+add_test(NAME "[strace]-umount"
+	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 5)
+
+add_test(NAME "[strace]-xattr"
+	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 6)
+
+# b) tests of system command with full path
 
 foreach(CMD date clear ls ping cat dir du uname free df)
 	execute_process(COMMAND which ${CMD}
@@ -92,6 +101,17 @@ foreach(CMD date clear ls ping cat dir du uname free df)
 		unset(ARGS)
 	endif ()
 
-	add_test(NAME ${CMD}
-		COMMAND ${TEST_DIR}/test-trace-command ${PATH} ${ARGS})
+	add_test(NAME "[strace]-${CMD}"
+		COMMAND ${TEST_DIR}/test-strace ${PATH} ${ARGS})
 endforeach(CMD)
+
+# c) tests of system command without full path
+
+add_test(NAME "[strace][no-path]-date"
+	COMMAND ${TEST_DIR}/test-strace date)
+
+add_test(NAME "[strace][no-path]-clear"
+	COMMAND ${TEST_DIR}/test-strace clear)
+
+add_test(NAME "[strace][no-path]-ls"
+	COMMAND ${TEST_DIR}/test-strace ls)

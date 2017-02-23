@@ -31,46 +31,44 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-# test/test-match -- test for strace.ebpf
+# test/test-match -- test for strace.ebpf using match and *.match files
 #
 
-
-TEST_FILE=./test_basic
-
-TEST_NUM=$1
-if [ "$TEST_NUM" == "" ]; then
-	echo "Usage: $0 <test-number>"
+if [ "$2" == "" ]; then
+	echo "Usage: $0 <test-file> <test-number>"
 	exit 1
 fi
 
-if [ ! -f $TEST_FILE ]; then
-	echo "Error: test file '$TEST_FILE' does not exist"
+TEST_NUM=$2
+TEST_FILE=$1
+if [ ! -x $TEST_FILE ]; then
+	echo "Error: executable file '$TEST_FILE' does not exist"
 	exit 1
 fi
 
 TEST_DIR=$(dirname $0)
-ROOT_DIR=$(dirname $TEST_DIR)
-SRC_DIR=$ROOT_DIR/src
-[ ! -d $SRC_DIR ] \
-	&& echo "Error: wrong project directory" \
-	&& exit 1
+[ "$TEST_DIR" == "." ] && TEST_DIR=$(pwd)
 
-SETUP=$TEST_DIR/setup.sh
 FUNCT=$TEST_DIR/helper_functions.sh
 COMMON=$TEST_DIR/common.sh
-[ ! -f $SETUP -o ! -f $COMMON -o ! -f $FUNCT ] \
-	&& echo "Error: one of files is missing: $SETUP, $COMMON or $FUNCT" \
+[ ! -f $COMMON -o ! -f $FUNCT ] \
+	&& echo "Error: one of files is missing: $COMMON or $FUNCT" \
 	&& exit 1
 
-source $SETUP
 source $COMMON
 source $FUNCT
 
-require_superuser
-
+PATTERN_START="FFFFFFFFFFFFFFFF close 0000000012345678"
+PATTERN_END="FFFFFFFFFFFFFFFF close 0000000087654321"
 OUT=output$TEST_NUM.log
 
-sudo -n bash -c "$RUN_STRACE -o $OUT $TEST_FILE $TEST_NUM"
+require_superuser
+
+# match files will be copied later
+rm -f *$TEST_NUM.log*
+
+echo "# sudo bash -c \"$RUN_STRACE -o $OUT $TEST_FILE $TEST_NUM\""
+sudo bash -c "$RUN_STRACE -o $OUT $TEST_FILE $TEST_NUM"
 
 case $TEST_NUM in
 # tests with one fork()

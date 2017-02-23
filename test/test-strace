@@ -31,7 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-# test/test-trace-command -- test for strace.ebpf
+# test/test-strace -- test for strace.ebpf (compare it with system strace)
 #
 
 # strace prints raw arguments for all except these syscalls (-e raw=!...):
@@ -39,23 +39,27 @@ OPT_STRACE="open,access,stat,lstat,statfs,execve,unlink,chroot,listxattr,\
 llistxattr,getxattr,lgetxattr,removexattr,lremovexattr,setxattr,\
 lsetxattr,mknod,mknodat,mount,swapon,swapoff,umount2,openat,newfstatat"
 
-TEST_DIR=$(dirname $0)
-[ "$TEST_DIR" == "." ] && TEST_DIR=$(pwd)
-ROOT_DIR=$(dirname $TEST_DIR)
-PATH_STRACE=$ROOT_DIR/src
-PATTERN=/tmp/strace
-OUT_NATIVE=$PATTERN-native.log
+PATTERN=./output-strace
+
+OUT_NATIVE_FULL=$PATTERN-native-full.log
 OUT_NATIVE_ALL=$PATTERN-native-all.log
-OUT_EBPF=$PATTERN-ebpf.log
+OUT_NATIVE=$PATTERN-native.log
+
+OUT_EBPF_FULL=$PATTERN-ebpf-full.log
 OUT_EBPF_ALL=$PATTERN-ebpf-all.log
-DIFF=$PATTERN-diff.log
+OUT_EBPF=$PATTERN-ebpf.log
+
 DIFF_ALL=$PATTERN-diff-all.log
+DIFF=$PATTERN-diff.log
+
 TMP=$(mktemp)
 
 FD="(fd)"
 ADDR="(addr)"
 FLAGS="(flags)"
 
+TEST_DIR=$(dirname $0)
+[ "$TEST_DIR" == "." ] && TEST_DIR=$(pwd)
 COMMON=$TEST_DIR/common.sh
 [ ! -f $COMMON ] \
 	&& echo "Error: missing file $COMMON" \
@@ -246,6 +250,8 @@ SKIP=0
 if [ "$1" == "s" ]; then
 	SKIP=1
 	shift 1
+else
+	rm -f $PATTERN*
 fi
 
 COMMAND="$*"
@@ -260,31 +266,32 @@ require_superuser
 
 if [ $SKIP -eq 0 ]; then
 	echo "Running system strace ..." >&2
-	echo "# sudo strace raw=!$OPT_STRACE $COMMAND" >&2
-	sudo strace -e raw=\!$OPT_STRACE $COMMAND 2>&1 1>/dev/null | grep -v -e "exit_group" -e "exited with" | grep "(" > $OUT_NATIVE_ALL
-	[ $(cat $OUT_NATIVE_ALL | wc -l) -eq 0 ] && echo "Error: no output of strace" >&2 && exit 1
+	echo "# sudo strace -e raw=!$OPT_STRACE $COMMAND" >&2
+	sudo strace -e raw=\!$OPT_STRACE $COMMAND 1>/dev/null 2>$OUT_NATIVE_FULL
+	[ $(cat $OUT_NATIVE_FULL | wc -l) -eq 0 ] && echo "Error: no output of strace" >&2 && exit 1
 
 	echo "Running strace.ebpf ..." >&2
-	echo "# sudo $PATH_STRACE/strace.ebpf -f -K' ' -e trace=kp-kern-all $COMMAND" >&2
-	sudo bash -c "ulimit -l 10240 && ulimit -n 10240 && $PATH_STRACE/strace.ebpf -f -K' ' -e trace=kp-kern-all -o $TMP $COMMAND" >/dev/null
-	grep -v -e "PID_TID" -e "strace.ebpf" $TMP > $OUT_EBPF_ALL
-	[ $(cat $OUT_EBPF_ALL | wc -l) -eq 0 ] && echo "Error: no output of strace.ebpf" >&2 && exit 1
+	echo "# sudo bash -c \"$RUN_STRACE -o $OUT_EBPF_FULL $COMMAND\"" >&2
+	sudo bash -c "$RUN_STRACE -o $OUT_EBPF_FULL $COMMAND" >/dev/null
+	[ $(cat $OUT_EBPF_FULL | wc -l) -eq 0 ] && echo "Error: no output of strace.ebpf" >&2 && exit 1
 fi
 
-echo "Converting strace's log ..." >&2
-convert_native $OUT_NATIVE_ALL > $OUT_NATIVE
-
-echo "Converting strace.ebpf's log ..." >&2
+echo "Converting strace.ebpf's log ($OUT_EBPF_FULL) ..." >&2
+grep -v -e "PID_TID" -e "$OUT_EBPF_FULL" $OUT_EBPF_FULL > $OUT_EBPF_ALL
 convert_ebpf $OUT_EBPF_ALL > $OUT_EBPF
+
+echo "Converting strace's log ($OUT_NATIVE_FULL) ..." >&2
+grep -v -e "exit_group" -e "exited with" $OUT_NATIVE_FULL | grep "(" > $OUT_NATIVE_ALL
+convert_native $OUT_NATIVE_ALL > $OUT_NATIVE
 
 diff -y $OUT_NATIVE $OUT_EBPF > $DIFF_ALL
 ERRORS=$(grep -e '|' -e '<' -e '>' $DIFF_ALL | tee $TMP | wc -l)
 
 if [ $ERRORS -eq 0 ]; then
-	echo "Passed."
+	echo "Test passed."
 	RV=0
 else
-	echo "FAILED !"
+	echo "Test FAILED!"
 	echo
 	echo "Following $ERRORS line(s) differ:"
 	echo "--- (system strace) -------------------------------------- | --- (strace.ebpf) ----------------------------------------"
