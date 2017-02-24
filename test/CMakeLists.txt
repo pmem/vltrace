@@ -47,15 +47,15 @@ add_test(NAME "[match]-basic"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 0)
 
 add_test(NAME "[match][fork]-basic"
-	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 1)
+	COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 1)
 
 add_test(NAME "[match]-unsupported"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 2)
 
 add_test(NAME "[match][fork]-unsupported"
-	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 3)
+	COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 3)
 
-add_test(NAME "[match]-execve"
+add_test(NAME "[match]-vfork"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4)
 
 add_test(NAME "[match]-umount"
@@ -76,7 +76,7 @@ add_test(NAME "[strace]-basic"
 add_test(NAME "[strace]-unsupported"
 	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 2)
 
-add_test(NAME "[strace]-execve"
+add_test(NAME "[strace]-vfork"
 	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 4)
 
 add_test(NAME "[strace]-umount"

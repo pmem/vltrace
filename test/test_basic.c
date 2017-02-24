@@ -114,7 +114,6 @@ test_basic_syscalls(void)
 	read (0x102, buffer, 2);
 	lseek(0x103, 3, SEEK_END);
 	fstat(0x104, &buf);
-	ioctl(7, 8, 9);
 	syscall(SYS_futex, 1, 2, 3, 4, 5, 6); /* futex */
 }
 
@@ -177,43 +176,18 @@ test_unsupported_syscalls(void)
 	swapon(NON_EXIST_PATH_1, 0x101);
 	swapoff(NON_EXIST_PATH_2);
 
-	if (vfork() == 0) { /* vfork - handle child */
-		execve(NON_EXIST_PATH_1, (char * const*)0x123456,
-			(char * const*)0x654321);
-		_exit(1);
-	}
-
-	syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 	syscall(SYS_poll, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
 
 	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, NON_EXIST_PATH_1,
 		0x101, (void *)0x102);
 
-	/* // (moved to test_5)
-	umount(NON_EXIST_PATH_2);
-	umount2(NON_EXIST_PATH_1, 0x103);
-	*/
+	syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
-	/* // (moved to test_6)
-	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
-		 (const void *)0x101, 0x102, 0x103);
-	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
-		  (const void *)0x104, 0x105, 0x106);
-	fsetxattr(0x107, NON_EXIST_PATH_2,
-		  (const void *)0x108, 0x109, 0x110);
-
-	getxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, (void *)0x101, 0x102);
-	lgetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, (void *)0x103, 0x104);
-	fgetxattr(0x105, NON_EXIST_PATH_2, (void *)0x106, 0x107);
-
-	listxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, 0x101);
-	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x102);
-	flistxattr(0x103, NON_EXIST_PATH_2, 0x104);
-
-	removexattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
-	lremovexattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1);
-	fremovexattr(0x101, NON_EXIST_PATH_2);
-	*/
+	/*
+	 *   vfork            - moved to test_4
+	 *   umount & umount2 - moved to test_5
+	 *   *xattr           - moved to test_6
+	 */
 }
 
 /*
@@ -255,12 +229,32 @@ static void test_3(void)
 }
 
 /*
- * test_4 -- test execve()
+ * test_4 -- test vfork()
  */
 static void test_4(void)
 {
 	MARK_START();
-	execve(NON_EXIST_PATH_1, (char * const*)0x1234, (char * const*)0x4321);
+
+	/*
+	 * test if other syscalls are correctly detected,
+	 * when vfork is present
+	 */
+	syscall(SYS_open, NON_EXIST_PATH_1, 0x101, 0x102, 0x103, 0x104, 0x105);
+	syscall(SYS_close, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
+
+	if (vfork() == 0) { /* vfork - handle child */
+		execve(NON_EXIST_PATH_1, (char * const*)0x123456,
+		       (char * const*)0x654321);
+		_exit(1);
+	}
+
+	/*
+	 * test if other syscalls are correctly detected,
+	 * when vfork is present
+	 */
+	syscall(SYS_open, NON_EXIST_PATH_2, 0x102, 0x103, 0x104, 0x105, 0x106);
+	syscall(SYS_close, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
+
 	MARK_END();
 }
 

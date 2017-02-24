@@ -84,9 +84,9 @@ function split_forked_file() {
 
 	set +e
 
-	grep    $PID $INPUT > $OUT1
-	grep -v $PID $INPUT > $OUT2
-	grep    fork $INPUT | grep -v vfork > $OUT3
+	grep    "$PID" $INPUT > $OUT1
+	grep -v "$PID" $INPUT > $OUT2
+	grep    "fork" $INPUT | grep -v "vfork" > $OUT3
 
 	set -e
 }
@@ -125,8 +125,8 @@ function check() {
 	SC_IS=$(echo $OUT | cut -d" " -f2)
 	echo "------"
 	[ "$SC_MATCH" != "$SC_IS" ] \
-		&& echo "Error: missed syscall '$SC_MATCH'" \
-		|| echo "Error: wrong arguments of syscall '$SC_MATCH'"
+		&& echo "Error: missed syscall $SC_MATCH" \
+		|| echo "Error: wrong arguments of syscall $SC_MATCH"
 	echo "------"
 	return $RV
 }

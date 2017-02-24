@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright 2017, Intel Corporation
 #
@@ -31,27 +32,21 @@
 #
 
 #
-# test/common.sh -- common setup for strace.ebpf tests
+# test/utils/report-tests.sh -- generate test report
 #
 
-OPT_STRACE_EBPF="-K' ' -e trace=kp-kern-all"
+DIR=$(dirname $0)
 
-STRACE_EBPF=../src/strace.ebpf
-[ ! -x $STRACE_EBPF ] \
-	&& echo "Error: executable file '$STRACE_EBPF' does not exist" \
-	&& exit 1
+TAB="	"
 
-RUN_STRACE="ulimit -l 10240 && ulimit -n 10240 && $STRACE_EBPF $OPT_STRACE_EBPF"
-
-#
-# require_superuser -- require superuser capabilities
-#
-function require_superuser() {
-	local user_id=$(sudo -n id -u)
-	[ "$user_id" == "0" ] && return
-	echo "Superuser rights required, please enter root's password:"
-	sudo date > /dev/null
-	[ $? -eq 0 ] && return
-	echo "Authentication failed, aborting..."
-	exit 1
-}
+ERR=$($DIR/view-tests.sh long | grep '%' | cut -d"$TAB" -f3 | sort | uniq)
+if [ "$ERR" != "" ]; then
+	echo
+	echo Report:
+	for e in $ERR; do
+		echo
+		echo -$e:
+		$DIR/view-tests.sh long | grep '%' | grep $e | sed "s/$e//g"
+	done
+fi
+exit

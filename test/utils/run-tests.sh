@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright 2017, Intel Corporation
 #
@@ -31,27 +32,35 @@
 #
 
 #
-# test/common.sh -- common setup for strace.ebpf tests
+# test/utils/run-tests.sh -- run ctests for strace.ebpf
 #
 
-OPT_STRACE_EBPF="-K' ' -e trace=kp-kern-all"
-
-STRACE_EBPF=../src/strace.ebpf
-[ ! -x $STRACE_EBPF ] \
-	&& echo "Error: executable file '$STRACE_EBPF' does not exist" \
-	&& exit 1
-
-RUN_STRACE="ulimit -l 10240 && ulimit -n 10240 && $STRACE_EBPF $OPT_STRACE_EBPF"
-
-#
-# require_superuser -- require superuser capabilities
-#
-function require_superuser() {
-	local user_id=$(sudo -n id -u)
-	[ "$user_id" == "0" ] && return
-	echo "Superuser rights required, please enter root's password:"
-	sudo date > /dev/null
-	[ $? -eq 0 ] && return
-	echo "Authentication failed, aborting..."
+MAX=$1
+if [ "$MAX" == "" ]; then
+	echo "Usage: $0 <number-of-iterations> <tests-to-run>"
+	echo "  e.g. $0 10 1 2 3 - runs tests (1,2,3) ten (10) times"
 	exit 1
-}
+else
+shift
+fi
+
+TESTS=$*
+if [ "$TESTS" == "" ]; then
+	TOTAL=$(ctest -N | tail -n1 | cut -d' ' -f3)
+	TESTS=$(seq -s' ' $TOTAL)
+fi
+
+echo
+echo "Number of iterations: $MAX"
+echo "Tests to run: $TESTS"
+echo
+
+N=1
+while [ $N -le $MAX ]; do
+	echo "--- TEST #$N ---"
+	for n in $TESTS; do
+		echo "--- TEST #$N ---" >> log${n}.txt
+		ctest -V -I ${n},${n} 2>&1 | tee -a log${n}.txt
+	done
+	N=$(($N + 1))
+done
