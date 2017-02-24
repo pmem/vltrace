@@ -114,7 +114,6 @@ test_basic_syscalls(void)
 	read (0x102, buffer, 2);
 	lseek(0x103, 3, SEEK_END);
 	fstat(0x104, &buf);
-	ioctl(7, 8, 9);
 	syscall(SYS_futex, 1, 2, 3, 4, 5, 6); /* futex */
 }
 
