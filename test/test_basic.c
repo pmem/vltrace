@@ -177,11 +177,12 @@ test_unsupported_syscalls(void)
 	swapon(NON_EXIST_PATH_1, 0x101);
 	swapoff(NON_EXIST_PATH_2);
 
-	syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 	syscall(SYS_poll, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
 
 	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, NON_EXIST_PATH_1,
 		0x101, (void *)0x102);
+
+	syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
 	/*
 	 *   vfork            - moved to test_4
