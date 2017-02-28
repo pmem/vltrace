@@ -32,15 +32,15 @@
 #
 #
 # test/utils/view-tests.sh -- view results of ctests for strace.ebpf
-#                             (has to be run in the build directory)
+#
+# Usage: view-tests.sh [long] [<minimum-value>]
 #
 
-TOTAL=$(ctest -N | tail -n1 | cut -d' ' -f3)
-[ "$TOTAL" == "" ] \
-	&& echo "$0 has to be run in the ctest build directory" \
-	&& exit 1
+[ "$1" == "long" ] && LONG=1 && shift || LONG=0
+[ "$1" != "" ] && MIN=$1 || MIN=1
 
-TESTS=$(seq -s' ' $TOTAL)
+MAX=$(ls -1 log* | cut -c4- | cut -d'.' -f1 | sort -n | tail -n1)
+TESTS=$(seq -s' ' $MAX)
 
 for n in $TESTS; do
 	[ ! -f ./log${n}.txt ] && continue
@@ -55,7 +55,8 @@ for n in $TESTS; do
 		ERR=$(grep "Error:" ./log${n}.txt | cut -d" " -f5 | sort | uniq)
 		for e in $ERR; do
 			C=$(grep "Error:" ./log${n}.txt | cut -d" " -f5 | grep $e | wc -l)
-			[ "$1" == "" ] \
+			[ $C -lt $MIN ] && continue
+			[ $LONG -eq 0 ] \
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$e" \
 				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$e\t$NAME"
 		done
@@ -64,7 +65,8 @@ for n in $TESTS; do
 		[ "$L" != "" ] && \
 		for l in $L; do
 			C=$(grep -e "<" ./log${n}.txt | cut -d" " -f2 | grep $l | wc -l)
-			[ "$1" == "" ] \
+			[ $C -lt $MIN ] && continue
+			[ $LONG -eq 0 ] \
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$l" \
 				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$l\t$NAME"
 		done
@@ -74,7 +76,8 @@ for n in $TESTS; do
 			echo "Extras:"
 			for r in $R; do
 				C=$(grep -e ">" ./log${n}.txt | cut -d">" -f2 | cut -d'	' -f2 | cut -d' ' -f1 | grep $r | wc -l)
-				[ "$1" == "" ] \
+				[ $C -lt $MIN ] && continue
+				[ $LONG -eq 0 ] \
 					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$r" \
 					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$r\t$NAME"
 			done
@@ -85,7 +88,8 @@ for n in $TESTS; do
 			echo "Diffs:"
 			for d in $D; do
 				C=$(grep -e "|" ./log${n}.txt | grep -v "(strace.ebpf)" | cut -d" " -f2 | grep $d | wc -l)
-				[ "$1" == "" ] \
+				[ $C -lt $MIN ] && continue
+				[ $LONG -eq 0 ] \
 					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$d" \
 					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$d\t$NAME"
 			done

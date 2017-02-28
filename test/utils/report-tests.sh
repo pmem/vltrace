@@ -34,19 +34,23 @@
 #
 # test/utils/report-tests.sh -- generate test report
 #
+# Usage: report-tests.sh <file-with-output-of-$(view-tests.sh long [<minimum>])>
+#    or: report-tests.sh [<minimum>]
+#
 
-DIR=$(dirname $0)
+[ "$1" != "" ] && [ -f $1 ] \
+	&& OUTPUT="cat $1" \
+	|| OUTPUT="$(dirname $0)/view-tests.sh long $1"
 
 TAB="	"
 
-ERR=$($DIR/view-tests.sh long | grep '%' | cut -d"$TAB" -f3 | sort | uniq)
+ERR=$($OUTPUT | grep '%' | cut -d"$TAB" -f3 | sort | uniq)
 if [ "$ERR" != "" ]; then
-	echo
 	echo Report:
 	for e in $ERR; do
 		echo
 		echo -$e:
-		$DIR/view-tests.sh long | grep '%' | grep $e | sed "s/$e//g"
+		$OUTPUT | grep '%' | grep -P "\t${e}\t" | sed "s/\t$e\t/\t\t/g"
 	done
 fi
 exit

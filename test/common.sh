@@ -34,7 +34,7 @@
 # test/common.sh -- common setup for strace.ebpf tests
 #
 
-OPT_STRACE_EBPF="-K' ' -e trace=kp-kern-all"
+OPT_STRACE_EBPF="-t -K' ' -e trace=kp-kern-all"
 
 STRACE_EBPF=../src/strace.ebpf
 [ ! -x $STRACE_EBPF ] \

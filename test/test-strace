@@ -213,7 +213,7 @@ function convert_ebpf() {
 
 	cat $FILE | \
 	while IFS='' read -r line || [[ -n "$line" ]]; do
-		NAME=$(echo $line | cut -d" " -f4)
+		NAME=$(echo $line | cut -d" " -f5)
 		# remove 'new' prefix
 		[[ $NAME =~ ^new ]] \
 			&& NAME=$(echo $NAME | sed 's/new//g')
@@ -221,10 +221,10 @@ function convert_ebpf() {
 		[[ $NAME =~ _pgoff$ ]] \
 			&& NAME=$(echo $NAME | sed 's/_pgoff//g')
 
-		# RES=$(echo $line | cut -d" " -f3)
+		# RES=$(echo $line | cut -d" " -f4)
 
-		ARG1=$(echo $line | cut -d" " -f5)
-		ARG2=$(echo $line | cut -d" " -f6)
+		ARG1=$(echo $line | cut -d" " -f6)
+		ARG2=$(echo $line | cut -d" " -f7)
 
 		[[ $ARG1 =~ ^[0F] ]] && ARG1=$(( 0x$ARG1 + 0))
 		[[ $ARG2 =~ ^[0F] ]] && ARG2=$(( 0x$ARG2 + 0))
@@ -277,7 +277,7 @@ if [ $SKIP -eq 0 ]; then
 fi
 
 echo "Converting strace.ebpf's log ($OUT_EBPF_FULL) ..." >&2
-grep -v -e "PID_TID" -e "$OUT_EBPF_FULL" $OUT_EBPF_FULL > $OUT_EBPF_ALL
+grep -v -e "PID_TID" -e "$OUT_EBPF_FULL" $OUT_EBPF_FULL | sort -o $OUT_EBPF_ALL
 convert_ebpf $OUT_EBPF_ALL > $OUT_EBPF
 
 echo "Converting strace's log ($OUT_NATIVE_FULL) ..." >&2

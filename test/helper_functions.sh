@@ -31,7 +31,7 @@
 #
 
 #
-# get_line_of_pattern -- get a line number of the pattern in the file
+# get_line_of_pattern -- get a line number of the first pattern in the file
 #                        get_line_of_pattern <file> <pattern>
 #
 function get_line_of_pattern() {
@@ -49,26 +49,18 @@ function cut_part_file() {
 	local FILE=$1
 	local PATTERN1=$2
 	local PATTERN2=$3
-	local TEMP=$(mktemp)
-
-	local NLINES=$(cat $FILE | wc -l)
 
 	local LINE1=$(get_line_of_pattern $FILE "$PATTERN1")
 	[ "$LINE1" == "" ] \
 		&& echo "Error: cut_part_file(): no pattern \"$PATTERN1\" found in file $FILE" >&2 \
 		&& exit 1
 
-	NLINES=$(($NLINES - $LINE1 + 1))
-	tail -n$NLINES $FILE > $TEMP
-
-	local LINE2=$(get_line_of_pattern $TEMP "$PATTERN2")
+	local LINE2=$(get_line_of_pattern $FILE "$PATTERN2")
 	[ "$LINE2" == "" ] \
 		&& echo "Error: cut_part_file(): no pattern \"$PATTERN2\" found in file $FILE" >&2 \
 		&& exit 1
 
-	head -n$LINE2 $TEMP
-
-	rm -f $TEMP
+	sed -n ${LINE1},${LINE2}p $FILE
 }
 
 #
@@ -80,7 +72,7 @@ function split_forked_file() {
 	OUT2=$3
 	OUT3=$4
 
-	PID=$(tail -n1 $INPUT | cut -d" " -f1)
+	PID=$(tail -n1 $INPUT | cut -d" " -f2)
 
 	set +e
 
@@ -119,7 +111,7 @@ function check() {
 
 	# match failed
 	tail -n11 $TEMP_OUT
-	OUT=$(tail -n3 $TEMP_OUT | head -n2 | cut -c21- | cut -d" " -f4)
+	OUT=$(tail -n3 $TEMP_OUT | head -n2 | cut -c21- | cut -d" " -f5)
 	rm -f $TEMP_OUT
 	SC_MATCH=$(echo $OUT | cut -d" " -f1)
 	SC_IS=$(echo $OUT | cut -d" " -f2)
