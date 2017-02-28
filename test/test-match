@@ -98,4 +98,11 @@ else
 	cut_part_file outB-sorted-$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutB$TEST_NUM.log
 fi
 
+if [ "${STRACE_EBPF_TEST_SAVE_LOGS}" ]; then
+	DIR_NAME="test-match-$TEST_NUM-$(date +%F_%T_%N)-$$"
+	mkdir $DIR_NAME
+	cp *$TEST_NUM.log $DIR_NAME/
+	echo "NOTICE: all log files were saved in the directory: $DIR_NAME"
+fi
+
 check

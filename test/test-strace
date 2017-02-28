@@ -52,8 +52,6 @@ OUT_EBPF=$PATTERN-ebpf.log
 DIFF_ALL=$PATTERN-diff-all.log
 DIFF=$PATTERN-diff.log
 
-TMP=$(mktemp)
-
 FD="(fd)"
 ADDR="(addr)"
 FLAGS="(flags)"
@@ -254,6 +252,8 @@ else
 	rm -f $PATTERN*
 fi
 
+NAME=$(basename $1)
+
 COMMAND="$*"
 if [ "$COMMAND" == "" ]; then
 	echo "Usage: $0 <command-to-be-tested>"
@@ -285,7 +285,7 @@ grep -v -e "exit_group" -e "exited with" $OUT_NATIVE_FULL | grep "(" > $OUT_NATI
 convert_native $OUT_NATIVE_ALL > $OUT_NATIVE
 
 diff -y $OUT_NATIVE $OUT_EBPF > $DIFF_ALL
-ERRORS=$(grep -e '|' -e '<' -e '>' $DIFF_ALL | tee $TMP | wc -l)
+ERRORS=$(grep -e '|' -e '<' -e '>' $DIFF_ALL | tee $DIFF | wc -l)
 
 if [ $ERRORS -eq 0 ]; then
 	echo "Test passed."
@@ -295,7 +295,7 @@ else
 	echo
 	echo "Following $ERRORS line(s) differ:"
 	echo "--- (system strace) -------------------------------------- | --- (strace.ebpf) ----------------------------------------"
-	cat $TMP | tee $DIFF
+	cat $DIFF
 	echo "--- (system strace) -------------------------------------- | --- (strace.ebpf) ----------------------------------------"
 	echo "($ERRORS line(s) differ)"
 	echo
@@ -308,6 +308,11 @@ else
 	RV=1
 fi
 
-rm -f $TMP
+if [ "${STRACE_EBPF_TEST_SAVE_LOGS}" ]; then
+	DIR_NAME="test-strace-$NAME-$(date +%F_%T_%N)-$$"
+	mkdir $DIR_NAME
+	cp $PATTERN* $DIR_NAME/
+	echo "NOTICE: all log files were saved in the directory: $DIR_NAME"
+fi
 
 exit $RV
