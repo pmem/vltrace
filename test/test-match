@@ -73,8 +73,8 @@ OUT=output$TEST_NUM.log
 
 require_superuser
 
-# match files will be copied later
-rm -f *$TEST_NUM.log*
+# remove all logs of the current test
+rm -f *$TEST_NUM.log
 
 echo "# sudo bash -c \"$RUN_STRACE $FF -o $OUT $TEST_FILE $TEST_NUM\""
 sudo bash -c "$RUN_STRACE $FF -o $OUT $TEST_FILE $TEST_NUM"
