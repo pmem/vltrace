@@ -81,12 +81,21 @@ sudo bash -c "$RUN_STRACE $FF -o $OUT $TEST_FILE $TEST_NUM"
 
 if [ "$FF" == "" ]; then
 	# tests without fork()
+
+	SORTED=output-sorted-$TEST_NUM.log
+	grep -v -e "PID_TID" -e "$OUT" $OUT | sort -o $SORTED
+	OUT=$SORTED
+
 	cut_part_file $OUT "$PATTERN_START" "$PATTERN_END" > cut_$TEST_NUM.log
 else
 	# tests with fork()
 	split_forked_file $OUT outA$TEST_NUM.log outB$TEST_NUM.log cutF$TEST_NUM.log
-	cut_part_file outA$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutA$TEST_NUM.log
-	cut_part_file outB$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutB$TEST_NUM.log
+
+	sort outA$TEST_NUM.log -o outA-sorted-$TEST_NUM.log
+	sort outB$TEST_NUM.log -o outB-sorted-$TEST_NUM.log
+
+	cut_part_file outA-sorted-$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutA$TEST_NUM.log
+	cut_part_file outB-sorted-$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutB$TEST_NUM.log
 fi
 
 check

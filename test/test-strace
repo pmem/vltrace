@@ -277,7 +277,7 @@ if [ $SKIP -eq 0 ]; then
 fi
 
 echo "Converting strace.ebpf's log ($OUT_EBPF_FULL) ..." >&2
-grep -v -e "PID_TID" -e "$OUT_EBPF_FULL" $OUT_EBPF_FULL > $OUT_EBPF_ALL
+grep -v -e "PID_TID" -e "$OUT_EBPF_FULL" $OUT_EBPF_FULL | sort -o $OUT_EBPF_ALL
 convert_ebpf $OUT_EBPF_ALL > $OUT_EBPF
 
 echo "Converting strace's log ($OUT_NATIVE_FULL) ..." >&2
