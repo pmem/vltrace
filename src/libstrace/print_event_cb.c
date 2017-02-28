@@ -842,9 +842,6 @@ print_event_hex(FILE *f, void *data, int size)
 	if (Args.failed && (event->ret >= 0))
 		return;
 
-	fprint_i64(f, event->pid_tid);
-	fwrite_out_lf_fld_sep(f);
-
 	if (Args.timestamp) {
 		unsigned long long delta_nsec =
 			event->finish_ts_nsec - start_ts_nsec;
@@ -852,6 +849,9 @@ print_event_hex(FILE *f, void *data, int size)
 		fprint_i64(f, delta_nsec);
 		fwrite_out_lf_fld_sep(f);
 	}
+
+	fprint_i64(f, event->pid_tid);
+	fwrite_out_lf_fld_sep(f);
 
 	fprint_i64(f, (uint64_t)err);
 	fwrite_out_lf_fld_sep(f);

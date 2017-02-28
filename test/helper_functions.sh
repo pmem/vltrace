@@ -72,7 +72,7 @@ function split_forked_file() {
 	OUT2=$3
 	OUT3=$4
 
-	PID=$(tail -n1 $INPUT | cut -d" " -f1)
+	PID=$(tail -n1 $INPUT | cut -d" " -f2)
 
 	set +e
 
