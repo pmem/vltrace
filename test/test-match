@@ -69,33 +69,31 @@ source $FUNCT
 
 PATTERN_START="close 0000000012345678"
 PATTERN_END="close 0000000087654321"
-OUT=output$TEST_NUM.log
+OUT=output-$TEST_NUM.log
+OUT_BARE=output-bare-$TEST_NUM.log
+OUT_SORT=output-sort-$TEST_NUM.log
 
 require_superuser
 
 # remove all logs of the current test
-rm -f *$TEST_NUM.log
+rm -f *-$TEST_NUM.log
 
 echo "# sudo bash -c \"$RUN_STRACE $FF -o $OUT $TEST_FILE $TEST_NUM\""
 sudo bash -c "$RUN_STRACE $FF -o $OUT $TEST_FILE $TEST_NUM"
 
+grep -v -e "PID_TID" -e "$OUT" $OUT > $OUT_BARE
+
 if [ "$FF" == "" ]; then
 	# tests without fork()
-
-	SORTED=output-sorted-$TEST_NUM.log
-	grep -v -e "PID_TID" -e "$OUT" $OUT | sort -o $SORTED
-	OUT=$SORTED
-
-	cut_part_file $OUT "$PATTERN_START" "$PATTERN_END" > cut_$TEST_NUM.log
+	sort $OUT_BARE -o $OUT_SORT
+	cut_part_file $OUT_SORT "$PATTERN_START" "$PATTERN_END" > cut-$TEST_NUM.log
 else
 	# tests with fork()
-	split_forked_file $OUT outA$TEST_NUM.log outB$TEST_NUM.log cutF$TEST_NUM.log
-
-	sort outA$TEST_NUM.log -o outA-sorted-$TEST_NUM.log
-	sort outB$TEST_NUM.log -o outB-sorted-$TEST_NUM.log
-
-	cut_part_file outA-sorted-$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutA$TEST_NUM.log
-	cut_part_file outB-sorted-$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cutB$TEST_NUM.log
+	NFILES=$(split_forked_file $OUT_BARE out $TEST_NUM.log)
+	for N in $(seq -s' ' $NFILES); do
+		sort out-$N-$TEST_NUM.log -o out-sort-$N-$TEST_NUM.log
+		cut_part_file out-sort-$N-$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cut-$N-$TEST_NUM.log
+	done
 fi
 
 check

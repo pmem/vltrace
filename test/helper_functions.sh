@@ -64,23 +64,34 @@ function cut_part_file() {
 }
 
 #
-# split_forked_file - split log files of two forked processes
+# split_forked_file - split log files of forked processes
+#                     split_forked_file <file> <name-part1> <name-part2>
 #
 function split_forked_file() {
-	INPUT=$1
-	OUT1=$2
-	OUT2=$3
-	OUT3=$4
+	NAME1=$2
+	NAME2=$3
 
-	PID=$(tail -n1 $INPUT | cut -d" " -f2)
+	local INPUT=$(mktemp)
+	local GREP=$(mktemp)
 
-	set +e
+	cp $1 $INPUT
 
-	grep    "$PID" $INPUT > $OUT1
-	grep -v "$PID" $INPUT > $OUT2
-	grep    "fork" $INPUT | grep -v "vfork" > $OUT3
-
-	set -e
+	local N=0
+	local PID="fork"
+	while true; do
+		NAME="${NAME1}-${N}-${NAME2}"
+		touch $NAME
+		set +e
+		grep    "$PID" $INPUT > $NAME
+		grep -v "$PID" $INPUT > $GREP
+		cp $GREP $INPUT
+		set -e
+		[ $(cat $INPUT | wc -l) -eq 0 ] && break
+		PID=$(head -n1 $INPUT | cut -d" " -f2)
+		N=$(($N + 1))
+	done
+	rm -f $GREP $INPUT
+	echo $N
 }
 
 #
@@ -103,8 +114,8 @@ function get_files() {
 function check() {
 	local MATCH_OUT="match-${TEST_NUM}.log"
 	set +e
-	[ "$TEST_DIR" != "$(pwd)" ] && cp -v -f $TEST_DIR/*${TEST_NUM}.log.match .
-	$TEST_DIR/match $(get_files "[^0-9w]*${TEST_NUM}\.log\.match") >$MATCH_OUT 2>&1
+	[ "$TEST_DIR" != "$(pwd)" ] && cp -v -f $TEST_DIR/*-${TEST_NUM}.log.match .
+	$TEST_DIR/match $(get_files ".*-${TEST_NUM}\.log\.match") >$MATCH_OUT 2>&1
 	RV=$?
 	set -e
 	[ $RV -eq 0 ] && rm -f $MATCH_OUT && return
@@ -121,7 +132,7 @@ function check() {
 		|| echo "Error: wrong arguments of syscall $SC_MATCH"
 	echo "------"
 
-	save_logs "*$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM"
+	save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM"
 
 	return $RV
 }
