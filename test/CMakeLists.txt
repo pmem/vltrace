@@ -58,6 +58,9 @@ add_test(NAME "[match]-unsupported"
 add_test(NAME "[match][fork]-unsupported"
 	COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 3)
 
+add_test(NAME "[match][double-fork]-unsupported"
+	COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 8)
+
 add_test(NAME "[match]-vfork"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4)
 
