@@ -120,5 +120,8 @@ function check() {
 		&& echo "Error: missed syscall $SC_MATCH" \
 		|| echo "Error: wrong arguments of syscall $SC_MATCH"
 	echo "------"
+
+	save_logs "*$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM"
+
 	return $RV
 }
