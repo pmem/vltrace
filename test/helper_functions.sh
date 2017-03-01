@@ -111,7 +111,8 @@ function check() {
 
 	# match failed
 	tail -n11 $TEMP_OUT
-	OUT=$(tail -n3 $TEMP_OUT | head -n2 | cut -c21- | cut -d" " -f5)
+	local NC=$(tail -n3 $TEMP_OUT | head -n1 | cut -d'$' -f1 | wc -c)
+	local OUT=$(tail -n3 $TEMP_OUT | head -n2 | cut -c${NC}- | cut -d" " -f5)
 	rm -f $TEMP_OUT
 	SC_MATCH=$(echo $OUT | cut -d" " -f1)
 	SC_IS=$(echo $OUT | cut -d" " -f2)
