@@ -102,8 +102,8 @@ function get_files() {
 #
 function check() {
 	local TEMP_OUT=$(mktemp)
-	cp -v $TEST_DIR/*${TEST_NUM}.log.match .
 	set +e
+	[ "$TEST_DIR" != "$(pwd)" ] && cp -v -f $TEST_DIR/*${TEST_NUM}.log.match .
 	$TEST_DIR/match $(get_files "[^0-9w]*${TEST_NUM}\.log\.match") >$TEMP_OUT 2>&1
 	RV=$?
 	set -e
