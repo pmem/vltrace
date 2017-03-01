@@ -101,18 +101,18 @@ function get_files() {
 # check -- check test results (using .match files)
 #
 function check() {
-	local TEMP_OUT=$(mktemp)
-	cp -v $TEST_DIR/*${TEST_NUM}.log.match .
+	local MATCH_OUT="match-${TEST_NUM}.log"
 	set +e
-	$TEST_DIR/match $(get_files "[^0-9w]*${TEST_NUM}\.log\.match") >$TEMP_OUT 2>&1
+	[ "$TEST_DIR" != "$(pwd)" ] && cp -v -f $TEST_DIR/*${TEST_NUM}.log.match .
+	$TEST_DIR/match $(get_files "[^0-9w]*${TEST_NUM}\.log\.match") >$MATCH_OUT 2>&1
 	RV=$?
 	set -e
-	[ $RV -eq 0 ] && rm -f $TEMP_OUT && return
+	[ $RV -eq 0 ] && rm -f $MATCH_OUT && return
 
 	# match failed
-	tail -n11 $TEMP_OUT
-	OUT=$(tail -n3 $TEMP_OUT | head -n2 | cut -c21- | cut -d" " -f5)
-	rm -f $TEMP_OUT
+	tail -n11 $MATCH_OUT
+	local NC=$(tail -n3 $MATCH_OUT | head -n1 | cut -d'$' -f1 | wc -c)
+	local OUT=$(tail -n3 $MATCH_OUT | head -n2 | cut -c${NC}- | cut -d" " -f5)
 	SC_MATCH=$(echo $OUT | cut -d" " -f1)
 	SC_IS=$(echo $OUT | cut -d" " -f2)
 	echo "------"
@@ -120,5 +120,8 @@ function check() {
 		&& echo "Error: missed syscall $SC_MATCH" \
 		|| echo "Error: wrong arguments of syscall $SC_MATCH"
 	echo "------"
+
+	save_logs "*$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM"
+
 	return $RV
 }

@@ -253,6 +253,7 @@ else
 fi
 
 NAME=$(basename $1)
+[ "$NAME" == "test_basic" ] && NAME="$NAME-$2"
 
 COMMAND="$*"
 if [ "$COMMAND" == "" ]; then
@@ -305,14 +306,10 @@ else
 	echo
 	echo "Tracing of the command '$COMMAND' FAILED."
 	echo
-	RV=1
-fi
 
-if [ "${STRACE_EBPF_TEST_SAVE_LOGS}" ]; then
-	DIR_NAME="test-strace-$NAME-$(date +%F_%T_%N)-$$"
-	mkdir $DIR_NAME
-	cp $PATTERN* $DIR_NAME/
-	echo "NOTICE: all log files were saved in the directory: $DIR_NAME"
+	save_logs "$PATTERN*" "strace-$NAME"
+
+	RV=1
 fi
 
 exit $RV

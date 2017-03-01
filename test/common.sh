@@ -55,3 +55,19 @@ function require_superuser() {
 	echo "Authentication failed, aborting..."
 	exit 1
 }
+
+#
+# save_logs -- save all logs of the current test
+#
+# usage: save_logs <file-mask> <name-pattern>
+#
+function save_logs() {
+	FILE_MASK=$1
+	NAME_PATTERN=$2
+	if [ "${STRACE_EBPF_TEST_SAVE_LOGS}" ]; then
+		DIR_NAME="logs-${NAME_PATTERN}-$(date +%F_%T_%N)-$$"
+		mkdir $DIR_NAME
+		cp $FILE_MASK $DIR_NAME/
+		echo "NOTICE: all log files were saved in the directory: $DIR_NAME"
+	fi
+}
