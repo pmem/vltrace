@@ -140,7 +140,8 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 		char reader_name[128];
 
 		struct perf_reader *reader =
-			bpf_open_perf_buffer(callback, NULL, -1, cpu);
+			bpf_open_perf_buffer(callback, NULL, -1, cpu,
+					Args.strace_reader_page_cnt);
 
 		if (NULL == reader) {
 			fprintf(stderr,

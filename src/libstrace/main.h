@@ -71,6 +71,12 @@ enum fnr_mode {
 enum { OUT_BUF_SIZE = 8 * 1024 * 1024 };
 
 /*
+ * The default size of ring buffers in 4k pages. Must be a power of two.
+ *    The lowest possible value is 64. The compromise is 4096.
+ */
+enum { STRACE_READER_PAGE_CNT_DEFAULT = 4096 };
+
+/*
  * This structure contains default and parsed values for command-line options
  */
 struct cl_options {
@@ -115,6 +121,12 @@ struct cl_options {
 	unsigned out_buf_size;
 
 	const char *ebpf_src_dir;
+
+	/*
+	 * The size of ring buffers in 4k pages. Must be a power of two.
+	 * The lowest possible value is 64.
+	 */
+	int strace_reader_page_cnt;
 };
 
 extern struct cl_options Args;
