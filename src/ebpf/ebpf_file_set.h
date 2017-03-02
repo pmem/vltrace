@@ -136,4 +136,8 @@ extern const char _binary_pid_check_ff_fast_hook_c_start[];
 extern const char _binary_pid_check_ff_full_hook_c_size[];
 extern const char _binary_pid_check_ff_full_hook_c_start[];
 
+#define BINARY_FILE_SIZE(name) (size_t)(_binary_##name##_size)
+#define BINARY_FILE_CONTENT(name) strndup(_binary_##name##_start, \
+		BINARY_FILE_SIZE(name))
+
 #endif /* EBPF_FILE_SET_H */

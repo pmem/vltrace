@@ -111,7 +111,7 @@ save_trace_h(void)
 	if (fd == -1)
 		return;
 
-	res = write(fd, _binary_trace_h_start, (size_t)_binary_trace_h_size);
+	res = write(fd, _binary_trace_h_start, BINARY_FILE_SIZE(trace_h));
 
 	close(fd);
 }
