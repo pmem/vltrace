@@ -37,6 +37,8 @@
 #ifndef EBPF_FILE_SET_H
 #define EBPF_FILE_SET_H
 
+#include <stdint.h>
+
 /* names */
 
 extern const char *ebpf_trace_h_file;
@@ -73,70 +75,71 @@ char *ebpf_load_file(const char *fn);
 
 /* bodies */
 
-extern const char _binary_trace_file_tmpl_sl_c_size[];
+extern const char _binary_trace_file_tmpl_sl_c_end[];
 extern const char _binary_trace_file_tmpl_sl_c_start[];
 
-extern const char _binary_trace_fileat_tmpl_sl_c_size[];
+extern const char _binary_trace_fileat_tmpl_sl_c_end[];
 extern const char _binary_trace_fileat_tmpl_sl_c_start[];
 
-extern const char _binary_trace_fs_path_1_2_arg_tmpl_sl_c_size[];
+extern const char _binary_trace_fs_path_1_2_arg_tmpl_sl_c_end[];
 extern const char _binary_trace_fs_path_1_2_arg_tmpl_sl_c_start[];
 
-extern const char _binary_trace_fs_path_1_3_arg_tmpl_sl_c_size[];
+extern const char _binary_trace_fs_path_1_3_arg_tmpl_sl_c_end[];
 extern const char _binary_trace_fs_path_1_3_arg_tmpl_sl_c_start[];
 
-extern const char _binary_trace_fs_path_2_4_arg_tmpl_sl_c_size[];
+extern const char _binary_trace_fs_path_2_4_arg_tmpl_sl_c_end[];
 extern const char _binary_trace_fs_path_2_4_arg_tmpl_sl_c_start[];
 
-extern const char _binary_trace_file_tmpl_ml_c_size[];
+extern const char _binary_trace_file_tmpl_ml_c_end[];
 extern const char _binary_trace_file_tmpl_ml_c_start[];
 
-extern const char _binary_trace_fileat_tmpl_ml_c_size[];
+extern const char _binary_trace_fileat_tmpl_ml_c_end[];
 extern const char _binary_trace_fileat_tmpl_ml_c_start[];
 
-extern const char _binary_trace_fs_path_1_2_arg_tmpl_ml_c_size[];
+extern const char _binary_trace_fs_path_1_2_arg_tmpl_ml_c_end[];
 extern const char _binary_trace_fs_path_1_2_arg_tmpl_ml_c_start[];
 
-extern const char _binary_trace_fs_path_1_3_arg_tmpl_ml_c_size[];
+extern const char _binary_trace_fs_path_1_3_arg_tmpl_ml_c_end[];
 extern const char _binary_trace_fs_path_1_3_arg_tmpl_ml_c_start[];
 
-extern const char _binary_trace_fs_path_2_4_arg_tmpl_ml_c_size[];
+extern const char _binary_trace_fs_path_2_4_arg_tmpl_ml_c_end[];
 extern const char _binary_trace_fs_path_2_4_arg_tmpl_ml_c_start[];
 
-extern const char _binary_trace_fork_tmpl_c_size[];
+extern const char _binary_trace_fork_tmpl_c_end[];
 extern const char _binary_trace_fork_tmpl_c_start[];
 
-extern const char _binary_trace_vfork_tmpl_c_size[];
+extern const char _binary_trace_vfork_tmpl_c_end[];
 extern const char _binary_trace_vfork_tmpl_c_start[];
 
-extern const char _binary_trace_clone_tmpl_c_size[];
+extern const char _binary_trace_clone_tmpl_c_end[];
 extern const char _binary_trace_clone_tmpl_c_start[];
 
-extern const char _binary_trace_head_c_size[];
+extern const char _binary_trace_head_c_end[];
 extern const char _binary_trace_head_c_start[];
 
-extern const char _binary_trace_h_size[];
+extern const char _binary_trace_h_end[];
 extern const char _binary_trace_h_start[];
 
-extern const char _binary_trace_kern_tmpl_c_size[];
+extern const char _binary_trace_kern_tmpl_c_end[];
 extern const char _binary_trace_kern_tmpl_c_start[];
 
-extern const char _binary_trace_libc_tmpl_c_size[];
+extern const char _binary_trace_libc_tmpl_c_end[];
 extern const char _binary_trace_libc_tmpl_c_start[];
 
-extern const char _binary_trace_tp_all_c_size[];
+extern const char _binary_trace_tp_all_c_end[];
 extern const char _binary_trace_tp_all_c_start[];
 
-extern const char _binary_pid_check_ff_disabled_hook_c_size[];
+extern const char _binary_pid_check_ff_disabled_hook_c_end[];
 extern const char _binary_pid_check_ff_disabled_hook_c_start[];
 
-extern const char _binary_pid_check_ff_fast_hook_c_size[];
+extern const char _binary_pid_check_ff_fast_hook_c_end[];
 extern const char _binary_pid_check_ff_fast_hook_c_start[];
 
-extern const char _binary_pid_check_ff_full_hook_c_size[];
+extern const char _binary_pid_check_ff_full_hook_c_end[];
 extern const char _binary_pid_check_ff_full_hook_c_start[];
 
-#define BINARY_FILE_SIZE(name) (size_t)(_binary_##name##_size)
+#define BINARY_FILE_SIZE(name) (size_t)((uintptr_t)_binary_##name##_end -\
+		(uintptr_t)_binary_##name##_start)
 #define BINARY_FILE_CONTENT(name) strndup(_binary_##name##_start, \
 		BINARY_FILE_SIZE(name))
 
