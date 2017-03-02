@@ -66,6 +66,7 @@ set(SOURCES
 link_directories(nondebug)
 include_directories(libstrace compat)
 include_directories(${LIBBCC_INCLUDE_DIRS})
+link_directories(${LIBBCC_LIBRARY_DIRS})
 
 add_executable(strace.ebpf ${SOURCES} ${TXT_OBJS})
 

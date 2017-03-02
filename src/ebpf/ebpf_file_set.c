@@ -92,68 +92,47 @@ ebpf_load_file(const char *const fn)
 
 	/* fallback to embedded ones */
 	if (0 == strcmp(ebpf_head_file, fn)) {
-		return strndup(_binary_trace_head_c_start,
-			(size_t)_binary_trace_head_c_size);
+		return BINARY_FILE_CONTENT(trace_head_c);
 	} else if (0 == strcmp(ebpf_libc_tmpl_file, fn)) {
-		return strndup(_binary_trace_libc_tmpl_c_start,
-			(size_t)_binary_trace_libc_tmpl_c_size);
+		return BINARY_FILE_CONTENT(trace_libc_tmpl_c);
 	} else if (0 == strcmp(ebpf_file_tmpl_ml_file, fn)) {
-		return strndup(_binary_trace_file_tmpl_ml_c_start,
-			(size_t)_binary_trace_file_tmpl_ml_c_size);
+		return BINARY_FILE_CONTENT(trace_file_tmpl_ml_c);
 	} else if (0 == strcmp(ebpf_file_tmpl_sl_file, fn)) {
-		return strndup(_binary_trace_file_tmpl_sl_c_start,
-			(size_t)_binary_trace_file_tmpl_sl_c_size);
+		return BINARY_FILE_CONTENT(trace_file_tmpl_sl_c);
 	} else if (0 == strcmp(ebpf_fileat_tmpl_ml_file, fn)) {
-		return strndup(_binary_trace_fileat_tmpl_ml_c_start,
-			(size_t)_binary_trace_fileat_tmpl_ml_c_size);
+		return BINARY_FILE_CONTENT(trace_fileat_tmpl_ml_c);
 	} else if (0 == strcmp(ebpf_fileat_tmpl_sl_file, fn)) {
-		return strndup(_binary_trace_fileat_tmpl_sl_c_start,
-			(size_t)_binary_trace_fileat_tmpl_sl_c_size);
+		return BINARY_FILE_CONTENT(trace_fileat_tmpl_sl_c);
 	} else if (0 == strcmp(ebpf_kern_tmpl_file, fn)) {
-		return strndup(_binary_trace_kern_tmpl_c_start,
-			(size_t)_binary_trace_kern_tmpl_c_size);
+		return BINARY_FILE_CONTENT(trace_kern_tmpl_c);
 	} else if (0 == strcmp(ebpf_tp_all_file, fn)) {
-		return strndup(_binary_trace_tp_all_c_start,
-			(size_t)_binary_trace_tp_all_c_size);
+		return BINARY_FILE_CONTENT(trace_tp_all_c);
 	} else if (0 == strcmp(ebpf_trace_h_file, fn)) {
-		return strndup(_binary_trace_h_start,
-			(size_t)_binary_trace_h_size);
+		return BINARY_FILE_CONTENT(trace_h);
 	} else if (0 == strcmp(ebpf_fs_path_1_2_arg_tmpl_ml_file, fn)) {
-		return strndup(_binary_trace_fs_path_1_2_arg_tmpl_ml_c_start,
-			(size_t)_binary_trace_fs_path_1_2_arg_tmpl_ml_c_size);
+		return BINARY_FILE_CONTENT(trace_fs_path_1_2_arg_tmpl_ml_c);
 	} else if (0 == strcmp(ebpf_fs_path_1_3_arg_tmpl_ml_file, fn)) {
-		return strndup(_binary_trace_fs_path_1_3_arg_tmpl_ml_c_start,
-			(size_t)_binary_trace_fs_path_1_3_arg_tmpl_ml_c_size);
+		return BINARY_FILE_CONTENT(trace_fs_path_1_3_arg_tmpl_ml_c);
 	} else if (0 == strcmp(ebpf_fs_path_2_4_arg_tmpl_ml_file, fn)) {
-		return strndup(_binary_trace_fs_path_2_4_arg_tmpl_ml_c_start,
-			(size_t)_binary_trace_fs_path_2_4_arg_tmpl_ml_c_size);
+		return BINARY_FILE_CONTENT(trace_fs_path_2_4_arg_tmpl_ml_c);
 	} else if (0 == strcmp(ebpf_fs_path_1_2_arg_tmpl_sl_file, fn)) {
-		return strndup(_binary_trace_fs_path_1_2_arg_tmpl_sl_c_start,
-			(size_t)_binary_trace_fs_path_1_2_arg_tmpl_sl_c_size);
+		return BINARY_FILE_CONTENT(trace_fs_path_1_2_arg_tmpl_sl_c);
 	} else if (0 == strcmp(ebpf_fs_path_1_3_arg_tmpl_sl_file, fn)) {
-		return strndup(_binary_trace_fs_path_1_3_arg_tmpl_sl_c_start,
-			(size_t)_binary_trace_fs_path_1_3_arg_tmpl_sl_c_size);
+		return BINARY_FILE_CONTENT(trace_fs_path_1_3_arg_tmpl_sl_c);
 	} else if (0 == strcmp(ebpf_fs_path_2_4_arg_tmpl_sl_file, fn)) {
-		return strndup(_binary_trace_fs_path_2_4_arg_tmpl_sl_c_start,
-			(size_t)_binary_trace_fs_path_2_4_arg_tmpl_sl_c_size);
+		return BINARY_FILE_CONTENT(trace_fs_path_2_4_arg_tmpl_sl_c);
 	} else if (0 == strcmp(ebpf_fork_tmpl_file, fn)) {
-		return strndup(_binary_trace_fork_tmpl_c_start,
-			(size_t)_binary_trace_fork_tmpl_c_size);
+		return BINARY_FILE_CONTENT(trace_fork_tmpl_c);
 	} else if (0 == strcmp(ebpf_vfork_tmpl_file, fn)) {
-		return strndup(_binary_trace_vfork_tmpl_c_start,
-			(size_t)_binary_trace_vfork_tmpl_c_size);
+		return BINARY_FILE_CONTENT(trace_vfork_tmpl_c);
 	} else if (0 == strcmp(ebpf_clone_tmpl_file, fn)) {
-		return strndup(_binary_trace_clone_tmpl_c_start,
-			(size_t)_binary_trace_clone_tmpl_c_size);
+		return BINARY_FILE_CONTENT(trace_clone_tmpl_c);
 	} else if (0 == strcmp(ebpf_pid_check_ff_disabled_hook_file, fn)) {
-		return strndup(_binary_pid_check_ff_disabled_hook_c_start,
-			(size_t)_binary_pid_check_ff_disabled_hook_c_size);
+		return BINARY_FILE_CONTENT(pid_check_ff_disabled_hook_c);
 	} else if (0 == strcmp(ebpf_pid_check_ff_full_hook_file, fn)) {
-		return strndup(_binary_pid_check_ff_full_hook_c_start,
-			(size_t)_binary_pid_check_ff_full_hook_c_size);
+		return BINARY_FILE_CONTENT(pid_check_ff_full_hook_c);
 	} else if (0 == strcmp(ebpf_pid_check_ff_fast_hook_file, fn)) {
-		return strndup(_binary_pid_check_ff_fast_hook_c_start,
-			(size_t)_binary_pid_check_ff_fast_hook_c_size);
+		return BINARY_FILE_CONTENT(pid_check_ff_fast_hook_c);
 	}
 
 
