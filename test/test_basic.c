@@ -297,6 +297,24 @@ static void test_6(void)
 }
 
 /*
+ * test_7 -- test basic syscalls after double fork()
+ */
+static void test_7(void)
+{
+	syscall(SYS_fork);
+	test_1();
+}
+
+/*
+ * test_8 -- test unsupported syscalls after double fork()
+ */
+static void test_8(void)
+{
+	syscall(SYS_fork);
+	test_3();
+}
+
+/*
  * run_test -- array of tests
  */
 static void (*run_test[])(void) = {
@@ -306,7 +324,9 @@ static void (*run_test[])(void) = {
 	test_3,
 	test_4,
 	test_5,
-	test_6
+	test_6,
+	test_7,
+	test_8
 };
 
 int

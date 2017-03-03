@@ -52,49 +52,45 @@ function cut_part_file() {
 
 	local LINE1=$(get_line_of_pattern $FILE "$PATTERN1")
 	[ "$LINE1" == "" ] \
-		&& echo "Error: cut_part_file(): no pattern \"$PATTERN1\" found in file $FILE" >&2 \
-		&& exit 1
+		&& echo "Error: cut_part_file(): the start-pattern \"$PATTERN1\" not found in file $FILE" \
+		&& return
 
 	local LINE2=$(get_line_of_pattern $FILE "$PATTERN2")
 	[ "$LINE2" == "" ] \
-		&& echo "Error: cut_part_file(): no pattern \"$PATTERN2\" found in file $FILE" >&2 \
-		&& exit 1
+		&& LINE2=$(cat $FILE | wc -l) # print the file till the end
 
 	sed -n ${LINE1},${LINE2}p $FILE
 }
 
 #
-# split_forked_file - split log files of two forked processes
+# split_forked_file - split log files of forked processes
+#                     split_forked_file <file> <name-part1> <name-part2>
 #
 function split_forked_file() {
-	INPUT=$1
-	OUT1=$2
-	OUT2=$3
-	OUT3=$4
+	NAME1=$2
+	NAME2=$3
 
-	PID=$(tail -n1 $INPUT | cut -d" " -f2)
+	local INPUT=$(mktemp)
+	local GREP=$(mktemp)
 
-	set +e
+	cp $1 $INPUT
 
-	grep    "$PID" $INPUT > $OUT1
-	grep -v "$PID" $INPUT > $OUT2
-	grep    "fork" $INPUT | grep -v "vfork" > $OUT3
-
-	set -e
-}
-
-#
-# get_files -- print list of files in the current directory matching the given regex to stdout
-#
-# This function has been implemented to workaround a race condition in
-# `find`, which fails if any file disappears in the middle of the operation.
-#
-# example, to list all *.log files in the current directory
-#	get_files ".*\.log"
-function get_files() {
-	set +e
-	ls -1 | grep -E "^$*$"
-	set -e
+	local N=0
+	local PID="fork"
+	while true; do
+		NAME="${NAME1}-${N}-${NAME2}"
+		touch $NAME
+		set +e
+		grep    "$PID" $INPUT > $NAME
+		grep -v "$PID" $INPUT > $GREP
+		cp $GREP $INPUT
+		set -e
+		[ $(cat $INPUT | wc -l) -eq 0 ] && break
+		PID=$(head -n1 $INPUT | cut -d" " -f2)
+		N=$(($N + 1))
+	done
+	rm -f $GREP $INPUT
+	echo $N
 }
 
 #
@@ -103,25 +99,49 @@ function get_files() {
 function check() {
 	local MATCH_OUT="match-${TEST_NUM}.log"
 	set +e
-	[ "$TEST_DIR" != "$(pwd)" ] && cp -v -f $TEST_DIR/*${TEST_NUM}.log.match .
-	$TEST_DIR/match $(get_files "[^0-9w]*${TEST_NUM}\.log\.match") >$MATCH_OUT 2>&1
+
+	# copy match files in case of out-of-tree build
+	[ "$TEST_DIR" != "$(pwd)" ] && cp -v -f $TEST_DIR/*-${TEST_NUM}.log.match .
+
+	# create missing log files
+	ls -1 *-${TEST_NUM}.log.match | sed 's/\.match//g' | xargs touch
+
+	# finally run 'match'
+	$TEST_DIR/match *-${TEST_NUM}.log.match >$MATCH_OUT 2>&1
 	RV=$?
 	set -e
 	[ $RV -eq 0 ] && rm -f $MATCH_OUT && return
 
-	# match failed
+	# match failed - print few last lines
 	tail -n11 $MATCH_OUT
-	local NC=$(tail -n3 $MATCH_OUT | head -n1 | cut -d'$' -f1 | wc -c)
-	local OUT=$(tail -n3 $MATCH_OUT | head -n2 | cut -c${NC}- | cut -d" " -f5)
-	SC_MATCH=$(echo $OUT | cut -d" " -f1)
-	SC_IS=$(echo $OUT | cut -d" " -f2)
-	echo "------"
-	[ "$SC_MATCH" != "$SC_IS" ] \
-		&& echo "Error: missed syscall $SC_MATCH" \
-		|| echo "Error: wrong arguments of syscall $SC_MATCH"
+
 	echo "------"
 
-	save_logs "*$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM"
+	# output does not match the pattern
+	if [ "$(tail -n1 $MATCH_OUT | grep 'did not match pattern')" != "" ]; then
+		# check if log is truncated
+		local LINE=$(tail -n2 $MATCH_OUT | grep 'EOF')
+		if [ "$LINE" == "" ]; then
+			local NC=$(tail -n3 $MATCH_OUT | head -n1 | cut -d'$' -f1 | wc -c)
+			local OUT=$(tail -n3 $MATCH_OUT | head -n2 | cut -c${NC}- | cut -d" " -f5)
+			SC_MATCH=$(echo $OUT | cut -d" " -f1)
+			SC_IS=$(echo $OUT | cut -d" " -f2)
+			[ "$SC_MATCH" != "$SC_IS" ] \
+				&& echo "Error 1: missed syscall $SC_MATCH" \
+				|| echo "Error 2: wrong arguments of syscall $SC_MATCH"
+		else
+			LN=$(echo $LINE | cut -d':' -f2 | cut -d' ' -f1)
+			[ $LN -eq 1 ] \
+				&& echo "Error 3: missing output (e.g. fork not followed)" \
+				|| echo "Error 4: truncated output (e.g. following fork stopped)"
+		fi
+	else
+		echo "Error 0: unknown error"
+	fi
+
+	echo "------"
+
+	save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM"
 
 	return $RV
 }
