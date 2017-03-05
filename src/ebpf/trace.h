@@ -43,7 +43,7 @@ enum { E_SC_ENTRY = 0, E_SC_EXIT = 1 };
 /*
  * The longest syscall's name is equal to 26 characters:
  *    'SyS_sched_get_priority_max'.
- * Let's to add a space for '\0' and few extra bytes.
+ * Let's add a space for '\0' and few extra bytes.
  */
 enum { E_SC_NAME_SIZE = 32 };
 
@@ -51,14 +51,13 @@ struct ev_dt_t {
 	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
 
 	/*
-	 * This fild is set for glibc-defined syscalls and describe
+	 * This field is set for glibc-defined syscalls and describe
 	 *    a series of packets for every syscall.
 	 *
-	 * It is needed because we are limited with stack size of
-	 *    512 bytes and used part of stack is initilaized with zeros
-	 *    on every call of syscall handlers.
+	 * It is needed because stack size is limited to 512 bytes and used part
+	 * of the stack is initialized with zero on every call of syscall handlers.
 	 *
-	 * the value equals to 0 means that this is "single-packet" syscall
+	 * the value equal to 0 means that this is "single-packet" syscall
 	 *    and there will be no additional packets sent.
 	 * the value bigger than 0 means that this is a first packet and there
 	 *    will be sent 'packet_type' more additional packets.
@@ -71,13 +70,12 @@ struct ev_dt_t {
 	s64 packet_type;
 
 	/*
-	 * Syscall's signature. All packets with same signature belongs to same
-	 *    call of same syscall. We need two timestamps here, because we
-	 *    can get nesting of syscalls from same pid_tid by calling syscall
-	 *    from signal handler, before syscall called from main context has
-	 *    returned.
+	 * Syscall's signature. All packets with the same signature belong to one
+	 *    syscall. We need two time stamps here, because syscalls can nest
+	 *    from one pid_tid by calling syscall from signal handler, before
+	 *    syscall called from main context has returned.
 	 *
-	 * XXX By the fact sc_id is not neaded here, but its presence simplifies
+	 * XXX In fact sc_id is not needed here, but its presence simplifies
 	 *    a lot of processing, so let's keep it here.
 	 */
 	struct {
@@ -88,9 +86,9 @@ struct ev_dt_t {
 		u64 finish_ts_nsec;
 
 		/*
-		 * the value equals to -1 means "header"
+		 * the value equal to -1 means "header"
 		 *
-		 * the value equals to -2 means that syscall's num is
+		 * the value equal to -2 means that syscall's num is
 		 *    unknown for glibc and the field sc_name should be
 		 *    used to figuring out syscall.
 		 */

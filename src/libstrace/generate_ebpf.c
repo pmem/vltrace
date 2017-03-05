@@ -237,7 +237,7 @@ static unsigned SyS_sigsuspend = 0;
  * generate_ebpf_kp_kern_all -- This function generates universal default eBPF
  *     syscall handler.
  *
- * Primer purpose of generated handler - new and unknown syscalls.
+ * Primary purpose of generated handler - new and unknown syscalls.
  */
 static void
 generate_ebpf_kp_kern_all(FILE *ts)
@@ -478,8 +478,8 @@ generate_ebpf()
 DeFault:
 	fprintf(stderr,
 			"%s: Default expression 'trace=kp-kern-all' was chosen."
-			" If you would like some speed improvment think about"
-			" 'trace=kp-libc-all'.\n", __func__);
+			" Consider using 'trace=kp-libc-all' for improved performance.\n",
+			__func__);
 	generate_ebpf_kp_kern_all(ts);
 
 out:

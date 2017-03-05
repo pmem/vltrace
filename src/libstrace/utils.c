@@ -239,10 +239,10 @@ check_bpf_jit_status(FILE *file)
 	case  0:
 		fprintf(file,
 			"WARNING:%s: DISABLED.\n"
-			"\tPlease reffer to `man strace.ebpf`,"
+			"\tPlease refer to `man strace.ebpf`,"
 				" section 'Configuration'.\n"
-			"\tIt will allow to improve performance significantly\n"
-			"\tand drop appropriate problems.\n",
+			"\tEnabling this will improve performance significantly\n"
+			"\tand fix some problems.\n",
 			__func__);
 		return;
 
@@ -324,7 +324,7 @@ get_sc_list(FILE *f, template_t template)
 }
 
 /*
- * str_replace_all -- Replace all occurrence of 'templt' in 'text' with 'str'
+ * str_replace_all -- Replace all occurrences of 'templt' in 'text' with 'str'
  */
 void
 str_replace_all(char **const text, const char *templt, const char *str)

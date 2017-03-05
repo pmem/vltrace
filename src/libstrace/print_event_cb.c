@@ -49,7 +49,7 @@
 /*
  * XXX A bit of black magic to have some US <-> KS portability.
  *
- * PLEASE do not add any other includes afters this comment.
+ * PLEASE do not add any other includes after this comment.
  */
 typedef __s32 s32;
 typedef __u32 u32;
@@ -130,7 +130,7 @@ print_event_strace(void *cb_cookie, void *data, int size)
 
 	if (0 == event->packet_type)
 		/*
-		 * XXX Check presence of aux_str by cheking sc_id
+		 * XXX Check presence of aux_str by checking sc_id
 		 *    and size arg
 		 */
 		fprintf(Out_lf, "%-6llu %4lld %3lld %s\n",
@@ -269,7 +269,7 @@ fprint_first_str(FILE *f, struct ev_dt_t *const event, int size)
 		return;
 	}
 
-	/* Full-lenth strings */
+	/* Full-length strings */
 	fwrite(event->aux_str, strnlen(event->aux_str, NAME_MAX), 1, f);
 }
 
@@ -286,7 +286,7 @@ fprint_second_str(FILE *f, struct ev_dt_t *const event, int size)
 		return;
 
 	/*
-	 * XXX Check presence of string body by cheking sc_id
+	 * XXX Check presence of string body by checking sc_id
 	 *    and size arg
 	 */
 	(void) size;
@@ -313,7 +313,7 @@ fprint_second_str(FILE *f, struct ev_dt_t *const event, int size)
 		return;
 	}
 
-	/* Full-lenth strings */
+	/* Full-length strings */
 	/* XXX assert(false); */
 }
 
@@ -356,7 +356,7 @@ fwrite_sc_name(FILE *f, struct ev_dt_t *const event, int size)
 				strlen(sc_num2str(event->sc_id)),
 				1, f);
 	else
-		/* XXX Check presence of string body by cheking size arg */
+		/* XXX Check presence of string body by checking size arg */
 		fwrite(event->sc_name + 4,
 				strlen(event->sc_name + 4),
 				1, f);
@@ -388,7 +388,7 @@ get_type_of_arg1(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 1)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Print nothing */
+	/* Syscall doesn't have this arg. Don't print anything. */
 	return EAT_absent;
 }
 
@@ -424,7 +424,7 @@ fprint_arg1_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Print nothing */
+			/* Syscall doesn't have this arg. Don't print anything. */
 			break;
 		}
 		break;
@@ -451,7 +451,7 @@ get_type_of_arg2(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 2)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Print nothing */
+	/* Syscall doesn't have this arg. Don't print anything. */
 	return EAT_absent;
 }
 
@@ -508,7 +508,7 @@ fprint_arg2_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Print nothing */
+			/* Syscall doesn't have this arg. Don't print anything. */
 			break;
 		}
 		break;
@@ -528,7 +528,7 @@ get_type_of_arg3(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 3)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Print nothing */
+	/* Syscall doesn't have this arg. Don't print anything. */
 	return EAT_absent;
 }
 
@@ -582,7 +582,7 @@ fprint_arg3_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Print nothing */
+			/* Syscall doesn't have this arg. Don't print anything. */
 			break;
 		}
 		break;
@@ -602,7 +602,7 @@ get_type_of_arg4(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 4)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Print nothing */
+	/* Syscall doesn't have this arg. Don't print anything. */
 	return EAT_absent;
 }
 
@@ -656,7 +656,7 @@ fprint_arg4_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Print nothing */
+			/* Syscall doesn't have this arg. Don't print anything. */
 			break;
 		}
 		break;
@@ -672,7 +672,7 @@ get_type_of_arg5(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 5)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Print nothing */
+	/* Syscall doesn't have this arg. Don't print anything. */
 	return EAT_absent;
 }
 
@@ -725,7 +725,7 @@ fprint_arg5_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Print nothing */
+			/* Syscall doesn't have this arg. Don't print anything. */
 			break;
 		}
 		break;
@@ -741,7 +741,7 @@ get_type_of_arg6(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 6)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Print nothing */
+	/* Syscall doesn't have this arg. Don't print anything. */
 	return EAT_absent;
 }
 
@@ -794,7 +794,7 @@ fprint_arg6_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Print nothing */
+			/* Syscall doesn't have this arg. Don't print anything. */
 			break;
 		}
 		break;
@@ -1026,9 +1026,9 @@ print_event_hex_sl(void *cb_cookie, void *data, int size)
 /* ** Binary logs ** */
 
 /*
- * XXX We should think about writting 64-bit packet number before length
- *    of packet, but there is probabilty that counting packets will be very
- *    expensive, because we run in multi-threading environment.
+ * XXX We should think about writing 64-bit packet number before length
+ *    of packet, but there is probability that counting packets will be very
+ *    expensive, because we run in multi-thread environment.
  */
 
 /*
@@ -1091,7 +1091,7 @@ print_event_bin(void *cb_cookie, void *data, int size)
 }
 
 /*
- * out_fmt_str2enum -- This function parsess log's type
+ * out_fmt_str2enum -- This function parses log's type
  */
 enum out_lf_fmt
 out_fmt_str2enum(const char *str)

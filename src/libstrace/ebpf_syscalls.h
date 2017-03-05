@@ -120,13 +120,13 @@ enum masks_t {
 
 /* Properties of syscall with number 'num' */
 struct syscall_descriptor {
-	/* Number of syscall */
+	/* Syscall number */
 	unsigned num;
-	/* Number of syscall as string */
+	/* Syscall number as string */
 	const char *num_name;
 	/* The name of in-kernel syscall's handler */
 	const char *handler_name;
-	/* Qty of args for this syscall */
+	/* Number of args for this syscall */
 	unsigned args_qty;
 	/* Flags */
 	unsigned masks;

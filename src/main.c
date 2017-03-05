@@ -94,14 +94,13 @@ main(const int argc, char *const argv[])
 	Args.out_buf_size = OUT_BUF_SIZE;
 
 	/*
-	 * Let's enlarge ring buffers. It's really improve situation
-	 *    with lost events.
+	 * Enlarge ring buffers. It really improves situation with lost events.
 	 *
 	 * XXX In the future we should allow to do it via cl options.
 	 */
 	Args.strace_reader_page_cnt = STRACE_READER_PAGE_CNT_DEFAULT;
 
-	/* Let's parse command-line options */
+	/* Parse command-line options */
 	st_optind = cl_parser(&Args, argc, argv);
 
 	/* Check for JIT acceleration of BPF */
@@ -109,7 +108,7 @@ main(const int argc, char *const argv[])
 
 	setup_out_lf();
 
-	/* Settuping of Out_lf failed */
+	/* setup_out_lf failed */
 	if (NULL == Out_lf) {
 		fprintf(stderr, "ERROR: Exiting\n");
 
@@ -117,7 +116,7 @@ main(const int argc, char *const argv[])
 	}
 
 	/*
-	 * XXX Temporarilly. We should do it in the future together with
+	 * XXX Temporarily. We should do it in the future together with
 	 *    multi-process attaching.
 	 */
 	if (Args.pid != -1 && Args.command) {
@@ -163,14 +162,14 @@ main(const int argc, char *const argv[])
 
 	apply_process_attach_code(&bpf_str);
 
-	/* Let's simulate preprocessor, because it's more safe */
+	/* Simulate preprocessor, because it's safer */
 	apply_trace_h_header(&bpf_str);
 
 	/* Print resulting code if debug mode */
 	if (Args.debug)
 		fprint_ebpf_code_with_debug_marks(stderr, bpf_str);
 
-	/* XXX We should do it only by user reques */
+	/* XXX We should do it only by user request */
 	save_trace_h();
 
 	/* initialize BPF */
@@ -195,7 +194,7 @@ main(const int argc, char *const argv[])
 			"ERROR: No probes were attached. Exiting.\n");
 
 		if (Args.command) {
-			/* let's KILL child */
+			/* KILL child */
 			kill(Args.pid, SIGKILL);
 		}
 
@@ -209,8 +208,7 @@ main(const int argc, char *const argv[])
 	 * Attach callback to perf output. "events" is a name of class declared
 	 * with BPF_PERF_OUTPUT() in ebpf/trace_head.c.
 	 *
-	 * XXX Most likely we should utilise here str_replace for consistence
-	 *    increasing.
+	 * XXX We should use str_replace here.
 	 */
 #define PERF_OUTPUT_NAME "events"
 	int res = attach_callback_to_perf_output(b,
@@ -218,7 +216,7 @@ main(const int argc, char *const argv[])
 
 	if (!res) {
 		if (Args.command) {
-			/* let's child go */
+			/* let child go */
 			kill(Args.pid, SIGCONT);
 		}
 	} else {
@@ -227,7 +225,7 @@ main(const int argc, char *const argv[])
 			PERF_OUTPUT_NAME);
 
 		if (Args.command) {
-			/* let's KILL child */
+			/* KILL child */
 			kill(Args.pid, SIGKILL);
 		}
 

@@ -8,7 +8,7 @@ Why we need new tool
 ---------------------
 
  - regular system tracing tools are slow
- - regular tools slowdown traced application for few orders
+ - regular tools slow down traced application by few orders of magnitude
  - output of regular tools is human-oriented and don't assume automated
    processing
  - overcoming above problems in regular way require:
@@ -41,13 +41,13 @@ System requirements
 Pros
 -----
 
- - Used combination of technologies allow tool to be about one order faster
-   than regular system strace.
- - This tool consume much less amount of CPU resource
- - Output of this tool is designed to be suitable for processing with
-   classical tools and technologies, like awk.
- - Could trace syscalls system-wide.
- - Could trace init (process with 'pid == 1'). Finally we have a proper
+ - Used combination of technologies allow tool to be about one order
+   of magnitude faster than regular system strace.
+ - Consumes much less amount of CPU resources.
+ - Output is designed to be suitable for processing with classical tools
+   and technologies, like awk.
+ - Can trace syscalls system-wide.
+ - Can trace init (process with 'pid == 1'). Finally we have a proper
    tool for debugging systemd ;-)
 
 ******
@@ -55,15 +55,13 @@ Pros
 Cons
 -----
 
- - Limited functionality
- - Slow attaching and detaching
- - Asynchronity. If user will not provide enough system resources for
-   performance tool will skip some calls. Tool does not assume to try
-   any work-around behind the scene.
- - Depend on modern kernel features
- - Underlaing eBPF technology still is in active development. So we should
-   expect hangs and crashes more often as for regular strace, especially on
-   low-res systems.
+ - Limited functionality.
+ - Slow attaching and detaching.
+ - Asynchronity. If user does not provide enough system resources, it may
+   lose some calls. This tool does not try to work-around it in any way.
+ - Depends on modern kernel features.
+ - Underlying eBPF technology is still in active development. Hangs and crashes
+   may occur more often as for regular strace, especially on low-res systems.
  - Truncating of very long filenames (longer then ~NAME_MAX bytes) to ~NAME_MAX.
    Details:
     + https://github.com/iovisor/bcc/issues/900
@@ -89,4 +87,4 @@ Conclusion
 
  - we reached performance more than 1000000 syscalls per second.
  - we introduce about 750 nanosec of penalty in each syscall.
- - there is places for future optimization.
+ - there is space for future optimizations.

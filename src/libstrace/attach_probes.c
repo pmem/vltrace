@@ -143,7 +143,7 @@ static unsigned SyS_sigsuspend = 0;
  * attach_kp_kern_all -- This function attaches eBPF handler to all existing
  *     syscalls in running kernel.
  *
- * It consume more time than attach_kp_libc_all().
+ * It consumes more time than attach_kp_libc_all().
  */
 static bool
 attach_kp_kern_all(struct bpf_ctx *b)
@@ -300,10 +300,9 @@ static const char tp_all_enter_fn[] = "tracepoint__sys_enter";
 static const char tp_all_exit_fn[]  = "tracepoint__sys_exit";
 
 /*
- * attach_tp_all -- Intercept all syscalls of running kernel using TracePoint
- *     way.
+ * attach_tp_all -- Intercept all syscalls using TracePoints.
  *
- * Should be faster and better but requires kernel at least 4.6.
+ * Should be faster and better but requires kernel >= 4.6.
  *
  * XXX Not tested.
  */
