@@ -39,10 +39,6 @@ add_executable(test_syscalls test_syscalls.c)
 # TESTS
 #
 
-#
-# 1) tests using match and *.match files
-#
-
 add_test(NAME "[match]-basic"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 0)
 
@@ -69,55 +65,3 @@ add_test(NAME "[match]-umount"
 
 add_test(NAME "[match]-xattr"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 6)
-
-#
-# 2) tests comparing strace.ebpf with system strace
-#
-
-# a) tests of the dedicated app
-
-add_test(NAME "[strace]-basic"
-	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 0)
-
-add_test(NAME "[strace]-unsupported"
-	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 2)
-
-add_test(NAME "[strace]-vfork"
-	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 4)
-
-add_test(NAME "[strace]-umount"
-	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 5)
-
-add_test(NAME "[strace]-xattr"
-	COMMAND ${TEST_DIR}/test-strace ${TEST_APP} 6)
-
-# b) tests of system command with full path
-
-foreach(CMD date clear ls ping cat dir du uname free df)
-	execute_process(COMMAND which ${CMD}
-			OUTPUT_VARIABLE PATH
-			OUTPUT_STRIP_TRAILING_WHITESPACE)
-	if (${CMD} STREQUAL ping)
-		set(ARGS "-c1 127.0.0.1")
-	elseif (${CMD} STREQUAL cat)
-		set(ARGS "/etc/fstab")
-	elseif (${CMD} STREQUAL du)
-		set(ARGS "Makefile")
-	else ()
-		unset(ARGS)
-	endif ()
-
-	add_test(NAME "[strace]-${CMD}"
-		COMMAND ${TEST_DIR}/test-strace ${PATH} ${ARGS})
-endforeach(CMD)
-
-# c) tests of system command without full path
-
-add_test(NAME "[strace][no-path]-date"
-	COMMAND ${TEST_DIR}/test-strace date)
-
-add_test(NAME "[strace][no-path]-clear"
-	COMMAND ${TEST_DIR}/test-strace clear)
-
-add_test(NAME "[strace][no-path]-ls"
-	COMMAND ${TEST_DIR}/test-strace ls)

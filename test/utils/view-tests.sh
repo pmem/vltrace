@@ -51,11 +51,10 @@ for n in $TESTS; do
 	A=$(($P + $F))
 	echo "   All $A   Passed $P   Failed $F   ($NAME)"
 	echo "----------------------------------------"
-	if [[ $NAME =~ ^\[match\] ]]; then
-		NUM_ERR=$(grep "Error " ./log${n}.txt | cut -c10 | sort | uniq)
-		for err in $NUM_ERR; do
+	NUM_ERR=$(grep "Error " ./log${n}.txt | cut -c10 | sort | uniq)
+	for err in $NUM_ERR; do
 		case $err in
-		0)
+		0) # unknown error
 			MSG="unknown-error"
 			C=$(grep "Error 0" ./log${n}.txt | wc -l)
 			[ $C -lt $MIN ] && continue
@@ -87,7 +86,7 @@ for n in $TESTS; do
 					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e\t$NAME"
 			done
 			;;
-		3)
+		3) # missing output
 			MSG="missing-output"
 			C=$(grep "Error 3" ./log${n}.txt | wc -l)
 			[ $C -lt $MIN ] && continue
@@ -95,7 +94,7 @@ for n in $TESTS; do
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG" \
 				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG\t$NAME"
 			;;
-		4)
+		4) # truncated output
 			MSG="truncated-output"
 			C=$(grep "Error 4" ./log${n}.txt | wc -l)
 			[ $C -lt $MIN ] && continue
@@ -103,45 +102,10 @@ for n in $TESTS; do
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG" \
 				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG\t$NAME"
 			;;
-		*)
+		*) # unknown error
 			echo "UNKNOWN ERROR"
+			;;
 		esac
-		done
-	else
-		MSG="missed-syscall: "
-		L=$(grep -e "<" ./log${n}.txt | cut -d" " -f2 | sort | uniq)
-		[ "$L" != "" ] && \
-		for l in $L; do
-			C=$(grep -e "<" ./log${n}.txt | cut -d" " -f2 | grep $l | wc -l)
-			[ $C -lt $MIN ] && continue
-			[ $LONG -eq 0 ] \
-				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$l" \
-				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$l\t$NAME"
-		done
-
-		MSG="wrong-arguments: "
-		D=$(grep -e "|" ./log${n}.txt | grep -v "(strace.ebpf)" | cut -d" " -f2 | sort | uniq)
-		if [ "$D" != "" ]; then
-			for d in $D; do
-				C=$(grep -e "|" ./log${n}.txt | grep -v "(strace.ebpf)" | cut -d" " -f2 | grep $d | wc -l)
-				[ $C -lt $MIN ] && continue
-				[ $LONG -eq 0 ] \
-					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$d" \
-					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$d\t$NAME"
-			done
-		fi
-
-		MSG="extra-syscall: "
-		R=$(grep -e ">" ./log${n}.txt | cut -d">" -f2 | cut -d'	' -f2 | cut -d' ' -f1 | sort | uniq)
-		if [ "$R" != "" ]; then
-			for r in $R; do
-				C=$(grep -e ">" ./log${n}.txt | cut -d">" -f2 | cut -d'	' -f2 | cut -d' ' -f1 | grep $r | wc -l)
-				[ $C -lt $MIN ] && continue
-				[ $LONG -eq 0 ] \
-					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$r" \
-					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$r\t$NAME"
-			done
-		fi
-	fi
+	done
 	echo
 done
