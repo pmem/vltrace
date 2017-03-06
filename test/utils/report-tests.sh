@@ -52,7 +52,7 @@ if [ "$ERR" != "" ]; then
 		missed-syscall:)
 			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
 			for s in $SC; do
-				echo "-$e $s"
+				echo "- missed syscall: $s"
 				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
 				echo
 			done
@@ -60,21 +60,21 @@ if [ "$ERR" != "" ]; then
 		wrong-arguments:)
 			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
 			for s in $SC; do
-				echo "-$e $s"
+				echo "- wrong arguments: $s"
 				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
 				echo
 			done
 			;;
 		missing-output)
-			echo "-$e - follow-fork did not follow (no output of at least one process):"
+			echo "- missing output - follow-fork did not follow (no output of at least one process):"
 			$OUTPUT | grep "$e" | sed "s/\t$e\t/\t\t/g"
 			;;
 		truncated-output)
-			echo "-$e - follow-fork stopped following:"
+			echo "- truncated output - follow-fork stopped following:"
 			$OUTPUT | grep "$e" | sed "s/\t$e\t/\t\t/g"
 			;;
 		*)
-			echo "Not handled event: $e"
+			echo "Unsupported event: $e"
 			;;
 		esac
 		echo
