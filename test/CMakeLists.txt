@@ -39,29 +39,29 @@ add_executable(test_syscalls test_syscalls.c)
 # TESTS
 #
 
-add_test(NAME "[match]-basic"
+add_test(NAME "basic-syscalls"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 0)
 
-add_test(NAME "[match][fork]-basic"
+add_test(NAME "basic-syscalls-with-fork"
 	COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 1)
 
-add_test(NAME "[match][double-fork]-basic"
+add_test(NAME "basic-syscalls-with-double-fork"
 	COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 7)
 
-add_test(NAME "[match]-unsupported"
+add_test(NAME "unsupported-syscalls"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 2)
 
-add_test(NAME "[match][fork]-unsupported"
+add_test(NAME "unsupported-syscalls-with-fork"
 	COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 3)
 
-add_test(NAME "[match][double-fork]-unsupported"
+add_test(NAME "unsupported-syscalls-with-double-fork"
 	COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 8)
 
-add_test(NAME "[match]-vfork"
+add_test(NAME "syscall-vfork"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4)
 
-add_test(NAME "[match]-umount"
+add_test(NAME "syscall-umount"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 5)
 
-add_test(NAME "[match]-xattr"
+add_test(NAME "syscall-xattr"
 	COMMAND ${TEST_DIR}/test-match ${TEST_APP} 6)
