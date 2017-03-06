@@ -29,11 +29,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-set(TEST_APP "./test_basic")
+set(TEST_APP "./test_syscalls")
 
 set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
 
-add_executable(test_basic test_basic.c)
+add_executable(test_syscalls test_syscalls.c)
 
 #
 # TESTS

@@ -253,7 +253,7 @@ else
 fi
 
 NAME=$(basename $1)
-[ "$NAME" == "test_basic" ] && NAME="$NAME-$2"
+[ "$NAME" == "test_syscalls" ] && NAME="$NAME-$2"
 
 COMMAND="$*"
 if [ "$COMMAND" == "" ]; then
