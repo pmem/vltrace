@@ -34,6 +34,14 @@
 # test/test-match -- test for strace.ebpf using match and *.match files
 #
 
+OPT_STRACE_EBPF="-t -K' ' -e trace=kp-kern-all"
+STRACE_EBPF=../src/strace.ebpf
+RUN_STRACE="ulimit -l 10240 && ulimit -n 10240 && $STRACE_EBPF $OPT_STRACE_EBPF"
+
+[ ! -x $STRACE_EBPF ] \
+	&& echo "Error: executable file '$STRACE_EBPF' does not exist" \
+	&& exit 1
+
 # follow-fork option
 if [ "$1" == "-f" ]; then
 	FF="-f"
@@ -59,12 +67,10 @@ TEST_DIR=$(dirname $0)
 [ "$TEST_DIR" == "." ] && TEST_DIR=$(pwd)
 
 FUNCT=$TEST_DIR/helper_functions.sh
-COMMON=$TEST_DIR/common.sh
-[ ! -f $COMMON -o ! -f $FUNCT ] \
-	&& echo "Error: one of files is missing: $COMMON or $FUNCT" \
+[ ! -f $FUNCT ] \
+	&& echo "Error: missing file: $FUNCT" \
 	&& exit 1
 
-source $COMMON
 source $FUNCT
 
 PATTERN_START="close 0000000012345678"
