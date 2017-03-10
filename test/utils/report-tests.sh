@@ -44,13 +44,40 @@
 
 TAB="	"
 
-ERR=$($OUTPUT | grep '%' | cut -d"$TAB" -f3 | sort | uniq)
+echo
+ERR=$($OUTPUT | grep '%' | cut -d"$TAB" -f3 | cut -d" " -f1 | sort | uniq)
 if [ "$ERR" != "" ]; then
-	echo Report:
 	for e in $ERR; do
+		case $e in
+		missed-syscall:)
+			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
+			for s in $SC; do
+				echo "-$e $s"
+				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
+				echo
+			done
+			;;
+		wrong-arguments:)
+			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
+			for s in $SC; do
+				echo "-$e $s"
+				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
+				echo
+			done
+			;;
+		missing-output)
+			echo "-$e - follow-fork did not follow (no output of at least one process):"
+			$OUTPUT | grep "$e" | sed "s/\t$e\t/\t\t/g"
+			;;
+		truncated-output)
+			echo "-$e - follow-fork stopped following:"
+			$OUTPUT | grep "$e" | sed "s/\t$e\t/\t\t/g"
+			;;
+		*)
+			echo "Not handled event: $e"
+			;;
+		esac
 		echo
-		echo -$e:
-		$OUTPUT | grep '%' | grep -P "\t${e}\t" | sed "s/\t$e\t/\t\t/g"
 	done
 fi
 exit
