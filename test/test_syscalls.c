@@ -31,7 +31,7 @@
  */
 
 /*
- * test_basic.c -- unit tests for strace.eBPF
+ * test_syscalls.c -- functional tests for strace.eBPF
  */
 
 #include <stdio.h>
