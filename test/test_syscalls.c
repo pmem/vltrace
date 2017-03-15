@@ -90,7 +90,7 @@ test_basic_syscalls(void)
 	fd = open(FILE_EXIST, O_RDONLY);
 	close(fd);
 
-	fd = open(FILE_CREATE, O_RDWR | O_CREAT);
+	fd = open(FILE_CREATE, O_RDWR | O_CREAT, 0666);
 	write(fd, buffer, BUF_LEN);
 	lseek(fd, 0, SEEK_SET);
 	read(fd, buffer, BUF_LEN);
