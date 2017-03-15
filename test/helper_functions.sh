@@ -64,7 +64,7 @@ function save_logs() {
 #                        get_line_of_pattern <file> <pattern>
 #
 function get_line_of_pattern() {
-	local LINE=$(grep -n "$2" $1 | cut -d: -f1 | head -n1)
+	local LINE=$(grep -n -e "$2" $1 | cut -d: -f1 | head -n1)
 	echo $LINE
 }
 
@@ -110,7 +110,9 @@ function split_forked_file() {
 		NAME="${NAME1}-${N}-${NAME2}"
 		touch $NAME
 		set +e
-		grep    "$PID" $INPUT > $NAME
+		[ "$PID" == "fork" ] \
+			&& grep "$PID" $INPUT | sort -k3 -r > $NAME \
+			|| grep "$PID" $INPUT > $NAME
 		grep -v "$PID" $INPUT > $GREP
 		cp $GREP $INPUT
 		set -e

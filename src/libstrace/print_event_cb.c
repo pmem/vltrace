@@ -816,7 +816,7 @@ fwrite_out_lf_fld_sep(FILE *f)
 }
 
 /*
- * print_event_hex -- This function prints syscall's logs entry in stream.
+ * print_event_hex_entry -- This function prints syscall's logs entry in stream.
  *
  * WARNING
  *
@@ -824,7 +824,78 @@ fwrite_out_lf_fld_sep(FILE *f)
  *		 function too much.
  */
 static void
-print_event_hex(FILE *f, void *data, int size)
+print_event_hex_entry(FILE *f, void *data, int size)
+{
+	s64 res, err;
+	struct ev_dt_t *const event = data;
+	char *str = "----------------";
+	size_t lenstr = strlen(str);
+
+	/* XXX Check size arg */
+	(void) size;
+
+	if (start_ts_nsec == 0)
+		start_ts_nsec = event->start_ts_nsec;
+
+	if (Args.timestamp) {
+		unsigned long long delta_nsec =
+			event->start_ts_nsec - start_ts_nsec;
+
+		fprint_i64(f, delta_nsec);
+		fwrite_out_lf_fld_sep(f);
+	}
+
+	fprint_i64(f, event->pid_tid);
+	fwrite_out_lf_fld_sep(f);
+
+	fwrite(str, lenstr, 1, f);
+	fwrite_out_lf_fld_sep(f);
+
+	fwrite(str, lenstr, 1, f);
+	fwrite_out_lf_fld_sep(f);
+
+	fwrite_sc_name(f, event, size);
+	fwrite_out_lf_fld_sep(f);
+
+	/* "ARG1" */
+	fprint_arg1_hex(f, event, size);
+	fwrite_out_lf_fld_sep(f);
+
+	/* "ARG2" */
+	fprint_arg2_hex(f, event, size);
+	fwrite_out_lf_fld_sep(f);
+
+	/* "ARG3" */
+	fprint_arg3_hex(f, event, size);
+	fwrite_out_lf_fld_sep(f);
+
+	/* "ARG4" */
+	fprint_arg4_hex(f, event, size);
+	fwrite_out_lf_fld_sep(f);
+
+	/* "ARG5" */
+	fprint_arg5_hex(f, event, size);
+	fwrite_out_lf_fld_sep(f);
+
+	/* "ARG6" */
+	fprint_arg6_hex(f, event, size);
+	fwrite_out_lf_fld_sep(f);
+
+	/* "AUX_DATA". For COMM and like. XXX */
+	/* fwrite(event->comm, strlen(event->comm), 1, f); */
+	fwrite("\n", 1, 1, f);
+}
+
+/*
+ * print_event_hex_exit -- This function prints syscall's logs entry in stream.
+ *
+ * WARNING
+ *
+ *    PLEASE don't use *printf() calls because it will slow down this
+ *		 function too much.
+ */
+static void
+print_event_hex_exit(FILE *f, void *data, int size)
 {
 	s64 res, err;
 	struct ev_dt_t *const event = data;
@@ -889,6 +960,33 @@ print_event_hex(FILE *f, void *data, int size)
 	/* "AUX_DATA". For COMM and like. XXX */
 	/* fwrite(event->comm, strlen(event->comm), 1, f); */
 	fwrite("\n", 1, 1, f);
+}
+
+/*
+ * print_event_hex -- This function prints syscall's logs entry in stream.
+ *
+ * WARNING
+ *
+ *    PLEASE don't use *printf() calls because it will slow down this
+ *		 function too much.
+ */
+static void
+print_event_hex(FILE *f, void *data, int size)
+{
+	s64 *type = data;
+	const char *str = "ERROR: Unknown type of event\n";
+
+	switch (*type) {
+	case E_SC_ENTRY:
+		print_event_hex_entry(f, data, size);
+		break;
+	case E_SC_EXIT:
+		print_event_hex_exit(f, data, size);
+		break;
+	default:
+		fwrite(str, strlen(str), 1, f);
+		break;
+	}
 }
 
 /*

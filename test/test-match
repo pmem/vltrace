@@ -73,8 +73,8 @@ FUNCT=$TEST_DIR/helper_functions.sh
 
 source $FUNCT
 
-PATTERN_START="close 0000000012345678"
-PATTERN_END="close 0000000087654321"
+PATTERN_START="---------------- close 0000000012345678"
+PATTERN_END="---------------- close 0000000087654321"
 OUT=output-$TEST_NUM.log
 OUT_BARE=output-bare-$TEST_NUM.log
 OUT_SORT=output-sort-$TEST_NUM.log

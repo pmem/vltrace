@@ -40,19 +40,8 @@
 
 #include "trace.h"
 
-struct first_step_t {
-    s64 arg_1;
-    s64 arg_2;
-    s64 arg_3;
-    s64 arg_4;
-    s64 arg_5;
-    s64 arg_6;
-    u64 start_ts_nsec;
-};
-
 /* The set of our children_pid */
 BPF_HASH(children_map, u64, u64);
 
-
-BPF_HASH(tmp_i, u64, struct first_step_t);
+BPF_HASH(tmp_i, u64, struct ev_dt_t);
 BPF_PERF_OUTPUT(events);

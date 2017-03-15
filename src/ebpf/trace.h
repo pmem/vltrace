@@ -38,6 +38,8 @@
 #ifndef TRACE_H
 #define TRACE_H
 
+enum { E_SC_ENTRY = 0, E_SC_EXIT = 1 };
+
 /*
  * The longest syscall's name is equal to 26 characters:
  *    'SyS_sched_get_priority_max'.
@@ -46,6 +48,8 @@
 enum { E_SC_NAME_SIZE = 32 };
 
 struct ev_dt_t {
+	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
+
 	/*
 	 * This fild is set for glibc-defined syscalls and describe
 	 *    a series of packets for every syscall.

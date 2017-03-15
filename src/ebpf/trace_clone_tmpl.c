@@ -41,20 +41,33 @@
 int
 kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct first_step_t fs;
+	struct ev_dt_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
 
-	fs.start_ts_nsec = bpf_ktime_get_ns();
-	fs.arg_1 = PT_REGS_PARM1(ctx);
-	fs.arg_2 = PT_REGS_PARM2(ctx);
-	fs.arg_3 = PT_REGS_PARM3(ctx);
-	fs.arg_4 = PT_REGS_PARM4(ctx);
-	fs.arg_5 = PT_REGS_PARM5(ctx);
-	fs.arg_6 = PT_REGS_PARM6(ctx);
+	ev.type = E_SC_ENTRY;
+	ev.start_ts_nsec = bpf_ktime_get_ns();
 
-	tmp_i.update(&pid_tid, &fs);
+	ev.packet_type = 0; /* No additional packets */
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.pid_tid = pid_tid;
+
+	ev.arg_1 = PT_REGS_PARM1(ctx);
+	ev.arg_2 = PT_REGS_PARM2(ctx);
+	ev.arg_3 = PT_REGS_PARM3(ctx);
+	ev.arg_4 = PT_REGS_PARM4(ctx);
+	ev.arg_5 = PT_REGS_PARM5(ctx);
+	ev.arg_6 = PT_REGS_PARM6(ctx);
+
+	ev.finish_ts_nsec = 0;
+	ev.ret = 0;
+
+	memset(ev.sc_name, 0, sizeof(ev.sc_name));
+
+	events.perf_submit(ctx, &ev, offsetof(struct ev_dt_t, sc_name));
+
+	tmp_i.update(&pid_tid, &ev);
 
 	return 0;
 };
@@ -65,7 +78,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 int
 kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct first_step_t *fsp;
+	struct ev_dt_t *fsp;
 	struct ev_dt_t ev;
 
 	u64 cur_nsec = bpf_ktime_get_ns();
@@ -75,6 +88,7 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	if (fsp == 0)
 		return 0;
 
+	ev.type = E_SC_EXIT;
 	ev.packet_type = 0; /* No additional packets */
 	ev.sc_id = SYSCALL_NR; /* SysCall ID */
 	ev.arg_1 = fsp->arg_1;

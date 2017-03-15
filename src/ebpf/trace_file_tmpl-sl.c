@@ -41,20 +41,37 @@
 int
 kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct first_step_t fs;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
 
-	fs.start_ts_nsec = bpf_ktime_get_ns();
-	fs.arg_1 = PT_REGS_PARM1(ctx);
-	fs.arg_2 = PT_REGS_PARM2(ctx);
-	fs.arg_3 = PT_REGS_PARM3(ctx);
-	fs.arg_4 = PT_REGS_PARM4(ctx);
-	fs.arg_5 = PT_REGS_PARM5(ctx);
-	fs.arg_6 = PT_REGS_PARM6(ctx);
+	enum { _pad_size = offsetof(struct ev_dt_t, aux_str) + NAME_MAX };
+	union {
+		struct ev_dt_t ev;
+		char _pad[_pad_size];
+	} u;
 
-	tmp_i.update(&pid_tid, &fs);
+	u.ev.type = E_SC_ENTRY;
+	u.ev.start_ts_nsec = bpf_ktime_get_ns();
+
+	u.ev.packet_type = 0; /* No additional packets */
+	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	u.ev.pid_tid = pid_tid;
+
+	u.ev.arg_1 = PT_REGS_PARM1(ctx);
+	u.ev.arg_2 = PT_REGS_PARM2(ctx);
+	u.ev.arg_3 = PT_REGS_PARM3(ctx);
+	u.ev.arg_4 = PT_REGS_PARM4(ctx);
+	u.ev.arg_5 = PT_REGS_PARM5(ctx);
+	u.ev.arg_6 = PT_REGS_PARM6(ctx);
+
+	u.ev.finish_ts_nsec = 0;
+	u.ev.ret = 0;
+
+	bpf_probe_read(&u.ev.aux_str, NAME_MAX, (void *)u.ev.arg_1);
+	events.perf_submit(ctx, &u.ev, _pad_size);
+
+	tmp_i.update(&pid_tid, &u.ev);
 
 	return 0;
 };
@@ -65,7 +82,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 int
 kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct first_step_t *fsp;
+	struct ev_dt_t *fsp;
 
 	enum { _pad_size = offsetof(struct ev_dt_t, aux_str) + NAME_MAX };
 
@@ -81,6 +98,7 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	if (fsp == 0)
 		return 0;
 
+	u.ev.type = E_SC_EXIT;
 	u.ev.packet_type = 0; /* No additional packets */
 	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
 	u.ev.arg_1 = fsp->arg_1;
