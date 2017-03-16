@@ -154,17 +154,23 @@ function check() {
 		local LINE=$(tail -n2 $MATCH_OUT | grep 'EOF')
 		if [ "$LINE" == "" ]; then
 			local NC=$(tail -n3 $MATCH_OUT | head -n1 | cut -d'$' -f1 | wc -c)
-			local OUT=$(tail -n3 $MATCH_OUT | head -n2 | cut -c${NC}- | cut -d" " -f5)
-			SC_MATCH=$(echo $OUT | cut -d" " -f1)
-			SC_IS=$(echo $OUT | cut -d" " -f2)
+			local NAMES=$(tail -n3 $MATCH_OUT | head -n2 | cut -c${NC}- | cut -d" " -f5)
+			local RESLT=$(tail -n3 $MATCH_OUT | head -n1 | cut -c${NC}- | cut -d" " -f4)
+			if [ "$RESLT" == "----------------" ]; then
+				NUM="1" && TYPE="ENTRY"
+			else
+				NUM="2" && TYPE="EXIT"
+			fi
+			SC_MATCH=$(echo $NAMES | cut -d" " -f1)
+			SC_IS=$(echo $NAMES | cut -d" " -f2)
 			[ "$SC_MATCH" != "$SC_IS" ] \
-				&& echo "Error 1: missed syscall $SC_MATCH" \
-				|| echo "Error 2: wrong arguments of syscall $SC_MATCH"
+				&& echo "Error $NUM: missed $TYPE probe of syscall $SC_MATCH" \
+				|| echo "Error 3: wrong arguments of syscall $SC_MATCH"
 		else
 			LN=$(echo $LINE | cut -d':' -f2 | cut -d' ' -f1)
 			[ $LN -eq 1 ] \
-				&& echo "Error 3: missing output (e.g. fork not followed)" \
-				|| echo "Error 4: truncated output (e.g. following fork stopped)"
+				&& echo "Error 4: missing output (e.g. fork not followed)" \
+				|| echo "Error 5: truncated output (e.g. following fork stopped)"
 		fi
 	else
 		echo "Error 0: unknown error"

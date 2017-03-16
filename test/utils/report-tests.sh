@@ -49,10 +49,18 @@ ERR=$($OUTPUT | grep '%' | cut -d"$TAB" -f3 | cut -d" " -f1 | sort | uniq)
 if [ "$ERR" != "" ]; then
 	for e in $ERR; do
 		case $e in
-		missed-syscall:)
+		missed-entry-syscall:)
 			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
 			for s in $SC; do
-				echo "- missed syscall: $s"
+				echo "- missed ENTRY probe of syscall: $s"
+				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
+				echo
+			done
+			;;
+		missed-exit-syscall:)
+			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
+			for s in $SC; do
+				echo "- missed EXIT probe of syscall: $s"
 				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
 				echo
 			done

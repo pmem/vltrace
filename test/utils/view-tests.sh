@@ -62,41 +62,53 @@ for n in $TESTS; do
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG" \
 				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG\t$NAME"
 			;;
-		1) # missed syscall
-			MSG="missed-syscall: "
-			FLD=6
-			ERR=$(grep "Error 1" ./log${n}.txt | cut -d" " -f$FLD | sort | uniq)
+		1) # missed entry probe of syscall
+			MSG="missed-entry-syscall: "
+			FLD=9
+			ERR=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | sort | uniq)
 			for e in $ERR; do
-				C=$(grep "Error 1" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
+				C=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
 				[ $C -lt $MIN ] && continue
 				[ $LONG -eq 0 ] \
 					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e" \
 					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e\t$NAME"
 			done
 			;;
-		2) # wrong arguments of syscall
+		2) # missed exit probe of syscall
+			MSG="missed-exit-syscall: "
+			FLD=9
+			ERR=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | sort | uniq)
+			for e in $ERR; do
+				C=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
+				[ $C -lt $MIN ] && continue
+				[ $LONG -eq 0 ] \
+					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e" \
+					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e\t$NAME"
+			done
+			;;
+		3) # wrong arguments of syscall
 			MSG="wrong-arguments: "
 			FLD=8
-			ERR=$(grep "Error 2" ./log${n}.txt | cut -d" " -f$FLD | sort | uniq)
+			ERR=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | sort | uniq)
 			for e in $ERR; do
-				C=$(grep "Error 2" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
+				C=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
 				[ $C -lt $MIN ] && continue
 				[ $LONG -eq 0 ] \
 					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e" \
 					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e\t$NAME"
 			done
 			;;
-		3) # missing output
+		4) # missing output
 			MSG="missing-output"
-			C=$(grep "Error 3" ./log${n}.txt | wc -l)
+			C=$(grep "Error $err" ./log${n}.txt | wc -l)
 			[ $C -lt $MIN ] && continue
 			[ $LONG -eq 0 ] \
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG" \
 				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG\t$NAME"
 			;;
-		4) # truncated output
+		5) # truncated output
 			MSG="truncated-output"
-			C=$(grep "Error 4" ./log${n}.txt | wc -l)
+			C=$(grep "Error $err" ./log${n}.txt | wc -l)
 			[ $C -lt $MIN ] && continue
 			[ $LONG -eq 0 ] \
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG" \
