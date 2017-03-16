@@ -99,7 +99,7 @@ We should implement it as soon as this bug will be closed:
 
 It will improve the time of attaching and detaching.
 
- - https://github.com/vitalyvch/strace.ebpf/issues/44
+ - https://github.com/ldorau/strace.ebpf/issues/1
 
 
 4. Output logs

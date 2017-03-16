@@ -20,6 +20,5 @@ is /usr/lib/x86_64-linux-gnu/pkgconfig/libbcc.pc.
 
 ** CONTACTS **
 
-For more information on this tool, contact
-Vitalii Chernookyi (vitalii.chernookyi@intel.com),
-or create an issue at https://github.com/vitalyvch/strace.ebpf/issues
+For more information on this tool contact Lukasz Dorau <lukasz.dorau@intel.com>
+or create an issue at https://github.com/ldorau/strace.ebpf/issues

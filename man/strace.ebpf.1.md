@@ -408,6 +408,6 @@ file or directory.
 
 # SEE ALSO #
 
-**strace**(1), **bpf**(2), **<https://github.com/vitalyvch/strace.ebpf>**.
+**strace**(1), **bpf**(2), **<https://github.com/ldorau/strace.ebpf>**.
 
 Also Documentation/networking/filter.txt in kernel sources.
