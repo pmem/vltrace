@@ -1,0 +1,31 @@
+This directory contains very basic functional tests of strace.ebpf.
+
+
+** REQUIREMENTS **
+
+The tests require CAP_SYS_ADMIN capability so they have to be run as root
+or using the 'sudo' command.
+
+
+** COMPILATION **
+
+In order to run the tests you should first build the whole project running:
+
+$ make
+
+in the build directory.
+
+
+** RUNNING THE TESTS **
+
+You can start the tests in the silent way by running:
+
+$ sudo make test
+
+or in the verbose way using 'ctest' command:
+
+$ sudo ctest -V
+
+For all ctest's options see the ctest's documentation:
+
+https://cmake.org/cmake/help/latest/manual/ctest.1.html
