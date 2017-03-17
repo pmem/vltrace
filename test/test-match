@@ -87,7 +87,11 @@ rm -f *-$TEST_NUM.log
 echo "# sudo bash -c \"$RUN_STRACE $FF -o $OUT $TEST_FILE $TEST_NUM\""
 sudo bash -c "$RUN_STRACE $FF -o $OUT $TEST_FILE $TEST_NUM"
 
+set +e
 grep -v -e "PID_TID" -e "$OUT" $OUT > $OUT_BARE
+set -e
+
+[ $(cat $OUT_BARE | wc -l) -eq 0 ] && echo "ERROR: no traces in output of strace.ebpf" && exit 1
 
 if [ "$FF" == "" ]; then
 	# tests without fork()

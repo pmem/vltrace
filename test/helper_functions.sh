@@ -81,7 +81,7 @@ function cut_part_file() {
 
 	local LINE1=$(get_line_of_pattern $FILE "$PATTERN1")
 	[ "$LINE1" == "" ] \
-		&& echo "Error: cut_part_file(): the start-pattern \"$PATTERN1\" not found in file $FILE" \
+		&& echo "ERROR: cut_part_file(): the start-pattern \"$PATTERN1\" not found in file $FILE" >&2 \
 		&& return
 
 	local LINE2=$(get_line_of_pattern $FILE "$PATTERN2")
@@ -169,8 +169,8 @@ function check() {
 		else
 			LN=$(echo $LINE | cut -d':' -f2 | cut -d' ' -f1)
 			[ $LN -eq 1 ] \
-				&& echo "Error 4: missing output (e.g. fork not followed)" \
-				|| echo "Error 5: truncated output (e.g. following fork stopped)"
+				&& echo "Error 4: missing output" \
+				|| echo "Error 5: truncated output"
 		fi
 	else
 		echo "Error 0: unknown error"
