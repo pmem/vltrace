@@ -355,6 +355,10 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_sysfs, SyS_sysfs, 6),
 	/* EBPF_SYSCALL_FILE(__NR_umount, SyS_umount, 6), */
 	/* EBPF_SYSCALL_FILE(__NR_oldumount, SyS_oldumount, 6), */
+
+	/* XXX workaround for libc<=>kernel syscall numbers issue */
+	EBPF_SYSCALL_FILE(__NR_umount2, SyS_umount, 6),
+
 	EBPF_SYSCALL_FLAGS(__NR_mount, SyS_mount, EM_fs_path_1_2_arg, 6),
 	EBPF_SYSCALL_FLAGS(__NR_pivot_root, SyS_pivot_root,
 				EM_fs_path_1_2_arg, 6),
