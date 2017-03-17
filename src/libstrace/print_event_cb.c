@@ -826,7 +826,6 @@ fwrite_out_lf_fld_sep(FILE *f)
 static void
 print_event_hex_entry(FILE *f, void *data, int size)
 {
-	s64 res, err;
 	struct ev_dt_t *const event = data;
 	char *str = "----------------";
 	size_t lenstr = strlen(str);
