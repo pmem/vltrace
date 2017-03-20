@@ -413,41 +413,20 @@ start_command_with_signals(int argc, char *const argv[])
 		return -1;
 	}
 
-	sa.sa_sigaction = sig_chld_handler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART | SA_SIGINFO |
-		SA_NOCLDSTOP | SA_NOCLDWAIT;
-
-	(void) sigaction(SIGCHLD, &sa, NULL);
-
 	sa.sa_sigaction = sig_transmit_handler;
 	sa.sa_flags = SA_RESTART;
+	sigemptyset(&sa.sa_mask);
 
 	(void) sigaction(SIGINT, &sa, NULL);
 	(void) sigaction(SIGHUP, &sa, NULL);
 	(void) sigaction(SIGQUIT, &sa, NULL);
 	(void) sigaction(SIGTERM, &sa, NULL);
 
-	sa.sa_flags = (int)(SA_RESTART | SA_RESETHAND);
+	sa.sa_flags = SA_RESTART | SA_RESETHAND;
+
 	(void) sigaction(SIGSEGV, &sa, NULL);
 
 	return pid;
-}
-
-/*
- * sig_chld_handler -- SIGCHLD handler.
- *
- * Is used if "command" was provided on command line.
- */
-void
-sig_chld_handler(int sig, siginfo_t *si, void *unused)
-{
-	if (si->si_code == CLD_EXITED && Args.pid == si->si_pid) {
-		Cont = false;
-	}
-
-	(void) sig;
-	(void) unused;
 }
 
 /*
@@ -459,9 +438,10 @@ sig_chld_handler(int sig, siginfo_t *si, void *unused)
 void
 sig_transmit_handler(int sig, siginfo_t *si, void *unused)
 {
-	kill(Args.pid, SIGSEGV == sig ? SIGHUP : sig);
+	if (Args.pid > 0)
+		kill(Args.pid, SIGSEGV == sig ? SIGHUP : sig);
 
-	Cont = false;
+	AbortTracing = 1;
 
 	(void) si;
 	(void) unused;
@@ -499,40 +479,4 @@ setup_buffer:
 	/* XXX We should improve it. May be we should use fd directly */
 	/* setbuffer(Out_lf, NULL, Args.out_buf_size); */
 	(void) Args.out_buf_size;
-}
-
-/*
- * Check main loop exit conditions
- */
-void
-main_loop_check_exit_conditions(void)
-{
-	if (!Cont) {
-		fprintf(stderr, "INFO: Signaled.\n");
-
-		goto exit_message;
-	}
-
-	if (!Args.command && 0 < Args.pid) {
-		if (kill(Args.pid, 0) == -1) {
-			/*
-			 * XXX subject to rework during
-			 *     implementation of multi-process
-			 *     attaching.
-			 */
-			Cont = false;
-
-			fprintf(stderr,
-				"ERROR: Process with pid '%d'"
-				" has disappeared : '%m'.\n",
-				Args.pid);
-
-			goto exit_message;
-		}
-	}
-
-	return;
-
-exit_message:
-	fprintf(stderr, "Exiting.\n");
 }

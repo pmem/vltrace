@@ -42,8 +42,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
 #include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/prctl.h>
 
 #include <linux/sched.h>
 #include <linux/limits.h>
@@ -68,10 +69,14 @@
 
 /* Global variables */
 struct cl_options Args;
-bool Cont = true;
 FILE *Out_lf;
 enum out_lf_fmt Out_lf_fmt;
 
+/* I/O error in perf callback occured */
+int OutputError;
+
+/* Terminating signal received */
+int AbortTracing;
 
 /*
  * main -- Tool's entry point
@@ -115,6 +120,14 @@ main(const int argc, char *const argv[])
 		exit(errno);
 	}
 
+	if (Args.ff_mode) {
+		/*
+		 * Set the "child subreaper" attribute to be able
+		 * to wait for all children and grandchildren.
+		 */
+		prctl(PR_SET_CHILD_SUBREAPER, 1);
+	}
+
 	/*
 	 * XXX Temporarily. We should do it in the future together with
 	 *    multi-process attaching.
@@ -135,7 +148,6 @@ main(const int argc, char *const argv[])
 
 		if (Args.pid == -1) {
 			fprintf(stderr, "ERROR: Exiting.\n");
-
 			exit(errno);
 		}
 	}
@@ -238,13 +250,32 @@ main(const int argc, char *const argv[])
 	for (unsigned i = 0; i < b->pr_arr_qty; i++)
 		readers[i] = b->pr_arr[i]->pr;
 
-	while (Cont) {
+	/* trace until all children exit */
+	while ((waitpid(-1, NULL, WNOHANG) != -1) || (errno != ECHILD)) {
+
 		(void) perf_reader_poll((int)b->pr_arr_qty, readers, -1);
 
-		main_loop_check_exit_conditions();
+		/* check if the process traced by PID exists */
+		if (!Args.command && Args.pid > 0 && kill(Args.pid, 0) == -1) {
+			fprintf(stderr, "ERROR: traced process with PID '%d'"
+					" disappeared : '%m'.\n", Args.pid);
+				break;
+		}
+
+		if (OutputError) {
+			fprintf(stderr, "ERROR: error writing output. "
+					"Exiting...\n");
+			break;
+		}
+
+		if (AbortTracing) {
+			fprintf(stderr, "Notice: terminated by signal. "
+					"Exiting...\n");
+			break;
+		}
 	}
 
-
 	detach_all(b);
+
 	return EXIT_SUCCESS;
 }

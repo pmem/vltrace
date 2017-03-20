@@ -130,7 +130,8 @@ struct cl_options {
 };
 
 extern struct cl_options Args;
-extern bool Cont;
+extern int OutputError;
+extern int AbortTracing;
 
 /* Output logfile */
 extern FILE *Out_lf;

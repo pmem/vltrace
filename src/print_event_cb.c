@@ -1055,12 +1055,12 @@ print_header_bin(int argc, char *const argv[])
 
 	if (1 != fwrite(&d_size, sizeof(d_size), 1, Out_lf)) {
 		/* ERROR */
-		Cont = false;
+		OutputError = 1;
 	}
 
 	if (1 != fwrite(&d, sizeof(d), 1, Out_lf)) {
 		/* ERROR */
-		Cont = false;
+		OutputError = 1;
 	}
 }
 
@@ -1079,12 +1079,12 @@ print_event_bin(void *cb_cookie, void *data, int size)
 
 	if (1 != fwrite(&size, sizeof(size), 1, Out_lf)) {
 		/* ERROR */
-		Cont = false;
+		OutputError = 1;
 	}
 
 	if (1 != fwrite(data, (size_t)size, 1, Out_lf)) {
 		/* ERROR */
-		Cont = false;
+		OutputError = 1;
 	}
 
 	(void) cb_cookie;
