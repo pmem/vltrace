@@ -33,6 +33,8 @@ set(TEST_APP "./test_syscalls")
 
 set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-result")
+
 add_executable(test_syscalls test_syscalls.c)
 
 #
