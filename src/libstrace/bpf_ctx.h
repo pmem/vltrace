@@ -31,7 +31,7 @@
  */
 
 /*
- * strace_bpf.h -- Key bpf_ctx structure and related functions
+ * bpf_ctx.h -- Key bpf_ctx structure and related functions
  */
 
 #ifndef STRACE_BPF_H

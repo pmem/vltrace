@@ -37,7 +37,7 @@ find_package(PkgConfig)
 pkg_check_modules(LIBBCC REQUIRED libbcc)
 
 set(SOURCES
-	strace_bpf.c
+	bpf_ctx.c
 	utils.c
 	attach_probes.c
 	ebpf_syscalls.c

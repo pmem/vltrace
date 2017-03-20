@@ -31,7 +31,7 @@
  */
 
 /*
- * strace_bpf.c -- functions related to struct bpf_ctx
+ * bpf_ctx.c -- functions related to struct bpf_ctx
  */
 
 #include <stdio.h>
@@ -48,7 +48,7 @@
 #include <bcc/perf_reader.h>
 
 #include "main.h"
-#include "strace_bpf.h"
+#include "bpf_ctx.h"
 
 
 /*

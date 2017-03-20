@@ -55,7 +55,7 @@
 
 #include "ebpf/ebpf_file_set.h"
 
-#include "strace_bpf.h"
+#include "bpf_ctx.h"
 
 #include "txt.h"
 #include "main.h"

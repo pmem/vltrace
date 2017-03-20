@@ -41,7 +41,7 @@
 
 #include "main.h"
 #include "utils.h"
-#include "strace_bpf.h"
+#include "bpf_ctx.h"
 #include "attach_probes.h"
 #include "ebpf_syscalls.h"
 
