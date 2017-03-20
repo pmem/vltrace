@@ -94,5 +94,3 @@ endif()
 add_subdirectory(ebpf)
 
 target_link_libraries(strace.ebpf ebpf ${LIBBCC_LIBRARIES})
-
-add_executable(file_sc_bench file_sc_bench.c)

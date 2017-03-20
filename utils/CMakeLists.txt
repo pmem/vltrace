@@ -30,6 +30,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 2.8.7)
-project(syscall_intercept C ASM)
+project(utils_strace_ebpf C)
 
-
+add_executable(file_sc_bench file_sc_bench.c)
