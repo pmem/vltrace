@@ -59,12 +59,18 @@ find_package(PkgConfig)
 pkg_check_modules(LIBBCC REQUIRED libbcc)
 
 set(SOURCES
-   txt.c
-   main.c
-   cl_parser.c)
+	strace.ebpf.c
+	txt.c
+	cl_parser.c
+	bpf_ctx.c
+	utils.c
+	attach_probes.c
+	ebpf_syscalls.c
+	generate_ebpf.c
+	print_event_cb.c)
 
 link_directories(nondebug)
-include_directories(libstrace compat)
+include_directories(compat)
 include_directories(${LIBBCC_INCLUDE_DIRS})
 link_directories(${LIBBCC_LIBRARY_DIRS})
 
@@ -86,8 +92,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-override-init")
 endif()
 
 add_subdirectory(ebpf)
-add_subdirectory(libstrace)
 
-target_link_libraries(strace.ebpf strace ebpf ${LIBBCC_LIBRARIES})
+target_link_libraries(strace.ebpf ebpf ${LIBBCC_LIBRARIES})
 
 add_executable(file_sc_bench file_sc_bench.c)

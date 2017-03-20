@@ -38,9 +38,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <ebpf/ebpf_file_set.h>
+#include "ebpf/ebpf_file_set.h"
 
-#include "main.h"
+#include "strace.ebpf.h"
 #include "utils.h"
 #include "ebpf_syscalls.h"
 #include "generate_ebpf.h"

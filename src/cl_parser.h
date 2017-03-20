@@ -38,7 +38,7 @@
 #ifndef CL_PARSER_H
 #define CL_PARSER_H
 
-#include <main.h>
+#include "strace.ebpf.h"
 
 int cl_parser(struct cl_options *const clo,
 		const int argc, char *const argv[]);

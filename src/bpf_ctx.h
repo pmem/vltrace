@@ -61,7 +61,7 @@ struct bpf_pr {
 	char  key[];
 };
 
-/* Context of libstrace library */
+/* eBPF context */
 struct bpf_ctx {
 	/* A pointer to compiled ebpf code */
 	void			 *module;

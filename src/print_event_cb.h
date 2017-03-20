@@ -41,7 +41,7 @@
 
 #include <bcc/libbpf.h>
 
-#include "main.h"
+#include "strace.ebpf.h"
 
 /* process event */
 extern perf_reader_raw_cb Print_event_cb[EOF_QTY + 1];

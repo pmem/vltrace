@@ -31,7 +31,7 @@
  */
 
 /*
- * main.c -- Trace syscalls. For Linux, uses BCC, ebpf.
+ * strace.ebpf.c -- Trace syscalls. For Linux, uses BCC, ebpf.
  */
 
 #include <errno.h>
@@ -58,7 +58,7 @@
 #include "bpf_ctx.h"
 
 #include "txt.h"
-#include "main.h"
+#include "strace.ebpf.h"
 #include "utils.h"
 #include "cl_parser.h"
 #include "attach_probes.h"

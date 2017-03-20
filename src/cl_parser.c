@@ -47,7 +47,7 @@
 #include <sys/types.h>
 
 #include "txt.h"
-#include "main.h"
+#include "strace.ebpf.h"
 #include "utils.h"
 #include "cl_parser.h"
 #include "ebpf_syscalls.h"

@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <signal.h>
 
-#include "main.h"
+#include "strace.ebpf.h"
 
 char *load_file(const char *fn);
 char *load_file_no_cr(const char *const fn);

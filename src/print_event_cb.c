@@ -42,7 +42,7 @@
 #include <linux/ptrace.h>
 #include <linux/limits.h>
 
-#include "main.h"
+#include "strace.ebpf.h"
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
 
@@ -58,7 +58,7 @@ typedef __u64 u64;
 
 enum { TASK_COMM_LEN = 16 };
 
-#include <ebpf/trace.h>
+#include "ebpf/trace.h"
 
 static unsigned long long start_ts_nsec = 0;
 

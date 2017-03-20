@@ -31,7 +31,7 @@
  */
 
 /*
- * main.h -- application-wide stuff
+ * strace.ebpf.h -- application-wide stuff
  */
 
 #ifndef MAIN_H

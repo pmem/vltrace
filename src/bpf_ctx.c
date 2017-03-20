@@ -47,7 +47,7 @@
 #include <bcc/bpf_common.h>
 #include <bcc/perf_reader.h>
 
-#include "main.h"
+#include "strace.ebpf.h"
 #include "bpf_ctx.h"
 
 
