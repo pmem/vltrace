@@ -148,7 +148,7 @@ Default: 'hex'
 
 `-K, --hex-separator <sep>`
 
-set field separator for hex logs. Default is '\\t'.
+set field separator for hex logs. Default is a single space ' '.
 
 
 #Filtering:
