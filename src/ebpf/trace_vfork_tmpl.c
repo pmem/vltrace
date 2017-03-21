@@ -41,7 +41,7 @@
 int
 kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct ev_dt_t ev;
+	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
@@ -60,14 +60,9 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.arg_5 = PT_REGS_PARM5(ctx);
 	ev.arg_6 = PT_REGS_PARM6(ctx);
 
-	ev.finish_ts_nsec = 0;
-	ev.ret = 0;
-
 	memset(ev.sc_name, 0, sizeof(ev.sc_name));
 
-	events.perf_submit(ctx, &ev, offsetof(struct ev_dt_t, arg_1));
-
-	tmp_i.update(&pid_tid, &ev);
+	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, arg_1));
 
 	return 0;
 };
@@ -78,33 +73,26 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 int
 kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct ev_dt_t *fsp;
-	struct ev_dt_t ev;
+	struct data_exit_t ev;
 
 	u64 cur_nsec = bpf_ktime_get_ns();
-
 	u64 pid_tid = bpf_get_current_pid_tgid();
-	fsp = tmp_i.lookup(&pid_tid);
-	if (fsp == 0)
-		return 0;
+
+	PID_CHECK_HOOK
 
 	ev.type = E_SC_EXIT;
 	ev.packet_type = 0; /* No additional packets */
 	ev.sc_id = SYSCALL_NR; /* SysCall ID */
 	ev.pid_tid = pid_tid;
-	ev.start_ts_nsec = fsp->start_ts_nsec;
 	ev.finish_ts_nsec = cur_nsec;
 	ev.ret = PT_REGS_RC(ctx);
 
 	if (0 < ev.ret) {
-		/* const */ u64 one = 1;
-
+		u64 one = 1;
 		children_map.update(&ev.ret, &one);
 	}
 
-	events.perf_submit(ctx, &ev, offsetof(struct ev_dt_t, arg_1));
-
-	tmp_i.delete(&pid_tid);
+	events.perf_submit(ctx, &ev, offsetof(struct data_exit_t, sc_name));
 
 	return 0;
 }

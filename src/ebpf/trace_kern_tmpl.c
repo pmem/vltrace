@@ -41,14 +41,14 @@
 int
 kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct ev_dt_t ev;
+	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
 
 	u64 cur_nsec = bpf_ktime_get_ns();
 
-	/* struct ev_dt_t  */
+	/* struct data_entry_t  */
 	memset(&ev, 0, sizeof(ev));
 
 	ev.type = E_SC_ENTRY;
@@ -56,10 +56,8 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 
 	ev.pid_tid = pid_tid;
 	ev.start_ts_nsec = cur_nsec;
-	ev.finish_ts_nsec = 0;
 	ev.sc_id = -2; /* SysCall ID */
 
-	ev.ret = 0;
 	ev.arg_1 = PT_REGS_PARM1(ctx);
 	ev.arg_2 = PT_REGS_PARM2(ctx);
 	ev.arg_3 = PT_REGS_PARM3(ctx);
@@ -70,10 +68,8 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	memset(ev.sc_name, 0, sizeof(ev.sc_name));
 	strcpy(ev.sc_name, "SYSCALL_NAME");
 
-	size_t ev_size = offsetof(struct ev_dt_t, sc_name) + E_SC_NAME_SIZE;
+	size_t ev_size = offsetof(struct data_entry_t, sc_name) + E_SC_NAME_SIZE;
 	events.perf_submit(ctx, &ev, ev_size);
-
-	tmp_i.update(&pid_tid, &ev);
 
 	return 0;
 };
@@ -84,37 +80,26 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 int
 kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct ev_dt_t *fsp;
-	struct ev_dt_t ev;
+	struct data_exit_t ev;
 
 	u64 cur_nsec = bpf_ktime_get_ns();
-
 	u64 pid_tid = bpf_get_current_pid_tgid();
-	fsp = tmp_i.lookup(&pid_tid);
-	if (fsp == 0)
-		return 0;
+
+	PID_CHECK_HOOK
 
 	ev.type = E_SC_EXIT;
 	ev.packet_type = 0; /* No additional packets */
 	ev.sc_id = -2; /* SysCall ID */
-	ev.arg_1 = fsp->arg_1;
-	ev.arg_2 = fsp->arg_2;
-	ev.arg_3 = fsp->arg_3;
-	ev.arg_4 = fsp->arg_4;
-	ev.arg_5 = fsp->arg_5;
-	ev.arg_6 = fsp->arg_6;
 	ev.pid_tid = pid_tid;
-	ev.start_ts_nsec = fsp->start_ts_nsec;
 	ev.finish_ts_nsec = cur_nsec;
 	ev.ret = PT_REGS_RC(ctx);
+
 	memset(ev.sc_name, 0, sizeof(ev.sc_name));
 	strcpy(ev.sc_name, "SYSCALL_NAME");
 
-	enum { ev_size = offsetof(struct ev_dt_t, sc_name) +
+	enum { ev_size = offsetof(struct data_exit_t, sc_name) +
 		sizeof(ev.sc_name) };
 	events.perf_submit(ctx, &ev, ev_size);
-
-	tmp_i.delete(&pid_tid);
 
 	return 0;
 }

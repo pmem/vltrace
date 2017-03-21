@@ -61,7 +61,7 @@ int
 tracepoint__sys_exit(struct pt_regs *ctx)
 {
 	struct first_step_t *fsp;
-	struct ev_dt_t ev;
+	struct data_entry_t ev;
 
 	u64 cur_nsec = bpf_ktime_get_ns();
 

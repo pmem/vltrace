@@ -47,7 +47,7 @@ enum { E_SC_ENTRY = 0, E_SC_EXIT = 1 };
  */
 enum { E_SC_NAME_SIZE = 32 };
 
-struct ev_dt_t {
+struct data_entry_t {
 	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
 
 	/*
@@ -83,7 +83,6 @@ struct ev_dt_t {
 
 		/* Timestamps */
 		u64 start_ts_nsec;
-		u64 finish_ts_nsec;
 
 		/*
 		 * the value equal to -1 means "header"
@@ -98,8 +97,6 @@ struct ev_dt_t {
 	union {
 		/* Body of first packet */
 		struct {
-			s64 ret;
-
 			s64 arg_1;
 			s64 arg_2;
 			s64 arg_3;
@@ -132,6 +129,59 @@ struct ev_dt_t {
 		 */
 		char str[1];	/* NAME_MAX */
 	};
+};
+
+struct data_exit_t {
+	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
+
+	/*
+	 * This field is set for glibc-defined syscalls and describe
+	 *    a series of packets for every syscall.
+	 *
+	 * It is needed because stack size is limited to 512 bytes and used part
+	 * of the stack is initialized with zero on every call of syscall handlers.
+	 *
+	 * the value equal to 0 means that this is "single-packet" syscall
+	 *    and there will be no additional packets sent.
+	 * the value bigger than 0 means that this is a first packet and there
+	 *    will be sent 'packet_type' more additional packets.
+	 * the value less than 0 means that this is additional packet with
+	 *   serial number 'packet_type'.
+	 *
+	 * Content of additional packets is defined by syscall number in
+	 *    first packet. There are no additional packets for "sc_id == -2"
+	 */
+	s64 packet_type;
+
+	/*
+	 * Syscall's signature. All packets with the same signature belong to one
+	 *    syscall. We need two time stamps here, because syscalls can nest
+	 *    from one pid_tid by calling syscall from signal handler, before
+	 *    syscall called from main context has returned.
+	 *
+	 * XXX In fact sc_id is not needed here, but its presence simplifies
+	 *    a lot of processing, so let's keep it here.
+	 */
+	struct {
+		u64 pid_tid;
+
+		/* Timestamps */
+		u64 finish_ts_nsec;
+
+		/*
+		 * the value equal to -1 means "header"
+		 *
+		 * the value equal to -2 means that syscall's num is
+		 *    unknown for glibc and the field sc_name should be
+		 *    used to figuring out syscall.
+		 */
+		s64 sc_id;
+	};
+
+	s64 ret;
+
+	/* should be last in this structure */
+	char sc_name[E_SC_NAME_SIZE];
 };
 
 #endif /* TRACE_H */

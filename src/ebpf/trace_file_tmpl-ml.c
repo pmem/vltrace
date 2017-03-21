@@ -67,10 +67,10 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
 	struct first_step_t *fsp;
 
-	enum { _pad_size = offsetof(struct ev_dt_t, str) + NAME_MAX };
+	enum { _pad_size = offsetof(struct data_entry_t, str) + NAME_MAX };
 
 	union {
-		struct ev_dt_t ev;
+		struct data_entry_t ev;
 		char _pad[_pad_size];
 	} u;
 
@@ -94,9 +94,9 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	u.ev.finish_ts_nsec = cur_nsec;
 	u.ev.ret = PT_REGS_RC(ctx);
 	/* XXX enum ??? */
-	// const size_t ev_size = offsetof(struct ev_dt_t, sc_name);
+	// const size_t ev_size = offsetof(struct data_entry_t, sc_name);
 	// events.perf_submit(ctx, &u.ev, ev_size);
-	events.perf_submit(ctx, &u.ev, offsetof(struct ev_dt_t, sc_name));
+	events.perf_submit(ctx, &u.ev, offsetof(struct data_entry_t, sc_name));
 
 	u.ev.packet_type = -1; /* first additional packet */
 	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp->arg_1);

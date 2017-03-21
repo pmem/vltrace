@@ -43,5 +43,4 @@
 /* The set of our children_pid */
 BPF_HASH(children_map, u64, u64);
 
-BPF_HASH(tmp_i, u64, struct ev_dt_t);
 BPF_PERF_OUTPUT(events);

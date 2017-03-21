@@ -31,26 +31,18 @@
  */
 
 /*
- * pid_check_ff_full_hook.c -- Pid check hook for full-follow-fork mode.
+ * pid_check_ff_full_hook.c -- pid check hook for full-follow-fork mode.
  */
 
 {
-	bool t = false;
-
-	/* const */ u64 pid = (pid_tid >> 32);
-
-	if (pid == TRACED_PID) {
-		t |= true;
-	} else {
+	u64 pid = (pid_tid >> 32);
+	if (pid != TRACED_PID) {
 		u64 *val = children_map.lookup(&pid);
-
-		if (NULL != val) {
-			if (*val == 1)
-				t |= true;
+		if (NULL == val) {
+			return 0;
 		}
-	}
-
-	if (!t) {
-		return 0;
+		if (*val != 1) {
+			return 0;
+		}
 	}
 }

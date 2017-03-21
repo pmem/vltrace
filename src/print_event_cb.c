@@ -100,25 +100,21 @@ print_header_strace(int argc, char *const argv[])
 static void
 print_event_strace(void *cb_cookie, void *data, int size)
 {
-	s64 res, err;
-	struct ev_dt_t *const event = data;
+	s64 res = 0, err = 0;
+	struct data_entry_t *const event = data;
 
 	/* XXX Check size arg */
 	(void) size;
 
-	/* split return value into result and errno */
-	res = (event->ret >= 0) ? event->ret : -1;
-	err = (event->ret >= 0) ? 0 : -event->ret;
-
 	if (start_ts_nsec == 0)
 		start_ts_nsec = event->start_ts_nsec;
 
-	if (Args.failed && (event->ret >= 0))
+	if (Args.failed /* && (event->ret >= 0) */)
 		return;
 
 	if (Args.timestamp) {
 		unsigned long long delta_nsec =
-			event->finish_ts_nsec - start_ts_nsec;
+			event->start_ts_nsec - start_ts_nsec;
 		fprintf(Out_lf, "%-14.9f",
 				(double)((double)delta_nsec / 1000000000.0));
 	}
@@ -232,7 +228,7 @@ fprint_i64(FILE *f, uint64_t x)
  *     in stream.
  */
 static inline void
-fprint_first_str(FILE *f, struct ev_dt_t *const event, int size)
+fprint_first_str(FILE *f, struct data_entry_t *const event, int size)
 {
 	/*
 	 * XXX Check presence of string body by cheking sc_id
@@ -278,7 +274,7 @@ fprint_first_str(FILE *f, struct ev_dt_t *const event, int size)
  *     in stream.
  */
 static inline void
-fprint_second_str(FILE *f, struct ev_dt_t *const event, int size)
+fprint_second_str(FILE *f, struct data_entry_t *const event, int size)
 {
 	/* This packet doesn't contain second string */
 	if (0 != event->packet_type)
@@ -346,20 +342,17 @@ out:
  * fwrite_sc_name -- write syscall's name to stream
  */
 static void
-fwrite_sc_name(FILE *f, struct ev_dt_t *const event, int size)
+fwrite_sc_name(FILE *f, const s64 sc_id, char const *sc_name, int size)
 {
 	/* XXX Temporarily */
 	(void) size;
 
-	if (event->sc_id >= 0)
-		fwrite(sc_num2str(event->sc_id),
-				strlen(sc_num2str(event->sc_id)),
-				1, f);
-	else
+	if (sc_id >= 0) {
+		fwrite(sc_num2str(sc_id), strlen(sc_num2str(sc_id)), 1, f);
+	} else {
 		/* XXX Check presence of string body by checking size arg */
-		fwrite(event->sc_name + 4,
-				strlen(event->sc_name + 4),
-				1, f);
+		fwrite(sc_name + 4, strlen(sc_name + 4), 1, f);
+	}
 }
 
 /*
@@ -396,7 +389,7 @@ get_type_of_arg1(unsigned sc_num)
  * fprint_arg1_hex -- If syscall has first arg print it in hex form.
  */
 static void
-fprint_arg1_hex(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg1_hex(FILE *f, struct data_entry_t *const event, int size)
 {
 	switch (event->sc_id) {
 	case -2:
@@ -459,7 +452,7 @@ get_type_of_arg2(unsigned sc_num)
  * fprint_arg2_path -- If syscall has path in second arg print it as ascii str
  */
 static void
-fprint_arg2_path(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg2_path(FILE *f, struct data_entry_t *const event, int size)
 {
 	if (EM_fs_path_1_2_arg == (EM_fs_path_1_2_arg &
 				Syscall_array[event->sc_id].masks)) {
@@ -480,7 +473,7 @@ fprint_arg2_path(FILE *f, struct ev_dt_t *const event, int size)
  * fprint_arg2_hex -- If syscall has second arg print it in hex form.
  */
 static void
-fprint_arg2_hex(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg2_hex(FILE *f, struct data_entry_t *const event, int size)
 {
 	switch (event->sc_id) {
 	case -2:
@@ -536,7 +529,7 @@ get_type_of_arg3(unsigned sc_num)
  * fprint_arg3_path -- If syscall has path in third arg print it as ascii str
  */
 static void
-fprint_arg3_path(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg3_path(FILE *f, struct data_entry_t *const event, int size)
 {
 	if (EM_fs_path_1_3_arg == (EM_fs_path_1_3_arg &
 				Syscall_array[event->sc_id].masks)) {
@@ -551,7 +544,7 @@ fprint_arg3_path(FILE *f, struct ev_dt_t *const event, int size)
  * fprint_arg3_hex -- If syscall has third arg print it in hex form.
  */
 static void
-fprint_arg3_hex(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg3_hex(FILE *f, struct data_entry_t *const event, int size)
 {
 	/* XXX Temporarily */
 	(void) size;
@@ -610,7 +603,7 @@ get_type_of_arg4(unsigned sc_num)
  * fprint_arg4_path -- If syscall has path in fourth arg print it as ascii str
  */
 static void
-fprint_arg4_path(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg4_path(FILE *f, struct data_entry_t *const event, int size)
 {
 	if (EM_fs_path_2_4_arg == (EM_fs_path_2_4_arg &
 				Syscall_array[event->sc_id].masks)) {
@@ -625,7 +618,7 @@ fprint_arg4_path(FILE *f, struct ev_dt_t *const event, int size)
  * fprint_arg4_hex -- If syscall has fourth arg print it in hex form.
  */
 static void
-fprint_arg4_hex(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg4_hex(FILE *f, struct data_entry_t *const event, int size)
 {
 	/* XXX Temporarily */
 	(void) size;
@@ -680,7 +673,7 @@ get_type_of_arg5(unsigned sc_num)
  * fprint_arg5_path -- If syscall has path in fifth arg print it as ascii str
  */
 static void
-fprint_arg5_path(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg5_path(FILE *f, struct data_entry_t *const event, int size)
 {
 	(void) f;
 	(void) event;
@@ -694,7 +687,7 @@ fprint_arg5_path(FILE *f, struct ev_dt_t *const event, int size)
  * fprint_arg5_hex -- If syscall has fifth arg print it in hex form.
  */
 static void
-fprint_arg5_hex(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg5_hex(FILE *f, struct data_entry_t *const event, int size)
 {
 	/* XXX Temporarily */
 	(void) size;
@@ -749,7 +742,7 @@ get_type_of_arg6(unsigned sc_num)
  * fprint_arg6_path -- If syscall has path in sixth arg print it as ascii str
  */
 static void
-fprint_arg6_path(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg6_path(FILE *f, struct data_entry_t *const event, int size)
 {
 	(void) f;
 	(void) event;
@@ -763,7 +756,7 @@ fprint_arg6_path(FILE *f, struct ev_dt_t *const event, int size)
  * fprint_arg6_hex -- If syscall has sixth arg print it in hex form.
  */
 static void
-fprint_arg6_hex(FILE *f, struct ev_dt_t *const event, int size)
+fprint_arg6_hex(FILE *f, struct data_entry_t *const event, int size)
 {
 	/* XXX Temporarily */
 	(void) size;
@@ -826,7 +819,7 @@ fwrite_out_lf_fld_sep(FILE *f)
 static void
 print_event_hex_entry(FILE *f, void *data, int size)
 {
-	struct ev_dt_t *const event = data;
+	struct data_entry_t *const event = data;
 	char *str = "----------------";
 	size_t lenstr = strlen(str);
 
@@ -853,7 +846,7 @@ print_event_hex_entry(FILE *f, void *data, int size)
 	fwrite(str, lenstr, 1, f);
 	fwrite_out_lf_fld_sep(f);
 
-	fwrite_sc_name(f, event, size);
+	fwrite_sc_name(f, event->sc_id, event->sc_name, size);
 	fwrite_out_lf_fld_sep(f);
 
 	/* "ARG1" */
@@ -897,7 +890,7 @@ static void
 print_event_hex_exit(FILE *f, void *data, int size)
 {
 	s64 res, err;
-	struct ev_dt_t *const event = data;
+	struct data_exit_t *const event = data;
 
 	/* XXX Check size arg */
 	(void) size;
@@ -907,7 +900,7 @@ print_event_hex_exit(FILE *f, void *data, int size)
 	err = (event->ret >= 0) ? 0 : -event->ret;
 
 	if (start_ts_nsec == 0)
-		start_ts_nsec = event->start_ts_nsec;
+		start_ts_nsec = event->finish_ts_nsec;
 
 	if (Args.failed && (event->ret >= 0))
 		return;
@@ -929,35 +922,8 @@ print_event_hex_exit(FILE *f, void *data, int size)
 	fprint_i64(f, (uint64_t)res);
 	fwrite_out_lf_fld_sep(f);
 
-	fwrite_sc_name(f, event, size);
-	fwrite_out_lf_fld_sep(f);
+	fwrite_sc_name(f, event->sc_id, event->sc_name, size);
 
-	/* "ARG1" */
-	fprint_arg1_hex(f, event, size);
-	fwrite_out_lf_fld_sep(f);
-
-	/* "ARG2" */
-	fprint_arg2_hex(f, event, size);
-	fwrite_out_lf_fld_sep(f);
-
-	/* "ARG3" */
-	fprint_arg3_hex(f, event, size);
-	fwrite_out_lf_fld_sep(f);
-
-	/* "ARG4" */
-	fprint_arg4_hex(f, event, size);
-	fwrite_out_lf_fld_sep(f);
-
-	/* "ARG5" */
-	fprint_arg5_hex(f, event, size);
-	fwrite_out_lf_fld_sep(f);
-
-	/* "ARG6" */
-	fprint_arg6_hex(f, event, size);
-	fwrite_out_lf_fld_sep(f);
-
-	/* "AUX_DATA". For COMM and like. XXX */
-	/* fwrite(event->comm, strlen(event->comm), 1, f); */
 	fwrite("\n", 1, 1, f);
 }
 
@@ -1039,7 +1005,7 @@ print_header_bin(int argc, char *const argv[])
 {
 	size_t  argv_size = 0;
 
-	struct ev_dt_t d = { .sc_id = -1 };
+	struct data_entry_t d = { .sc_id = -1 };
 
 	const size_t d_size = sizeof(d);
 	d.header.argc = argc;
@@ -1070,11 +1036,11 @@ print_header_bin(int argc, char *const argv[])
 static void
 print_event_bin(void *cb_cookie, void *data, int size)
 {
-	struct ev_dt_t *const event = data;
+	struct data_entry_t *const event = data;
 
 	/* XXX Check size arg */
 
-	if (Args.failed && (event->ret >= 0))
+	if (Args.failed /* && (event->ret >= 0) */)
 		return;
 
 	if (1 != fwrite(&size, sizeof(size), 1, Out_lf)) {

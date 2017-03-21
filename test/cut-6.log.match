@@ -1,27 +1,27 @@
 $(X) $(X) ---------------- ---------------- close 0000000012345678      
-$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF close 0000000012345678      
+$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF close
 $(X) $(X) ---------------- ---------------- setxattr 111_non_exist 222_non_exist 0000000000000101 0000000000000102 0000000000000103 $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF setxattr 111_non_exist 222_non_exist 0000000000000101 0000000000000102 0000000000000103 $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF setxattr
 $(X) $(X) ---------------- ---------------- lsetxattr 222_non_exist 111_non_exist 0000000000000104 0000000000000105 0000000000000106 $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF lsetxattr 222_non_exist 111_non_exist 0000000000000104 0000000000000105 0000000000000106 $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF lsetxattr
 $(X) $(X) ---------------- ---------------- fsetxattr 0000000000000107 222_non_exist 0000000000000108 0000000000000109 0000000000000110 $(*)
-$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF fsetxattr 0000000000000107 222_non_exist 0000000000000108 0000000000000109 0000000000000110 $(*)
+$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF fsetxattr
 $(X) $(X) ---------------- ---------------- getxattr 111_non_exist 222_non_exist 0000000000000101 0000000000000102 $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF getxattr 111_non_exist 222_non_exist 0000000000000101 0000000000000102 $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF getxattr
 $(X) $(X) ---------------- ---------------- lgetxattr 222_non_exist 111_non_exist 0000000000000103 0000000000000104 $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF lgetxattr 222_non_exist 111_non_exist 0000000000000103 0000000000000104 $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF lgetxattr
 $(X) $(X) ---------------- ---------------- fgetxattr 0000000000000105 222_non_exist 0000000000000106 0000000000000107 $(*)
-$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF fgetxattr 0000000000000105 222_non_exist 0000000000000106 0000000000000107 $(*)
+$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF fgetxattr
 $(X) $(X) ---------------- ---------------- listxattr 111_non_exist 222_non_exist 0000000000000101 $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF listxattr 111_non_exist 222_non_exist 0000000000000101 $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF listxattr
 $(X) $(X) ---------------- ---------------- llistxattr 222_non_exist 111_non_exist 0000000000000102 $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF llistxattr 222_non_exist 111_non_exist 0000000000000102 $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF llistxattr
 $(X) $(X) ---------------- ---------------- flistxattr 0000000000000103 222_non_exist 0000000000000104 $(*)
-$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF flistxattr 0000000000000103 222_non_exist 0000000000000104 $(*)
+$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF flistxattr
 $(X) $(X) ---------------- ---------------- removexattr 111_non_exist 222_non_exist $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF removexattr 111_non_exist 222_non_exist $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF removexattr
 $(X) $(X) ---------------- ---------------- lremovexattr 222_non_exist 111_non_exist $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF lremovexattr 222_non_exist 111_non_exist $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF lremovexattr
 $(X) $(X) ---------------- ---------------- fremovexattr 0000000000000101 222_non_exist $(*)
-$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF fremovexattr 0000000000000101 222_non_exist $(*)
+$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF fremovexattr
 $(X) $(X) ---------------- ---------------- close 0000000087654321      

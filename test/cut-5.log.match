@@ -1,7 +1,7 @@
 $(X) $(X) ---------------- ---------------- close 0000000012345678      
-$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF close 0000000012345678      
+$(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF close
 $(X) $(X) ---------------- ---------------- umount 111_non_exist $(*)
-$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF umount 111_non_exist $(*)
+$(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF umount
 $(X) $(X) ---------------- ---------------- umount 222_non_exist 0000000000000123 $(*)
-$(X) $(X) 0000000000000016 FFFFFFFFFFFFFFFF umount 222_non_exist 0000000000000123 $(*)
+$(X) $(X) 0000000000000016 FFFFFFFFFFFFFFFF umount
 $(X) $(X) ---------------- ---------------- close 0000000087654321      

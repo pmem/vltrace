@@ -112,7 +112,6 @@ attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 	return res;
 }
 
-
 /*
  * attach_kp_libc_all -- This function attaches eBPF handler to each syscall
  *     known to libc.
