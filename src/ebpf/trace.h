@@ -38,7 +38,11 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-enum { E_SC_ENTRY = 0, E_SC_EXIT = 1 };
+enum {
+	E_SC_ENTRY	= 0,
+	E_SC_EXIT	= 1,
+	E_SC_TP		= 2
+};
 
 /*
  * The longest syscall's name is equal to 26 characters:
@@ -182,6 +186,14 @@ struct data_exit_t {
 
 	/* should be last in this structure */
 	char sc_name[E_SC_NAME_SIZE];
+};
+
+struct tp_s {
+	s64 type;
+	u64 pid_tid;
+	u64 finish_ts_nsec;
+	s64 id;
+	s64 ret;
 };
 
 #endif /* TRACE_H */

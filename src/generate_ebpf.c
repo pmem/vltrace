@@ -45,7 +45,6 @@
 #include "ebpf_syscalls.h"
 #include "generate_ebpf.h"
 
-
 /*
  * get_sc_num -- This function returns syscall number by name according to
  *     libc knowledge.
@@ -433,6 +432,17 @@ generate_ebpf_tp_all(FILE *ts)
 }
 
 /*
+ * generate_ebpf_common -- This function generates eBPF syscall handler
+ *     specific for kprobes and tracepoints.
+ */
+static void
+generate_ebpf_common(FILE *ts)
+{
+	generate_ebpf_kp_kern_all(ts);
+	generate_ebpf_tp_all(ts);
+}
+
+/*
  * generate_ebpf -- This function parses and process expression.
  */
 char *
@@ -468,6 +478,8 @@ generate_ebpf()
 		generate_ebpf_kp_fileio(ts);
 	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
 		generate_ebpf_tp_all(ts);
+	} else if (!strcasecmp(Args.expr, "trace=common")) {
+		generate_ebpf_common(ts);
 	}
 
 	fclose(ts);

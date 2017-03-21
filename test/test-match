@@ -34,7 +34,7 @@
 # test/test-match -- test for strace.ebpf using match and *.match files
 #
 
-OPT_STRACE_EBPF="-t -K' ' -e trace=kp-kern-all"
+OPT_STRACE_EBPF="-t -K' ' -e trace=common"
 STRACE_EBPF=../src/strace.ebpf
 RUN_STRACE="ulimit -l 10240 && ulimit -n 10240 && $STRACE_EBPF $OPT_STRACE_EBPF"
 

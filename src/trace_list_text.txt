@@ -7,7 +7,7 @@ List of supported sets:
 		- 'kp-file'            SCs with path in args
 		- 'kp-desc'            SCs with fdesd in args
 		- 'kp-kern-all'        All syscalls provided by kernel.
-		-                      A bit slower.
+		                       A bit slower.
 		- 'kp-libc-all'        All syscalls provided by glibc.
 		                       This list is 36% shorter
 		                       than previous and loads faster.
@@ -21,6 +21,11 @@ List of supported sets:
 		                       such as 'open'
 		- 'kp-raw:XXXX'        Choose exact single low-level func by
 		                       name, such as 'raw:ext4_mkdir'
+
+	* Intercepting using KProbes and TracePoints:
+		- 'common'             All syscalls provided by kernel using:
+                                       - KProbes on syscall entry and
+                                       - TracePoint (raw syscall sys_exit) on syscall exit
 
 	 * Intercepting using TracePoints:
 	   Currently malfunctions because of this bug:

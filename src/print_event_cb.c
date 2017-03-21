@@ -928,6 +928,57 @@ print_event_hex_exit(FILE *f, void *data, int size)
 }
 
 /*
+ * print_event_hex_tp -- This function prints syscall's logs entry in stream.
+ *
+ * WARNING
+ *
+ *    PLEASE don't use *printf() calls because it will slow down this
+ *		 function too much.
+ */
+static void
+print_event_hex_tp(FILE *f, void *data, int size)
+{
+	s64 res, err;
+	struct tp_s *const event = data;
+	char *str = "sys_exit";
+	size_t lenstr = strlen(str);
+
+	/* XXX Check size arg */
+	(void) size;
+
+	/* split return value into result and errno */
+	res = (event->ret >= 0) ? event->ret : -1;
+	err = (event->ret >= 0) ? 0 : -event->ret;
+
+	if (start_ts_nsec == 0)
+		start_ts_nsec = event->finish_ts_nsec;
+
+	if (Args.timestamp) {
+		unsigned long long delta_nsec =
+			event->finish_ts_nsec - start_ts_nsec;
+
+		fprint_i64(f, delta_nsec);
+		fwrite_out_lf_fld_sep(f);
+	}
+
+	fprint_i64(f, event->pid_tid);
+	fwrite_out_lf_fld_sep(f);
+
+	fprint_i64(f, (uint64_t)err);
+	fwrite_out_lf_fld_sep(f);
+
+	fprint_i64(f, (uint64_t)res);
+	fwrite_out_lf_fld_sep(f);
+
+	fwrite(str, lenstr, 1, f);
+	fwrite_out_lf_fld_sep(f);
+
+	fprint_i64(f, event->id);
+
+	fwrite("\n", 1, 1, f);
+}
+
+/*
  * print_event_hex -- This function prints syscall's logs entry in stream.
  *
  * WARNING
@@ -947,6 +998,9 @@ print_event_hex(FILE *f, void *data, int size)
 		break;
 	case E_SC_EXIT:
 		print_event_hex_exit(f, data, size);
+		break;
+	case E_SC_TP:
+		print_event_hex_tp(f, data, size);
 		break;
 	default:
 		fwrite(str, strlen(str), 1, f);

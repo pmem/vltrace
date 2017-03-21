@@ -112,6 +112,26 @@ attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 	return res;
 }
 
+static int
+attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
+{
+	int res = -1;
+	char kprobe[HANDLER_NAME_MAX_SIZE];
+
+	if (NULL == handler)
+		return -1;
+
+	print_kprobe_name(kprobe, sizeof(kprobe), handler);
+
+	res = load_fn_and_attach_to_kp(b, handler, kprobe, Args.pid, 0, -1);
+	if (res == -1) {
+		fprintf(stderr, "ERROR:%s:Can't attach %s to '%s'.\n",
+				__func__, kprobe, handler);
+	}
+
+	return res;
+}
+
 /*
  * attach_kp_libc_all -- This function attaches eBPF handler to each syscall
  *     known to libc.
@@ -139,13 +159,13 @@ attach_kp_libc_all(struct bpf_ctx *b)
 static unsigned SyS_sigsuspend = 0;
 
 /*
- * attach_kp_kern_all -- This function attaches eBPF handler to all existing
- *     syscalls in running kernel.
+ * attach_kp_kern -- This function attaches eBPF handler
+ *                   to syscalls in running kernel.
  *
  * It consumes more time than attach_kp_libc_all().
  */
 static bool
-attach_kp_kern_all(struct bpf_ctx *b)
+attach_kp_kern(struct bpf_ctx *b, int (*attach)(struct bpf_ctx *, const char *))
 {
 	unsigned succ_counter = 0;
 
@@ -176,7 +196,7 @@ attach_kp_kern_all(struct bpf_ctx *b)
 			SyS_sigsuspend ++;
 		}
 
-		res = attach_single_sc(b, line);
+		res = (*attach)(b, line);
 
 		if (res >= 0)
 			succ_counter ++;
@@ -186,6 +206,30 @@ attach_kp_kern_all(struct bpf_ctx *b)
 	fclose(in);
 
 	return succ_counter > 0;
+}
+
+/*
+ * attach_kp_kern_all -- This function attaches eBPF handler to all existing
+ *     syscalls in running kernel.
+ *
+ * It consumes more time than attach_kp_libc_all().
+ */
+static bool
+attach_kp_kern_all(struct bpf_ctx *b)
+{
+	return attach_kp_kern(b, attach_single_sc);
+}
+
+/*
+ * attach_kp_kern_all -- This function attaches eBPF handler to all existing
+ *     syscalls in running kernel.
+ *
+ * It consumes more time than attach_kp_libc_all().
+ */
+static bool
+attach_kp_kern_all_enter(struct bpf_ctx *b)
+{
+	return attach_kp_kern(b, attach_single_sc_enter);
 }
 
 /*
@@ -299,11 +343,34 @@ static const char tp_all_enter_fn[] = "tracepoint__sys_enter";
 static const char tp_all_exit_fn[]  = "tracepoint__sys_exit";
 
 /*
+ * attach_tp_exit -- intercept raw syscall sys_exit using TracePoints.
+ *
+ * Should be faster and better but requires kernel >= 4.6.
+ *
+ */
+static bool
+attach_tp_exit(struct bpf_ctx *b)
+{
+	int res;
+
+	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_exit_name,
+					tp_all_exit_fn, Args.pid, 0, -1);
+	if (res == -1) {
+		fprintf(stderr,
+			"ERROR:%s:Can't attach %s to '%s:%s'. Exiting.\n",
+			__func__, tp_all_exit_fn,
+			tp_all_category, tp_all_exit_name);
+		return false;
+	}
+
+	return true;
+}
+
+/*
  * attach_tp_all -- Intercept all syscalls using TracePoints.
  *
  * Should be faster and better but requires kernel >= 4.6.
  *
- * XXX Not tested.
  */
 static bool
 attach_tp_all(struct bpf_ctx *b)
@@ -311,30 +378,46 @@ attach_tp_all(struct bpf_ctx *b)
 	int res;
 
 	/* 'sys_exit' should be first to prevent race condition */
+	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_exit_name,
+					tp_all_exit_fn, Args.pid, 0, -1);
+
+	if (res == -1) {
+		fprintf(stderr,
+			"ERROR:%s:Can't attach %s to '%s:%s'. Exiting.\n",
+			__func__, tp_all_exit_fn,
+			tp_all_category, tp_all_exit_name);
+
+		return false;
+	}
+
 	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_enter_name,
 			tp_all_enter_fn, Args.pid, 0, -1);
 
 	if (res == -1) {
 		fprintf(stderr,
-			"ERROR:%s:Can't attach %s to '%s:%s'. Exiting.\n",
+			"ERROR:%s:Can't attach %s to '%s:%s'. Ignoring.\n",
 			__func__, tp_all_enter_fn,
 			tp_all_category, tp_all_enter_name);
-
-		/* Tracepoint fails. There is no reason to try continue */
-		return false;
-	}
-
-	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_exit_name,
-			tp_all_exit_fn, Args.pid, 0, -1);
-
-	if (res == -1) {
-		fprintf(stderr,
-			"ERROR:%s:Can't attach %s to '%s:%s'. Ignoring.\n",
-			__func__, tp_all_exit_fn,
-			tp_all_category, tp_all_exit_name);
 	}
 
 	return true;
+}
+
+/*
+ * attach_common -- intercept all syscalls using kprobes and tracepoints.
+ *
+ * Requires kernel >= 4.6.
+ *
+ */
+static bool
+attach_common(struct bpf_ctx *b)
+{
+	bool res = attach_kp_kern_all_enter(b);
+
+	if (res)
+		res = attach_tp_exit(b);
+
+	return res;
 }
 
 /*
@@ -361,6 +444,8 @@ attach_probes(struct bpf_ctx *b)
 		return attach_kp_fileio(b);
 	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
 		return attach_tp_all(b);
+	} else if (!strcasecmp(Args.expr, "trace=common")) {
+		return attach_common(b);
 	}
 
 DeFault:

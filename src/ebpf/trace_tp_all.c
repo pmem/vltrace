@@ -38,53 +38,37 @@
  * tracepoint__sys_enter -- Syscall's entry handler.
  */
 int
-tracepoint__sys_enter(struct pt_regs *ctx)
+tracepoint__sys_enter(struct tracepoint__raw_syscalls__sys_enter *args)
 {
-	struct first_step_t fs;
-	u64 pid_tid = bpf_get_current_pid_tgid();
-
-	PID_CHECK_HOOK
-
-	if (!bpf_get_current_comm(&fs.comm, sizeof(fs.comm)))
-		return;
-
-	fs.start_ts_nsec = bpf_ktime_get_ns();
-	tmp_i.update(&pid_tid, &fs);
-
 	return 0;
-};
+}
 
 /*
  * tracepoint__sys_exit -- Syscall's exit handler.
  */
 int
-tracepoint__sys_exit(struct pt_regs *ctx)
+tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 {
-	struct first_step_t *fsp;
-	struct data_entry_t ev;
-
-	u64 cur_nsec = bpf_ktime_get_ns();
-
+	struct tp_s tp;
 	u64 pid_tid = bpf_get_current_pid_tgid();
-	fsp = tmp_i.lookup(&pid_tid);
-	if (fsp == 0)
-		return 0;
 
-	bpf_probe_read(&ev.comm, sizeof(ev.comm), fsp->comm);
-	bpf_probe_read(&ev.open.str,
-			sizeof(ev.open.str),
-			(void *)fsp->str);
+	tp.finish_ts_nsec = bpf_ktime_get_ns();
+	tp.id = args->id;
+	tp.ret = args->ret;
 
-	ev.packet_type = 0; /* No additional packets */
-	/* SysCall ID */
-	/* ev.sc_id = __NR_open; */
-	ev.pid_tid = pid_tid;
-	ev.start_ts_nsec = fsp->start_ts_nsec;
-	ev.finish_ts_nsec = cur_nsec;
-	ev.ret = PT_REGS_RC(ctx);
+	PID_CHECK_HOOK
 
-	events.perf_submit(ctx, &ev, sizeof(ev));
-	tmp_i.delete(&pid_tid);
+	if (tp.id == __NR_clone || tp.id == __NR_fork || tp.id == __NR_vfork) {
+		if (tp.ret > 0) {
+			u64 one = 1;
+			children_map.update(&tp.ret, &one);
+		}
+	}
+
+	tp.type = E_SC_TP;
+	tp.pid_tid = pid_tid;
+
+	events.perf_submit(args, &tp, sizeof(tp));
 
 	return 0;
 }
