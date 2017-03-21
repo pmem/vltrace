@@ -31,7 +31,7 @@
  */
 
 /*
- * strace.ebpf.c -- Trace syscalls. For Linux, uses BCC, ebpf.
+ * strace.ebpf.c -- trace syscalls using eBPF linux kernel feature
  */
 
 #include <errno.h>
@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/prctl.h>
@@ -49,167 +50,140 @@
 #include <linux/sched.h>
 #include <linux/limits.h>
 
-/* from bcc import BPF */
 #include <bcc/libbpf.h>
 #include <bcc/bpf_common.h>
 #include <bcc/perf_reader.h>
 
-#include "ebpf/ebpf_file_set.h"
-
-#include "bpf_ctx.h"
-
-#include "txt.h"
 #include "strace.ebpf.h"
+#include "bpf_ctx.h"
+#include "txt.h"
 #include "utils.h"
 #include "cl_parser.h"
 #include "attach_probes.h"
 #include "ebpf_syscalls.h"
 #include "generate_ebpf.h"
 #include "print_event_cb.h"
+#include "ebpf/ebpf_file_set.h"
 
-/* Global variables */
-struct cl_options Args;
-FILE *Out_lf;
-enum out_lf_fmt Out_lf_fmt;
+struct cl_options Args;		/* command-line arguments */
+FILE *Out_lf;			/* output file */
+enum out_lf_fmt Out_lf_fmt;	/* format of output */
+int OutputError;		/* I/O error in perf callback occured */
+int AbortTracing;		/* terminating signal received */
 
-/* I/O error in perf callback occured */
-int OutputError;
-
-/* Terminating signal received */
-int AbortTracing;
-
-/*
- * main -- Tool's entry point
- */
 int
 main(const int argc, char *const argv[])
 {
+	int tracing_PID = 0;
 	int st_optind;
 
 	Args.pid = -1;
 	Args.out_lf_fld_sep_ch = ' ';
 
-	/*
-	 * XXX Should be set by cl options
-	 *    if we need something over syscalls
-	 */
+	/* XXX set using command-line options */
 	Args.pr_arr_max = 1000;
 
-	/* XXX Should be configurable through command line */
+	/* XXX set using command-line options */
 	Args.out_buf_size = OUT_BUF_SIZE;
 
-	/*
-	 * Enlarge ring buffers. It really improves situation with lost events.
-	 *
-	 * XXX In the future we should allow to do it via cl options.
-	 */
+	/* enlarge ring buffers	- XXX set using command-line options */
 	Args.strace_reader_page_cnt = STRACE_READER_PAGE_CNT_DEFAULT;
 
-	/* Parse command-line options */
+	/* parse command-line options */
 	st_optind = cl_parser(&Args, argc, argv);
 
-	/* Check for JIT acceleration of BPF */
-	check_bpf_jit_status(stderr);
-
-	setup_out_lf();
-
-	/* setup_out_lf failed */
-	if (NULL == Out_lf) {
-		fprintf(stderr, "ERROR: Exiting\n");
-
-		exit(errno);
-	}
-
-	if (Args.ff_mode) {
-		/*
-		 * Set the "child subreaper" attribute to be able
-		 * to wait for all children and grandchildren.
-		 */
-		prctl(PR_SET_CHILD_SUBREAPER, 1);
-	}
-
-	/*
-	 * XXX Temporarily. We should do it in the future together with
-	 *    multi-process attaching.
-	 */
-	if (Args.pid != -1 && Args.command) {
-		fprintf(stderr, "ERROR: "
-				"It is currently unsupported to watch for PID"
-				" and command simultaneously.\n");
+	if (!Args.command && Args.pid == -1) {
+		fprintf(stderr, "ERROR: command or PID has to be set."
+			" Exiting.\n");
 		fprint_help(stderr);
 		exit(EXIT_FAILURE);
 	}
 
-	/* Run user-supplied command */
-	if (Args.command) {
-		Args.pid = start_command_with_signals(
-				argc - st_optind,
-				argv + st_optind);
+	if (Args.command && Args.pid > 0) {
+		fprintf(stderr, "ERROR: command and PID cannot be set together."
+			" Exiting.\n");
+		fprint_help(stderr);
+		exit(EXIT_FAILURE);
+	}
 
-		if (Args.pid == -1) {
-			fprintf(stderr, "ERROR: Exiting.\n");
+	setup_out_lf();
+	if (NULL == Out_lf) {
+		fprintf(stderr, "ERROR: failed to set up the output file. "
+				"Exiting\n");
+		exit(errno);
+	}
+
+	/* check JIT acceleration of BPF */
+	check_bpf_jit_status(stderr);
+
+	if (Args.ff_mode) { /* only in follow-fork mode */
+		/*
+		 * Set the "child subreaper" attribute to be able
+		 * to wait for all children and grandchildren.
+		 */
+		if (prctl(PR_SET_CHILD_SUBREAPER, 1) == -1) {
+			fprintf(stderr, "ERROR: failed to set the 'child "
+					"subreaper' attribute. Exiting\n");
 			exit(errno);
 		}
 	}
 
-	if (0 < Args.pid) {
-		if (!Args.command) {
-			if (kill(Args.pid, 0) == -1) {
-				fprintf(stderr,
-					"ERROR: Process with pid '%d'"
-					" does not exist: '%m'.\n", Args.pid);
-
-				/*
-				 * XXX As soon as multi-process attaching will
-				 *     be done we should print warning here
-				 *     and continue.
-				 */
-				exit(errno);
-			}
+	if (Args.command) {
+		/* run the command */
+		Args.pid = start_command_with_signals(argc - st_optind,
+							argv + st_optind);
+		if (Args.pid == -1) {
+			fprintf(stderr, "ERROR: failed to start the command. "
+					"Exiting.\n");
+			exit(errno);
 		}
+	} else if (Args.pid > 0) {
+		/* check if process with given PID exists */
+		if (kill(Args.pid, 0) == -1) {
+			fprintf(stderr,	"ERROR: process with PID '%d'"
+					" does not exist: '%m'.\n", Args.pid);
+			exit(errno);
+		} else {
+			tracing_PID = 1;
+		}
+
 	}
 
-	/* Generate BPF program */
+	/* generate BPF program */
 	char *bpf_str = generate_ebpf();
 
 	apply_process_attach_code(&bpf_str);
 
-	/* Simulate preprocessor, because it's safer */
+	/* simulate preprocessor, because it's safer */
 	apply_trace_h_header(&bpf_str);
 
-	/* Print resulting code if debug mode */
+	/* print resulting code in debug mode */
 	if (Args.debug)
 		fprint_ebpf_code_with_debug_marks(stderr, bpf_str);
 
-	/* XXX We should do it only by user request */
+	/* XXX should be done only by user request */
 	save_trace_h();
 
 	/* initialize BPF */
 	struct bpf_ctx *b = calloc(1, sizeof(*b));
-
-	if (NULL == b) {
-		fprintf(stderr,
-			"ERROR:%s: Out of memory. Exiting.\n", __func__);
-
+	if (b == NULL) {
+		fprintf(stderr, "ERROR: out of memory. Exiting.\n");
 		return EXIT_FAILURE;
 	}
 
-	/* Compiling of generated eBPF code */
+	/* compile generated eBPF code */
 	b->module = bpf_module_create_c_from_string(bpf_str, 0, NULL, 0);
 	b->debug  = Args.debug;
 
 	free(bpf_str);
 
 	if (!attach_probes(b)) {
-		/* No probes were attached */
-		fprintf(stderr,
-			"ERROR: No probes were attached. Exiting.\n");
-
+		/* no probes were attached */
+		fprintf(stderr, "ERROR: no probes were attached. Exiting.\n");
 		if (Args.command) {
-			/* KILL child */
+			/* kill the started child */
 			kill(Args.pid, SIGKILL);
 		}
-
 		return EXIT_FAILURE;
 	}
 
@@ -223,24 +197,20 @@ main(const int argc, char *const argv[])
 	 * XXX We should use str_replace here.
 	 */
 #define PERF_OUTPUT_NAME "events"
-	int res = attach_callback_to_perf_output(b,
-			PERF_OUTPUT_NAME, Print_event_cb[Out_lf_fmt]);
-
-	if (!res) {
+	int res = attach_callback_to_perf_output(b, PERF_OUTPUT_NAME,
+						Print_event_cb[Out_lf_fmt]);
+	if (res == 0) {
 		if (Args.command) {
 			/* let child go */
 			kill(Args.pid, SIGCONT);
 		}
 	} else {
-		fprintf(stderr,
-			"ERROR: Can't attach to perf output '%s'. Exiting.\n",
-			PERF_OUTPUT_NAME);
-
+		fprintf(stderr, "ERROR: can't attach callbacks to perf output"
+				" '%s'. Exiting.\n", PERF_OUTPUT_NAME);
 		if (Args.command) {
-			/* KILL child */
+			/* kill the started child */
 			kill(Args.pid, SIGKILL);
 		}
-
 		detach_all(b);
 		return EXIT_FAILURE;
 	}
@@ -256,7 +226,7 @@ main(const int argc, char *const argv[])
 		(void) perf_reader_poll((int)b->pr_arr_qty, readers, -1);
 
 		/* check if the process traced by PID exists */
-		if (!Args.command && Args.pid > 0 && kill(Args.pid, 0) == -1) {
+		if (tracing_PID && kill(Args.pid, 0) == -1) {
 			fprintf(stderr, "ERROR: traced process with PID '%d'"
 					" disappeared : '%m'.\n", Args.pid);
 				break;
