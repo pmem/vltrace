@@ -241,8 +241,8 @@ check_bpf_jit_status(FILE *file)
 			"WARNING:%s: DISABLED.\n"
 			"\tPlease refer to `man strace.ebpf`,"
 				" section 'Configuration'.\n"
-			"\tEnabling this will improve performance significantly\n"
-			"\tand fix some problems.\n",
+			"\tEnabling this will improve performance\n"
+			"\tsignificantly and fix some problems.\n",
 			__func__);
 		return;
 

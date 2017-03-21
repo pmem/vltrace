@@ -424,7 +424,7 @@ fprint_arg1_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Don't print anything. */
+			/* syscall doesn't have this argument */
 			break;
 		}
 		break;
@@ -451,7 +451,7 @@ get_type_of_arg2(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 2)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Don't print anything. */
+	/* syscall doesn't have this argument */
 	return EAT_absent;
 }
 
@@ -508,7 +508,7 @@ fprint_arg2_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Don't print anything. */
+			/* syscall doesn't have this argument */
 			break;
 		}
 		break;
@@ -528,7 +528,7 @@ get_type_of_arg3(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 3)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Don't print anything. */
+	/* syscall doesn't have this argument */
 	return EAT_absent;
 }
 
@@ -582,7 +582,7 @@ fprint_arg3_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Don't print anything. */
+			/* syscall doesn't have this argument */
 			break;
 		}
 		break;
@@ -602,7 +602,7 @@ get_type_of_arg4(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 4)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Don't print anything. */
+	/* syscall doesn't have this argument */
 	return EAT_absent;
 }
 
@@ -656,7 +656,7 @@ fprint_arg4_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Don't print anything. */
+			/* syscall doesn't have this argument */
 			break;
 		}
 		break;
@@ -725,7 +725,7 @@ fprint_arg5_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Don't print anything. */
+			/* syscall doesn't have this argument */
 			break;
 		}
 		break;
@@ -741,7 +741,7 @@ get_type_of_arg6(unsigned sc_num)
 	if (Syscall_array[sc_num].args_qty >= 6)
 		return EAT_int;
 
-	/* Syscall doesn't have this arg. Don't print anything. */
+	/* syscall doesn't have this argument */
 	return EAT_absent;
 }
 
@@ -794,7 +794,7 @@ fprint_arg6_hex(FILE *f, struct ev_dt_t *const event, int size)
 			break;
 
 		case EAT_absent:
-			/* Syscall doesn't have this arg. Don't print anything. */
+			/* syscall doesn't have this argument */
 			break;
 		}
 		break;

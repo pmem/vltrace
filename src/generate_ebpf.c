@@ -452,37 +452,24 @@ generate_ebpf()
 
 	head = NULL;
 
-	if (NULL == Args.expr)
-		goto DeFault;
-
-	if (!strcasecmp(Args.expr, "trace=kp-libc-all")) {
+	if (NULL == Args.expr) {
+		fprintf(stderr, "%s: defaulting to 'trace=kp-kern-all'.\n",
+				__func__);
+		generate_ebpf_kp_kern_all(ts);
+	} else if (!strcasecmp(Args.expr, "trace=kp-libc-all")) {
 		generate_ebpf_kp_libc_all(ts);
-		goto out;
 	} else if (!strcasecmp(Args.expr, "trace=kp-kern-all")) {
 		generate_ebpf_kp_kern_all(ts);
-		goto out;
 	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
 		generate_ebpf_kp_file(ts);
-		goto out;
 	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
 		generate_ebpf_kp_desc(ts);
-		goto out;
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
 		generate_ebpf_kp_fileio(ts);
-		goto out;
 	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
 		generate_ebpf_tp_all(ts);
-		goto out;
 	}
 
-DeFault:
-	fprintf(stderr,
-			"%s: Default expression 'trace=kp-kern-all' was chosen."
-			" Consider using 'trace=kp-libc-all' for improved performance.\n",
-			__func__);
-	generate_ebpf_kp_kern_all(ts);
-
-out:
 	fclose(ts);
 	return text;
 }
