@@ -149,7 +149,7 @@ function check() {
 	echo "------"
 
 	# output does not match the pattern
-	if [ "$(tail -n1 $MATCH_OUT | grep 'did not match pattern')" != "" ]; then
+	if [ "$(tail -n1 $MATCH_OUT | grep -e 'did not match pattern')" != "" ]; then
 		# check if log is truncated
 		local LINE=$(tail -n2 $MATCH_OUT | grep 'EOF')
 		if [ "$LINE" == "" ]; then
@@ -172,9 +172,11 @@ function check() {
 				&& echo "Error 4: missing output" \
 				|| echo "Error 5: truncated output"
 		fi
+	else if [ "$(tail -n1 $MATCH_OUT | grep -e 'unexpected output')" != "" ]; then
+		echo "Error 6: unexpected output"
 	else
 		echo "Error 0: unknown error"
-	fi
+	fi; fi;
 
 	echo "------"
 

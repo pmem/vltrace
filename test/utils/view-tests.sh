@@ -114,6 +114,14 @@ for n in $TESTS; do
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG" \
 				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG\t$NAME"
 			;;
+		6) # unexpected output
+			MSG="unexpected-output"
+			C=$(grep "Error $err" ./log${n}.txt | wc -l)
+			[ $C -lt $MIN ] && continue
+			[ $LONG -eq 0 ] \
+				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG" \
+				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG\t$NAME"
+			;;
 		*) # unknown error
 			echo "UNKNOWN ERROR"
 			;;

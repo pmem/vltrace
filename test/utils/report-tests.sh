@@ -81,6 +81,10 @@ if [ "$ERR" != "" ]; then
 			echo "- truncated output - follow-fork stopped following:"
 			$OUTPUT | grep "$e" | sed "s/\t$e\t/\t\t/g"
 			;;
+		unexpected-output)
+			echo "- unexpected output:"
+			$OUTPUT | grep "$e" | sed "s/\t$e\t/\t\t/g"
+			;;
 		*)
 			echo "Unsupported event: $e"
 			;;
