@@ -38,6 +38,13 @@
 
 #include "ebpf_syscalls.h"
 
+/* array of syscall names */
+char *syscall_names[SC_TBL_SIZE] = {
+	[0 ... SC_TBL_SIZE - 1] = "?",
+#define __SYSCALL_64(nr, name, ptregs)	[nr] = #name,
+#include "syscalls_64_mod.h"
+#undef __SYSCALL_64
+};
 
 /* EBPF_SYSCALL(__NR_setxattr, sys_setxattr) */
 #define EBPF_SYSCALL(nr, sym, aq)    [nr] = {\

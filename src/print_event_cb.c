@@ -970,10 +970,8 @@ print_event_hex_tp(FILE *f, void *data, int size)
 	fprint_i64(f, (uint64_t)res);
 	fwrite_out_lf_fld_sep(f);
 
-	fwrite(str, lenstr, 1, f);
-	fwrite_out_lf_fld_sep(f);
-
-	fprint_i64(f, event->id);
+	fwrite(syscall_names[event->id],
+		strlen(syscall_names[event->id]), 1, f);
 
 	fwrite("\n", 1, 1, f);
 }
