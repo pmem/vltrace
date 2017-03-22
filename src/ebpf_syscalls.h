@@ -38,9 +38,9 @@
 #define EBPF_SYSCALLS_H
 
 #include <stdio.h>
-
 #include <sys/syscall.h>
-
+/* add syscall numbers from kernel header */
+#include "syscalls_64_num.h"
 
 enum sc_arg_type {
 	/* Syscall does not have this argument */
@@ -54,7 +54,6 @@ enum sc_arg_type {
 	/* This argument is generic integer */
 	EAT_int,
 };
-
 
 /* XXX Subject to re-develop */
 enum masks_t {

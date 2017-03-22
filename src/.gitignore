@@ -2,3 +2,4 @@ strace.ebpf
 nondebug/
 config.h
 syscalls_64_mod.h
+syscalls_64_num.h

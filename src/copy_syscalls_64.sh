@@ -35,7 +35,8 @@
 # copy_syscalls_64.sh -- shell script for finding and coping syscalls_64.sh header
 #
 
-NEW_HEADER="syscalls_64_mod.h"
+HEADER_MOD="syscalls_64_mod.h"
+HEADER_NUM="syscalls_64_num.h"
 KERNEL=$(uname -r)
 FILES=$(mktemp)
 
@@ -57,5 +58,23 @@ HEADER=$(cat $FILES)
 	&& echo "Error: missing kernel header 'arch/x86/include/generated/asm/syscalls_64.h'" \
 	&& exit 1
 
-# copy the header and remove the 'sys_' prefix
-cat $HEADER | sed 's/\ sys_/\ /g' > ./$NEW_HEADER
+# generate two new headers
+rm -f $HEADER_MOD $HEADER_NUM
+echo "/*"                                   >> $HEADER_MOD
+echo " * Generated from the kernel header:" >> $HEADER_MOD
+echo " * $HEADER"                           >> $HEADER_MOD
+echo " */"                                  >> $HEADER_MOD
+cp $HEADER_MOD $HEADER_NUM
+
+# generate new header - removed the 'sys_' prefix
+cat $HEADER | sed 's/\ sys_/\ /g' >> $HEADER_MOD
+
+# generate new header with defines of syscall numbers
+cat $HEADER | sed 's/\ sys_/\ /g' | \
+while IFS='' read -r line || [[ -n "$line" ]]; do
+	echo $line | grep "__SYSCALL_64" >/dev/null 2>&1
+	[ $? -ne 0 ] && echo "$line" >> $HEADER_NUM && continue
+	NUMBER=$(echo $line | cut -d'(' -f2 | cut -d',' -f1)
+	NAME=$(echo $line | cut -d',' -f2 | cut -d' ' -f2)
+	echo "#define __NR_${NAME} $NUMBER" >> $HEADER_NUM
+done
