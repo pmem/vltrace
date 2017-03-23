@@ -60,6 +60,7 @@ extern const char *ebpf_fs_path_2_4_arg_tmpl_sl_file;
 extern const char *ebpf_fork_tmpl_file;
 extern const char *ebpf_vfork_tmpl_file;
 extern const char *ebpf_clone_tmpl_file;
+extern const char *ebpf_exit_tmpl_file;
 
 extern const char *ebpf_libc_tmpl_file;
 extern const char *ebpf_kern_tmpl_file;
@@ -113,6 +114,9 @@ extern const char _binary_trace_vfork_tmpl_c_start[];
 
 extern const char _binary_trace_clone_tmpl_c_end[];
 extern const char _binary_trace_clone_tmpl_c_start[];
+
+extern const char _binary_trace_exit_tmpl_c_end[];
+extern const char _binary_trace_exit_tmpl_c_start[];
 
 extern const char _binary_trace_head_c_end[];
 extern const char _binary_trace_head_c_start[];

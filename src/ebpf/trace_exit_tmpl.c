@@ -31,46 +31,69 @@
  */
 
 /*
- * trace_tp_all.c -- Trace syscalls. Uses BCC, eBPF.
+ * trace_exit_tmpl.c -- trace exit() and exit_group() syscalls
+ *                      in full-follow-fork mode. Uses BCC, eBPF.
  */
 
 /*
- * tracepoint__sys_enter -- Syscall's entry handler.
+ * kprobe__SYSCALL_NAME -- SYSCALL_NAME() entry handler
  */
 int
-tracepoint__sys_enter(struct tracepoint__raw_syscalls__sys_enter *args)
+kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	return 0;
-}
-
-/*
- * tracepoint__sys_exit -- Syscall's exit handler.
- */
-int
-tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
-{
-	struct tp_s tp;
+	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
-
-	tp.finish_ts_nsec = bpf_ktime_get_ns();
-	tp.id = args->id;
-	tp.ret = args->ret;
 
 	PID_CHECK_HOOK
 
-	if (tp.id == __NR_clone ||
-	    tp.id == __NR_fork  ||
-	    tp.id == __NR_vfork) {
-		if (tp.ret > 0) {
-			u64 one = 1;
-			children_map.update(&tp.ret, &one);
-		}
+	/* val and pid are defined in PID_CHECK_HOOK macro */
+	if (val) {
+		children_map.delete(&pid);
 	}
 
-	tp.type = E_SC_TP;
-	tp.pid_tid = pid_tid;
+	ev.type = E_SC_ENTRY;
+	ev.start_ts_nsec = bpf_ktime_get_ns();
 
-	events.perf_submit(args, &tp, sizeof(tp));
+	ev.packet_type = 0; /* No additional packets */
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.pid_tid = pid_tid;
+
+	ev.arg_1 = PT_REGS_PARM1(ctx);
+	ev.arg_2 = PT_REGS_PARM2(ctx);
+	ev.arg_3 = PT_REGS_PARM3(ctx);
+	ev.arg_4 = PT_REGS_PARM4(ctx);
+	ev.arg_5 = PT_REGS_PARM5(ctx);
+	ev.arg_6 = PT_REGS_PARM6(ctx);
+
+	memset(ev.sc_name, 0, sizeof(ev.sc_name));
+
+	enum { ev_size = offsetof(struct data_entry_t, sc_name) };
+	events.perf_submit(ctx, &ev, ev_size);
+
+	return 0;
+};
+
+/*
+ * kretprobe__SYSCALL_NAME -- SYSCALL_NAME() exit handler
+ */
+int
+kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
+{
+	struct data_exit_t ev;
+
+	u64 cur_nsec = bpf_ktime_get_ns();
+	u64 pid_tid = bpf_get_current_pid_tgid();
+
+	PID_CHECK_HOOK
+
+	ev.type = E_SC_EXIT;
+	ev.packet_type = 0; /* No additional packets */
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.pid_tid = pid_tid;
+	ev.finish_ts_nsec = cur_nsec;
+	ev.ret = PT_REGS_RC(ctx);
+
+	events.perf_submit(ctx, &ev, offsetof(struct data_exit_t, sc_name));
 
 	return 0;
 }

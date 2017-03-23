@@ -115,6 +115,24 @@ get_libc_tmpl(unsigned i)
 	if (NULL == Syscall_array[i].handler_name)
 		return NULL;
 
+	if (Args.ff_mode == E_FF_FULL) {
+		switch (i) {
+		case __NR_clone:
+			text = load_file_no_cr(ebpf_clone_tmpl_file);
+			break;
+		case __NR_vfork:
+			text = load_file_no_cr(ebpf_vfork_tmpl_file);
+			break;
+		case __NR_fork:
+			text = load_file_no_cr(ebpf_fork_tmpl_file);
+			break;
+		case __NR_exit:
+		case __NR_exit_group:
+			text = load_file_no_cr(ebpf_exit_tmpl_file);
+			break;
+		};
+	}
+
 	if (EM_fs_path_1_2_arg ==
 			(EM_fs_path_1_2_arg & Syscall_array[i].masks)) {
 		switch (Args.fnr_mode) {
@@ -166,23 +184,6 @@ get_libc_tmpl(unsigned i)
 			assert(false);
 			break;
 		}
-	} else if (E_FF_FULL == Args.ff_mode &&
-			EM_rpid == (EM_rpid & Syscall_array[i].masks)) {
-		switch (i) {
-		case __NR_clone:
-			text = load_file_no_cr(ebpf_clone_tmpl_file);
-			break;
-		case __NR_vfork:
-			text = load_file_no_cr(ebpf_vfork_tmpl_file);
-			break;
-		case __NR_fork:
-			text = load_file_no_cr(ebpf_fork_tmpl_file);
-			break;
-
-		default:
-			assert(false);
-			break;
-		};
 	} else if (EM_file == (EM_file & Syscall_array[i].masks)) {
 		text = load_ebpf_file_tmpl();
 	} else if (EM_fileat == (EM_fileat & Syscall_array[i].masks)) {

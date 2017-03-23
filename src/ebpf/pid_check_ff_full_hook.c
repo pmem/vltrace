@@ -34,15 +34,15 @@
  * pid_check_ff_full_hook.c -- pid check hook for full-follow-fork mode.
  */
 
-{
-	u64 pid = (pid_tid >> 32);
-	if (pid != TRACED_PID) {
-		u64 *val = children_map.lookup(&pid);
-		if (NULL == val) {
-			return 0;
-		}
-		if (*val != 1) {
-			return 0;
-		}
+u64 pid = (pid_tid >> 32);
+u64 *val = NULL;
+
+if (pid != TRACED_PID) {
+	val = children_map.lookup(&pid);
+	if (NULL == val) {
+		return 0;
+	}
+	if (*val != 1) {
+		return 0;
 	}
 }

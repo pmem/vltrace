@@ -47,6 +47,7 @@ set (BIN_SRCS
 	trace_clone_tmpl.c
 	trace_fork_tmpl.c
 	trace_vfork_tmpl.c
+	trace_exit_tmpl.c
 	trace_fs_path_1_2_arg_tmpl-ml.c
 	trace_fs_path_1_3_arg_tmpl-ml.c
 	trace_fs_path_2_4_arg_tmpl-ml.c
