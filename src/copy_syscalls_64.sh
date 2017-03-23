@@ -42,6 +42,10 @@ KERNEL=$(uname -r)
 FILE=$(find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$(uname -r)" | tail -n1)
 
 [ "$FILE" != "" ] && [ $HEADER_MOD -nt $FILE -a $HEADER_NUM -nt $FILE ] \
+	&& if [ "$1" != "make" ]; then \
+		echo "-- Found header: $HEADER_MOD (up to date)"; \
+		echo "-- Found header: $HEADER_NUM (up to date)"; \
+	   fi \
 	&& exit 0 # headers $HEADER_MOD and $HEADER_NUM are up to date
 
 FILE=$(mktemp)
@@ -51,17 +55,26 @@ NFILES=$(cat $FILE | wc -l)
 HEADER=$(cat $FILE)
 
 [ $NFILES -eq 0 ] \
-	&& echo "Error: missing kernel header 'arch/x86/include/generated/asm/syscalls_64.h'" \
-	&& echo "Hint: install 'kernel-headers' or 'kernel-devel' package" \
+	&& echo \
+	&& echo "ERROR: missing kernel header 'arch/x86/include/generated/asm/syscalls_64.h'" \
+	&& echo \
+	&& echo "Hint:  install 'kernel-devel' (RHEL, Fedora, CentOS) or 'linux-headers' (Debian, Ubuntu) package" \
+	&& echo \
 	&& exit 1
 
 [ $NFILES -gt 1 ] \
-	&& echo "Error: more than one kernel header 'syscalls_64.h': $HEADER" \
+	&& echo \
+	&& echo "ERROR: more than one kernel header 'syscalls_64.h': $HEADER" \
+	&& echo \
 	&& exit 1
 
 [ ! -f $HEADER ] \
-	&& echo "Error: missing kernel header 'arch/x86/include/generated/asm/syscalls_64.h'" \
+	&& echo \
+	&& echo "ERROR: missing kernel header 'arch/x86/include/generated/asm/syscalls_64.h'" \
+	&& echo \
 	&& exit 1
+
+echo "-- Found kernel header: $HEADER"
 
 # generate two new headers
 rm -f $HEADER_MOD $HEADER_NUM
@@ -73,6 +86,7 @@ cp $HEADER_MOD $HEADER_NUM
 
 # generate new header - removed the 'sys_' prefix
 cat $HEADER | sed 's/\ sys_/\ /g' >> $HEADER_MOD
+echo "-- Generated header: $HEADER_MOD"
 
 # generate new header with defines of syscall numbers
 cat $HEADER | sed 's/\ sys_/\ /g' | \
@@ -83,3 +97,4 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 	NAME=$(echo $line | cut -d',' -f2 | cut -d' ' -f2)
 	echo "#define __NR_${NAME} $NUMBER" >> $HEADER_NUM
 done
+echo "-- Generated header: $HEADER_NUM"

@@ -105,9 +105,12 @@ Could be useful with old libbcc versions.
 
 # SYSTEM REQUIREMENTS #
 
- - libbcc after commit 6c99958e95cfb741575b05bef6b5701e55b3d7c0
- - Linux Kernel 4.4 or later (for Perf Event Circular Buffer)
- - CAP_SYS_ADMIN capability for bpf() syscall
+ - kernel v4.4 or later (for Perf Event Circular Buffer)
+ - kernel headers installed:
+    - 'kernel-devel' package on RHEL, Fedora and CentOS or
+    - 'linux-headers' package on Debian and Ubuntu
+ - libbcc v0.2.0-313-g6c99958 or later
+ - CAP_SYS_ADMIN capability (required by the bpf() syscall)
  - mounted tracefs
 
 # OPTIONS #
