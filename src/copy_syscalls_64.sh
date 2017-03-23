@@ -38,12 +38,17 @@
 HEADER_MOD="syscalls_64_mod.h"
 HEADER_NUM="syscalls_64_num.h"
 KERNEL=$(uname -r)
-FILES=$(mktemp)
 
-find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$(uname -r)" > $FILES
+FILE=$(find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$(uname -r)" | tail -n1)
 
-NFILES=$(cat $FILES | wc -l)
-HEADER=$(cat $FILES)
+[ "$FILE" != "" ] && [ $HEADER_MOD -nt $FILE -a $HEADER_NUM -nt $FILE ] \
+	&& exit 0 # headers $HEADER_MOD and $HEADER_NUM are up to date
+
+FILE=$(mktemp)
+find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$(uname -r)" > $FILE
+
+NFILES=$(cat $FILE | wc -l)
+HEADER=$(cat $FILE)
 
 [ $NFILES -eq 0 ] \
 	&& echo "Error: missing kernel header 'arch/x86/include/generated/asm/syscalls_64.h'" \
