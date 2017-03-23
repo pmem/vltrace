@@ -195,7 +195,7 @@ get_libc_tmpl(unsigned i)
 		return NULL;
 
 	str_replace_all(&text, "SYSCALL_NR",
-			Syscall_array[i].num_name);
+			Syscall_array[i].num_str);
 
 	return text;
 }
@@ -279,6 +279,9 @@ generate_ebpf_kp_kern_all(FILE *ts)
 			text = get_libc_tmpl((unsigned)sc_num);
 		} else {
 			text = load_file_no_cr(ebpf_kern_tmpl_file);
+			if (Args.debug)
+				fprintf(stderr, "Notice: syscall %s is not "
+						"defined in the table\n", line);
 		}
 
 		str_replace_all(&text, "SYSCALL_NAME", line);
@@ -317,7 +320,7 @@ generate_ebpf_kp_file(FILE *ts)
 		text = load_ebpf_file_tmpl();
 
 		str_replace_all(&text, "SYSCALL_NR",
-				Syscall_array[i].num_name);
+				Syscall_array[i].num_str);
 		str_replace_all(&text, "SYSCALL_NAME",
 				Syscall_array[i].handler_name);
 
@@ -352,7 +355,7 @@ generate_ebpf_kp_fileat(FILE *ts)
 		text = load_ebpf_fileat_tmpl();
 
 		str_replace_all(&text, "SYSCALL_NR",
-				Syscall_array[i].num_name);
+				Syscall_array[i].num_str);
 		str_replace_all(&text, "SYSCALL_NAME",
 				Syscall_array[i].handler_name);
 
@@ -387,7 +390,7 @@ generate_ebpf_kp_desc(FILE *ts)
 		text = load_file_no_cr(ebpf_libc_tmpl_file);
 
 		str_replace_all(&text, "SYSCALL_NR",
-				Syscall_array[i].num_name);
+				Syscall_array[i].num_str);
 		str_replace_all(&text, "SYSCALL_NAME",
 				Syscall_array[i].handler_name);
 

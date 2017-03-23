@@ -149,6 +149,9 @@ main(const int argc, char *const argv[])
 
 	}
 
+	/* init array of syscalls */
+	init_sc_tbl();
+
 	/* generate BPF program */
 	char *bpf_str = generate_ebpf();
 

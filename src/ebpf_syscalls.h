@@ -117,12 +117,15 @@ enum masks_t {
 	EM_ALL = -1,
 };
 
+/* maximum length of the syscall's number - 4 digits + '\0' */
+enum { SC_NUM_LEN = 5 };
+
 /* Properties of syscall with number 'num' */
 struct syscall_descriptor {
 	/* Syscall number */
 	unsigned num;
 	/* Syscall number as string */
-	const char *num_name;
+	char num_str[SC_NUM_LEN];
 	/* The name of in-kernel syscall's handler */
 	const char *handler_name;
 	/* Number of args for this syscall */
@@ -136,6 +139,7 @@ enum { SC_TBL_SIZE = 1024 };
 extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
 extern char *syscall_names[SC_TBL_SIZE];
 
+void init_sc_tbl(void);
 int fprint_sc_tbl(FILE *f);
 
 #endif /* EBPF_SYSCALLS_H */
