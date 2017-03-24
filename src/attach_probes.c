@@ -132,37 +132,11 @@ attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 	return res;
 }
 
-/*
- * attach_kp_libc_all -- This function attaches eBPF handler to each syscall
- *     known to libc.
- *
- * It can be useful because kernel has a lot of "unused" syscalls.
- */
-static bool
-attach_kp_libc_all(struct bpf_ctx *b)
-{
-	unsigned succ_counter = 0;
-
-	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		int res;
-
-		res = attach_single_sc(b, Syscall_array[i].handler_name);
-
-		if (res >= 0)
-			succ_counter++;
-	}
-
-	return succ_counter > 0;
-}
-
 /* XXX HACK: this syscall is exported by kernel twice. */
 static unsigned SyS_sigsuspend = 0;
 
 /*
- * attach_kp_kern -- This function attaches eBPF handler
- *                   to syscalls in running kernel.
- *
- * It consumes more time than attach_kp_libc_all().
+ * attach_kp_kern -- attach eBPF handler to all syscalls in running kernel
  */
 static bool
 attach_kp_kern(struct bpf_ctx *b, int (*attach)(struct bpf_ctx *, const char *))
@@ -209,10 +183,8 @@ attach_kp_kern(struct bpf_ctx *b, int (*attach)(struct bpf_ctx *, const char *))
 }
 
 /*
- * attach_kp_kern_all -- This function attaches eBPF handler to all existing
- *     syscalls in running kernel.
- *
- * It consumes more time than attach_kp_libc_all().
+ * attach_kp_kern_all -- attach eBPF handler to all existing
+ *                       syscalls in running kernel.
  */
 static bool
 attach_kp_kern_all(struct bpf_ctx *b)
@@ -221,10 +193,8 @@ attach_kp_kern_all(struct bpf_ctx *b)
 }
 
 /*
- * attach_kp_kern_all -- This function attaches eBPF handler to all existing
- *     syscalls in running kernel.
- *
- * It consumes more time than attach_kp_libc_all().
+ * attach_kp_kern_all_enter -- attach eBPF handler to entry of all existing
+ *                             syscalls in running kernel.
  */
 static bool
 attach_kp_kern_all_enter(struct bpf_ctx *b)
@@ -233,8 +203,8 @@ attach_kp_kern_all_enter(struct bpf_ctx *b)
 }
 
 /*
- * attach_kp_desc -- This function attaches eBPF handler to each syscall which
- *     operates on file descriptor.
+ * attach_kp_desc -- attach eBPF handler to each syscall which
+ *                   operates on file descriptor.
  *
  * Inspired by: 'strace -e trace=desc'
  */
@@ -262,8 +232,8 @@ attach_kp_desc(struct bpf_ctx *b)
 }
 
 /*
- * attach_kp_file -- This function attaches eBPF handler to each syscall which
- *     operates on filenames.
+ * attach_kp_file -- attach eBPF handler to each syscall which
+ *                   operates on filenames.
  *
  * Inspired by 'strace -e trace=file'.
  */
@@ -291,8 +261,8 @@ attach_kp_file(struct bpf_ctx *b)
 }
 
 /*
- * attach_kp_fileat -- This function attaches eBPF handler to each syscall
- *     which operates on relative file path.
+ * attach_kp_fileat -- attach eBPF handler to each syscall
+ *                     which operates on relative file path.
  *
  * There are no equivalents in strace.
  */
@@ -320,7 +290,7 @@ attach_kp_fileat(struct bpf_ctx *b)
 }
 
 /*
- * attach_kp_fileio -- Attach eBPF handlers to all file-related syscalls.
+ * attach_kp_fileio -- attach eBPF handlers to all file-related syscalls.
  *
  * Inspired by: 'strace -e trace=desc,file'
  */
@@ -367,7 +337,7 @@ attach_tp_exit(struct bpf_ctx *b)
 }
 
 /*
- * attach_tp_all -- Intercept all syscalls using TracePoints.
+ * attach_tp_all -- intercept all syscalls using TracePoints.
  *
  * Should be faster and better but requires kernel >= 4.6.
  *
@@ -421,7 +391,7 @@ attach_common(struct bpf_ctx *b)
 }
 
 /*
- * attach_probes -- This function parses and processes expression.
+ * attach_probes -- parse and processe expression
  *
  * XXX Think about applying 'fn_name' via str_replace_all()
  *     to be more consistent
@@ -430,10 +400,10 @@ bool
 attach_probes(struct bpf_ctx *b)
 {
 	if (NULL == Args.expr)
-		goto DeFault;
+		goto default_option;
 
-	if (!strcasecmp(Args.expr, "trace=kp-libc-all")) {
-		return attach_kp_libc_all(b);
+	if (!strcasecmp(Args.expr, "trace=common")) {
+		return attach_common(b);
 	} else if (!strcasecmp(Args.expr, "trace=kp-kern-all")) {
 		return attach_kp_kern_all(b);
 	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
@@ -442,12 +412,16 @@ attach_probes(struct bpf_ctx *b)
 		return attach_kp_desc(b);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
 		return attach_kp_fileio(b);
-	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
-		return attach_tp_all(b);
-	} else if (!strcasecmp(Args.expr, "trace=common")) {
-		return attach_common(b);
+	} else {
+		fprintf(stderr, "ERROR: %s: unknown option: '%s'\n",
+				__func__, Args.expr);
+		return false;
 	}
+	/*
+	 * else if (!strcasecmp(Args.expr, "trace=tp-all")) {
+	 *	return attach_tp_all(b);
+	 */
 
-DeFault:
-	return attach_kp_kern_all(b);
+default_option:
+	return attach_common(b);
 }

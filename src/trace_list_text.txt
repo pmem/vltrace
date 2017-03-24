@@ -2,15 +2,17 @@ List of supported sets:
 	* Help:
 		- 'help', 'list'    This list.
 
+	* Intercepting using both KProbes and TracePoints:
+		- 'common'             All syscalls provided by the kernel using:
+                                       - KProbes on syscalls' entry and
+                                       - TracePoint (raw syscall sys_exit) on syscalls' exit
+                                       This is the default option.
+
 	* Intercepting using KProbe:
+		- 'kp-kern-all'        All syscalls provided by kernel.
 		- 'kp-fileio'          FileIO - any syscall related to file IO
 		- 'kp-file'            SCs with path in args
 		- 'kp-desc'            SCs with fdesd in args
-		- 'kp-kern-all'        All syscalls provided by kernel.
-		                       A bit slower.
-		- 'kp-libc-all'        All syscalls provided by glibc.
-		                       This list is 36% shorter
-		                       than previous and loads faster.
 		- 'kp-sc_glob:*'       Choose SCs by glob pattern, such as 'set*'
 		- 'kp-sc_re:.*'        Choose SCs by re pattern, such as 'set.*'
 		- 'kp-raw_glob:*'      Choose low-level funcs by glob pattern,
@@ -21,16 +23,3 @@ List of supported sets:
 		                       such as 'open'
 		- 'kp-raw:XXXX'        Choose exact single low-level func by
 		                       name, such as 'raw:ext4_mkdir'
-
-	* Intercepting using KProbes and TracePoints:
-		- 'common'             All syscalls provided by kernel using:
-                                       - KProbes on syscall entry and
-                                       - TracePoint (raw syscall sys_exit) on syscall exit
-
-	 * Intercepting using TracePoints:
-	   Currently malfunctions because of this bug:
-	   https://github.com/iovisor/bcc/issues/748
-		- 'tp-all'             All syscalls provided by kernel.
-	                           This option starts many times faster than
-	                           corresponding kprobe ones, but can eat
-	                           more of CPU resource.

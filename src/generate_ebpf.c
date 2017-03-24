@@ -46,8 +46,8 @@
 #include "generate_ebpf.h"
 
 /*
- * get_sc_num -- This function returns syscall number by name according to
- *     libc knowledge.
+ * get_sc_num -- this function returns syscall number by name
+ *               according to the table of syscalls
  */
 static int
 get_sc_num(const char *sc_name)
@@ -108,7 +108,7 @@ load_ebpf_file_tmpl(void)
 }
 
 static char *
-get_libc_tmpl(unsigned i)
+get_template(unsigned i)
 {
 	char *text = NULL;
 
@@ -201,35 +201,6 @@ get_libc_tmpl(unsigned i)
 	return text;
 }
 
-/*
- * generate_ebpf_kp_libc_all -- This function generates eBPF handler for
- *     syscalls which are known to glibc.
- */
-static void
-generate_ebpf_kp_libc_all(FILE *ts)
-{
-	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		size_t fw_res;
-		char *text;
-
-		text = get_libc_tmpl(i);
-
-		if (NULL == text)
-			continue;
-
-		str_replace_all(&text, "SYSCALL_NAME",
-				Syscall_array[i].handler_name);
-
-		fw_res = fwrite(text, strlen(text), 1, ts);
-
-		assert(fw_res > 0);
-
-		free(text);
-
-		text = NULL;
-	}
-}
-
 /* XXX HACK: this syscall is exported by kernel twice. */
 static unsigned SyS_sigsuspend = 0;
 
@@ -263,7 +234,7 @@ generate_ebpf_kp_kern_all(FILE *ts)
 		if (!is_a_sc(line, read - 1))
 			continue;
 
-		line [read - 1] = '\0';
+		line[read - 1] = '\0';
 
 		/* XXX HACK: this syscall is exported by kernel twice. */
 		if (!strcasecmp("SyS_sigsuspend", line)) {
@@ -274,10 +245,8 @@ generate_ebpf_kp_kern_all(FILE *ts)
 		}
 
 		sc_num = get_sc_num(line);
-
-		/* Some optimization for glibc-supported syscalls */
-		if (0 <= sc_num) {
-			text = get_libc_tmpl((unsigned)sc_num);
+		if (sc_num >= 0) {
+			text = get_template((unsigned)sc_num);
 		} else {
 			text = load_file_no_cr(ebpf_kern_tmpl_file);
 			if (Args.debug)
@@ -467,11 +436,11 @@ generate_ebpf()
 	head = NULL;
 
 	if (NULL == Args.expr) {
-		fprintf(stderr, "%s: defaulting to 'trace=kp-kern-all'.\n",
+		fprintf(stderr, "%s: defaulting to 'trace=common'.\n",
 				__func__);
-		generate_ebpf_kp_kern_all(ts);
-	} else if (!strcasecmp(Args.expr, "trace=kp-libc-all")) {
-		generate_ebpf_kp_libc_all(ts);
+		generate_ebpf_common(ts);
+	} else if (!strcasecmp(Args.expr, "trace=common")) {
+		generate_ebpf_common(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-kern-all")) {
 		generate_ebpf_kp_kern_all(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
@@ -480,11 +449,14 @@ generate_ebpf()
 		generate_ebpf_kp_desc(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
 		generate_ebpf_kp_fileio(ts);
-	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
-		generate_ebpf_tp_all(ts);
-	} else if (!strcasecmp(Args.expr, "trace=common")) {
-		generate_ebpf_common(ts);
+	} else {
+		fprintf(stderr, "ERROR: %s: unknown option: '%s'\n",
+				__func__, Args.expr);
 	}
+	/*
+	 * else if (!strcasecmp(Args.expr, "trace=tp-all")) {
+	 *	generate_ebpf_tp_all(ts);
+	 */
 
 	fclose(ts);
 	return text;
