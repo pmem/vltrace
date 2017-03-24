@@ -1,3 +1,11 @@
+Startup:
+    -p, --pid    <pid>
+        Trace this PID only, <command> option should be missing.
+        Press (CTRL-C) to send interrupt signal to exit.
+        Note -p "`pidof PROG`" syntax.
+    -N, --ebpf-src-dir <dir>
+        Enable checking of updated ebpf templates in directory <dir>.
+
 Output format:
     -o, --output <file>
         log filename
@@ -53,15 +61,6 @@ Tracing:
               https://github.com/iovisor/bcc/issues/900
         Default: fast
 
-Startup:
-    -p, --pid    <pid>
-        trace this PID only. Command arg should be missing
-        Press (CTRL-C) to send interrupt signal to exit.
-        Note -p "`pidof PROG`" syntax.
-    -N, --ebpf-src-dir <dir>
-        Enable checking of updated ebpf templates in directory <dir>
-
-
 Miscellaneous:
     -d, --debug
         enable debug output
@@ -75,7 +74,7 @@ Miscellaneous:
     -B, --builtin-list
         Print a list of all syscalls known by glibc.
 
-examples:
+Examples:
     ./strace.ebpf           # trace all syscalls in the system
     ./strace.ebpf ls        # trace syscalls of ls command
     ./strace.ebpf -p 342    # only trace PID 342

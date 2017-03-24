@@ -92,13 +92,6 @@ main(const int argc, char *const argv[])
 	/* parse command-line options */
 	st_optind = cl_parser(&Args, argc, argv);
 
-	if (!Args.command && Args.pid == -1) {
-		fprintf(stderr, "ERROR: command or PID has to be set."
-			" Exiting.\n");
-		fprint_help(stderr);
-		exit(EXIT_FAILURE);
-	}
-
 	if (Args.command && Args.pid > 0) {
 		fprintf(stderr, "ERROR: command and PID cannot be set together."
 			" Exiting.\n");
