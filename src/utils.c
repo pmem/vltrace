@@ -184,9 +184,6 @@ load_pid_check_hook(enum ff_mode ff_mode)
 	case E_FF_FULL:
 		return load_file_no_cr(ebpf_pid_check_ff_full_hook_file);
 
-	case E_FF_FAST:
-		return load_file_no_cr(ebpf_pid_check_ff_fast_hook_file);
-
 	default:
 		return NULL;
 	}

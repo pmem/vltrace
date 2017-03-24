@@ -76,8 +76,6 @@ const char *ebpf_tp_all_file = "trace_tp_all.c";
 
 const char *ebpf_pid_check_ff_disabled_hook_file =
 		"pid_check_ff_disabled_hook.c";
-const char *ebpf_pid_check_ff_fast_hook_file =
-		"pid_check_ff_fast_hook.c";
 const char *ebpf_pid_check_ff_full_hook_file =
 		"pid_check_ff_full_hook.c";
 
@@ -134,10 +132,7 @@ ebpf_load_file(const char *const fn)
 		return BINARY_FILE_CONTENT(pid_check_ff_disabled_hook_c);
 	} else if (0 == strcmp(ebpf_pid_check_ff_full_hook_file, fn)) {
 		return BINARY_FILE_CONTENT(pid_check_ff_full_hook_c);
-	} else if (0 == strcmp(ebpf_pid_check_ff_fast_hook_file, fn)) {
-		return BINARY_FILE_CONTENT(pid_check_ff_fast_hook_c);
 	}
-
 
 	return NULL;
 }

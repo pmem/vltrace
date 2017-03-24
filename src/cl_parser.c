@@ -66,27 +66,24 @@ cl_parser(struct cl_options *const clo,
 		int option_index = 0;
 
 		static struct option long_options[] = {
-			{"timestamp",	no_argument,	   0, 't'},
+			{"timestamp",		no_argument,	   0, 't'},
 			{"failed",		no_argument,	   0, 'X'},
 			{"help",		no_argument,	   0, 'h'},
 			{"debug",		no_argument,	   0, 'd'},
 			{"list",		no_argument,	   0, 'L'},
 			{"ll-list",		no_argument,	   0, 'R'},
-			{"builtin-list", no_argument,	   0, 'B'},
-
-			{"fast-follow-fork", optional_argument,	   0, 'F'},
-			{"full-follow-fork", optional_argument,	   0, 'f'},
-
-			{"pid",		   required_argument, 0, 'p'},
+			{"builtin-list",	no_argument,	   0, 'B'},
+			{"pid",			required_argument, 0, 'p'},
 			{"format",		required_argument, 0, 'l'},
 			{"expr",		required_argument, 0, 'e'},
 			{"output",		required_argument, 0, 'o'},
-			{"ebpf-src-dir", required_argument, 0, 'N'},
-			{"hex-separator", required_argument, 0, 'K'},
-			{0,	   0,	 0,  0 }
+			{"ebpf-src-dir", 	required_argument, 0, 'N'},
+			{"hex-separator", 	required_argument, 0, 'K'},
+			{"full-follow-fork",	optional_argument, 0, 'f'},
+			{0, 0, 0, 0}
 		};
 
-		c = getopt_long(argc, argv, "+tXhdp:o:l:K:e:LRBf::F::N:",
+		c = getopt_long(argc, argv, "+tXhdLRBp:l:e:o:N:K:f::",
 				long_options, &option_index);
 
 		if (c == -1)
@@ -202,13 +199,6 @@ cl_parser(struct cl_options *const clo,
 
 		case 'f':
 			clo->ff_mode = E_FF_FULL;
-			if (optarg) {
-				clo->ff_separate_logs = true;
-			}
-			break;
-
-		case 'F':
-			clo->ff_mode = E_FF_FAST;
 			if (optarg) {
 				clo->ff_separate_logs = true;
 			}

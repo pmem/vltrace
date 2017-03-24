@@ -55,7 +55,6 @@ set (BIN_SRCS
 	trace_fs_path_1_3_arg_tmpl-sl.c
 	trace_fs_path_2_4_arg_tmpl-sl.c
 	pid_check_ff_disabled_hook.c
-	pid_check_ff_fast_hook.c
 	pid_check_ff_full_hook.c
 )
 

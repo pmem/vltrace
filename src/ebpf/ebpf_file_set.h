@@ -67,7 +67,6 @@ extern const char *ebpf_kern_tmpl_file;
 extern const char *ebpf_tp_all_file;
 
 extern const char *ebpf_pid_check_ff_disabled_hook_file;
-extern const char *ebpf_pid_check_ff_fast_hook_file;
 extern const char *ebpf_pid_check_ff_full_hook_file;
 
 /* functions */

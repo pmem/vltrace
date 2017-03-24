@@ -184,30 +184,6 @@ Same as above, but put logs for each thread in
 separate file with name \<file\>\.tid.pid
 Implementation is not finished and is postponned.
 
-`-F, --fast-follow-fork`
-
-Follow new processes created with fork()/vfork()/clone()
-in fast, but limited, way using kernel 4.8 feature
-bpf_get_current_task(). This mode assume "level 1"
-tracing only: no grandchildren or other descendants
-will be traced.
-Implementation is not debugged and is postponned.
-Details:
- - https://github.com/iovisor/bcc/issues/799
- - http://lxr.free-electrons.com/source/kernel/sys.c?v=4.8#L847
-
-`-FF, --fast-follow-fork=F`
-
-Same as above, but put logs for each process in
-separate file with name \<file\>\.pid
-Implementation is not finished and is postponned.
-
-`-FFF, --fast-follow-fork=FF`
-
-Same as above, but put logs for each process in
-separate file with name \<file\>\.tid.pid
-Implementation is not finished and is postponned.
-
 `-n, --filenames <mode>`
 
 eBPF virtual machine is extremely limited in available memory. Also currently

@@ -38,21 +38,7 @@ Tracing:
         Same as above, but put logs for each thread in separate file with
         name <file>.tid.pid
         Implementation is not finished and is postponned.
-    -F, --fast-follow-fork
-        Follow new processes created with fork()/vfork()/clone() in fast, but
-        limited, way using kernel 4.8 feature bpf_get_current_task(). This mode
-        assume "level 1" tracing only: no grandchildren or other descendants
-        will be traced.
-        Implementation is not debugged and is postponned.
-    -FF, --fast-follow-fork=F
-        Same as above, but put logs for each process in separate file with
-        name <file>.pid
-        Implementation is not finished and is postponned.
-    -FFF, --fast-follow-fork=FF
-        Same as above, but put logs for each thread in separate file with
-        name <file>.tid.pid
-        Implementation is not finished and is postponned.
-	-n, --filenames <mode>
+    -n, --filenames <mode>
         Mode of fetching filenames:
         - 'fast' - everything what we could not fit into single packet will
             be truncated.

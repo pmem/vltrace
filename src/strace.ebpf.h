@@ -57,7 +57,6 @@ enum out_lf_fmt {
 enum ff_mode {
 	E_FF_DISABLED = 0,
 	E_FF_FULL,
-	E_FF_FAST,
 };
 
 /* filenames reading modes */
