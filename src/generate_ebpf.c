@@ -56,7 +56,7 @@ get_sc_num(const char *sc_name)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (!strcasecmp(sc_name, Syscall_array[i].handler_name))
+		if (strcasecmp(sc_name, Syscall_array[i].handler_name) == 0)
 			return i;
 	}
 
