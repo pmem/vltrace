@@ -37,6 +37,10 @@
 
 HEADER_MOD="gen_syscalls_64_mod.h"
 HEADER_NUM="gen_syscalls_64_num.h"
+
+DEFINE_MOD="GEN_SYSCALLS_64_MOD_H"
+DEFINE_NUM="GEN_SYSCALLS_64_NUM_H"
+
 KERNEL=$(uname -r)
 
 FILE=$(find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$(uname -r)" | tail -n1)
@@ -82,13 +86,19 @@ echo "/*"                                   >> $HEADER_MOD
 echo " * Generated from the kernel header:" >> $HEADER_MOD
 echo " * $HEADER"                           >> $HEADER_MOD
 echo " */"                                  >> $HEADER_MOD
+echo ""                                     >> $HEADER_MOD
 cp $HEADER_MOD $HEADER_NUM
 
 # generate new header - removed the 'sys_' prefix
+echo "#ifndef $DEFINE_MOD"        >> $HEADER_MOD
+echo "#define $DEFINE_MOD"        >> $HEADER_MOD
 cat $HEADER | sed 's/\ sys_/\ /g' >> $HEADER_MOD
+echo "#endif /* $DEFINE_MOD */  " >> $HEADER_MOD
 echo "-- Generated header: $HEADER_MOD"
 
 # generate new header with defines of syscall numbers
+echo "#ifndef $DEFINE_NUM"        >> $HEADER_NUM
+echo "#define $DEFINE_NUM"        >> $HEADER_NUM
 cat $HEADER | sed 's/\ sys_/\ /g' | \
 while IFS='' read -r line || [[ -n "$line" ]]; do
 	echo $line | grep "__SYSCALL_64" >/dev/null 2>&1
@@ -97,4 +107,5 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 	NAME=$(echo $line | cut -d',' -f2 | cut -d' ' -f2)
 	echo "#define __NR_${NAME} $NUMBER" >> $HEADER_NUM
 done
+echo "#endif /* $DEFINE_NUM */  " >> $HEADER_NUM
 echo "-- Generated header: $HEADER_NUM"
