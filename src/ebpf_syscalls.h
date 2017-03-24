@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <sys/syscall.h>
 /* add syscall numbers from kernel header */
-#include "syscalls_64_num.h"
+#include "gen_syscalls_64_num.h"
 
 enum sc_arg_type {
 	/* Syscall does not have this argument */

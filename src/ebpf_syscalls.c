@@ -37,12 +37,13 @@
 #include <stdlib.h>
 
 #include "ebpf_syscalls.h"
+#include "syscalls_unknown.h"
 
 /* array of syscall names */
 char *syscall_names[SC_TBL_SIZE] = {
 	[0 ... SC_TBL_SIZE - 1] = "?",
 #define __SYSCALL_64(nr, name, ptregs)	[nr] = #name,
-#include "syscalls_64_mod.h"
+#include "gen_syscalls_64_mod.h"
 #undef __SYSCALL_64
 };
 

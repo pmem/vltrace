@@ -35,8 +35,8 @@
 # copy_syscalls_64.sh -- shell script for finding and coping syscalls_64.sh header
 #
 
-HEADER_MOD="syscalls_64_mod.h"
-HEADER_NUM="syscalls_64_num.h"
+HEADER_MOD="gen_syscalls_64_mod.h"
+HEADER_NUM="gen_syscalls_64_num.h"
 KERNEL=$(uname -r)
 
 FILE=$(find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$(uname -r)" | tail -n1)
