@@ -132,6 +132,8 @@ struct syscall_descriptor {
 	unsigned args_qty;
 	/* Flags */
 	unsigned masks;
+	/* Helper field used to speed up attaching */
+	int attached;
 };
 
 /* Currently glibc does not have appropriate macro for it */

@@ -498,6 +498,7 @@ void
 init_sc_tbl(void)
 {
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
+		Syscall_array[i].attached = 0;
 		if (NULL != Syscall_array[i].handler_name) {
 			Syscall_array[i].num = i;
 			sprintf(Syscall_array[i].num_str, "%u",
