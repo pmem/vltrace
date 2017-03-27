@@ -128,6 +128,8 @@ struct syscall_descriptor {
 	char num_str[SC_NUM_LEN];
 	/* The name of in-kernel syscall's handler */
 	const char *handler_name;
+	/* length of the name of in-kernel syscall's handler */
+	size_t name_length;
 	/* Number of args for this syscall */
 	unsigned args_qty;
 	/* Flags */

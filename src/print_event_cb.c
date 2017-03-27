@@ -57,6 +57,7 @@ typedef __s64 s64;
 typedef __u64 u64;
 
 enum { TASK_COMM_LEN = 16 };
+enum { LEN_SYS = 4 }; /* = strlen("SyS_") */
 
 #include "ebpf/trace.h"
 
@@ -325,9 +326,7 @@ sc_num2str(const int64_t sc_num)
 	if ((0 <= sc_num) && (SC_TBL_SIZE > sc_num)) {
 		if (NULL == Syscall_array[sc_num].handler_name)
 			goto out;
-
-		return Syscall_array[sc_num].handler_name +
-			4 /* strlen("sys_") */;
+		return Syscall_array[sc_num].handler_name + LEN_SYS;
 	}
 
 out:
@@ -347,11 +346,13 @@ fwrite_sc_name(FILE *f, const s64 sc_id, char const *sc_name, int size)
 	/* XXX Temporarily */
 	(void) size;
 
-	if (sc_id >= 0) {
-		fwrite(sc_num2str(sc_id), strlen(sc_num2str(sc_id)), 1, f);
+	if (sc_id >= 0 && sc_id < SC_TBL_SIZE &&
+	    Syscall_array[sc_id].handler_name != NULL) {
+		fwrite(Syscall_array[sc_id].handler_name + LEN_SYS,
+			Syscall_array[sc_id].name_length - LEN_SYS, 1, f);
 	} else {
 		/* XXX Check presence of string body by checking size arg */
-		fwrite(sc_name + 4, strlen(sc_name + 4), 1, f);
+		fwrite(sc_name + LEN_SYS, strlen(sc_name + LEN_SYS), 1, f);
 	}
 }
 

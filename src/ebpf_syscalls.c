@@ -507,6 +507,8 @@ init_sc_tbl(void)
 		Syscall_names[i].length = strlen(Syscall_names[i].name);
 
 		if (NULL != Syscall_array[i].handler_name) {
+			Syscall_array[i].name_length =
+				strlen(Syscall_array[i].handler_name);
 			Syscall_array[i].attached = 0;
 			Syscall_array[i].num = i;
 			sprintf(Syscall_array[i].num_str, "%u",
