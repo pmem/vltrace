@@ -251,10 +251,17 @@ main(const int argc, char *const argv[])
 			/* wait for a terminating signal */
 			break;
 		case TRACING_CMD:
-			/* trace until all children exit */
-			if ((waitpid(-1, NULL, WNOHANG) == -1) &&
-			    (errno == ECHILD)) {
-				AbortTracing = 1;
+			if (Args.ff_mode) {
+				/* trace until all children exit */
+				if ((waitpid(-1, NULL, WNOHANG) == -1) &&
+				    (errno == ECHILD)) {
+					AbortTracing = 1;
+				}
+			} else {
+				/* trace until the child exits */
+				if (waitpid(-1, NULL, WNOHANG) == Args.pid) {
+					AbortTracing = 1;
+				}
 			}
 			break;
 		case TRACING_PID:
