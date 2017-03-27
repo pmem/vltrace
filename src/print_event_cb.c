@@ -820,8 +820,8 @@ static void
 print_event_hex_entry(FILE *f, void *data, int size)
 {
 	struct data_entry_t *const event = data;
-	char *str = "----------------";
-	size_t lenstr = strlen(str);
+	const char *str_line = "----------------";
+	const size_t len_str_line = 16; /* length of the string above */
 
 	/* XXX Check size arg */
 	(void) size;
@@ -840,10 +840,10 @@ print_event_hex_entry(FILE *f, void *data, int size)
 	fprint_i64(f, event->pid_tid);
 	fwrite_out_lf_fld_sep(f);
 
-	fwrite(str, lenstr, 1, f);
+	fwrite(str_line, len_str_line, 1, f);
 	fwrite_out_lf_fld_sep(f);
 
-	fwrite(str, lenstr, 1, f);
+	fwrite(str_line, len_str_line, 1, f);
 	fwrite_out_lf_fld_sep(f);
 
 	fwrite_sc_name(f, event->sc_id, event->sc_name, size);
