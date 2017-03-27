@@ -35,17 +35,23 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "ebpf_syscalls.h"
 #include "syscalls_unknown.h"
 
+#define __SYSCALL_64(nr, sysname, ptregs)	[nr] = {\
+	.name = #sysname, \
+	.length = 0, \
+},
+
 /* array of syscall names */
-char *syscall_names[SC_TBL_SIZE] = {
-	[0 ... SC_TBL_SIZE - 1] = "?",
-#define __SYSCALL_64(nr, name, ptregs)	[nr] = #name,
+struct syscall_name Syscall_names[SC_TBL_SIZE] = {
+	[0 ... SC_TBL_SIZE - 1] = {"?", 1},
+/* fill the array with names from the generater header */
 #include "gen_syscalls_64_mod.h"
-#undef __SYSCALL_64
 };
+#undef __SYSCALL_64
 
 #define EBPF_SYSCALL(nr, sym, aq)    [nr] = {\
 	.num = nr, \
@@ -498,8 +504,10 @@ void
 init_sc_tbl(void)
 {
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		Syscall_array[i].attached = 0;
+		Syscall_names[i].length = strlen(Syscall_names[i].name);
+
 		if (NULL != Syscall_array[i].handler_name) {
+			Syscall_array[i].attached = 0;
 			Syscall_array[i].num = i;
 			sprintf(Syscall_array[i].num_str, "%u",
 				Syscall_array[i].num);

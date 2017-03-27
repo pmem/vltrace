@@ -940,8 +940,8 @@ print_event_hex_tp(FILE *f, void *data, int size)
 {
 	s64 res, err;
 	struct tp_s *const event = data;
-	char *str = "sys_exit";
-	size_t lenstr = strlen(str);
+	const char *str_sys_exit = "sys_exit ";
+	const size_t len_sys_exit = 9; /* length of the string above */
 
 	/* XXX Check size arg */
 	(void) size;
@@ -970,8 +970,13 @@ print_event_hex_tp(FILE *f, void *data, int size)
 	fprint_i64(f, (uint64_t)res);
 	fwrite_out_lf_fld_sep(f);
 
-	fwrite(syscall_names[event->id],
-		strlen(syscall_names[event->id]), 1, f);
+	if (event->id >= 0 && event->id < SC_TBL_SIZE) {
+		fwrite(Syscall_names[event->id].name,
+			Syscall_names[event->id].length, 1, f);
+	} else {
+		fwrite(str_sys_exit, len_sys_exit, 1, f);
+		fprint_i64(f, (uint64_t)(event->id));
+	}
 
 	fwrite("\n", 1, 1, f);
 }
