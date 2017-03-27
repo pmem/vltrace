@@ -71,10 +71,17 @@ enum out_lf_fmt Out_lf_fmt;	/* format of output */
 int OutputError;		/* I/O error in perf callback occured */
 int AbortTracing;		/* terminating signal received */
 
+/* what are we tracing ? */
+enum {
+	TRACING_ALL = 0,	/* all syscalls in the system */
+	TRACING_CMD = 1,	/* a process given by the command */
+	TRACING_PID = 2,	/* a process given by the PID */
+};
+
 int
 main(const int argc, char *const argv[])
 {
-	int tracing_PID = 0;
+	int tracing = TRACING_ALL; /* what are we tracing ? */
 	int st_optind;
 
 	Args.pid = -1;
@@ -130,16 +137,23 @@ main(const int argc, char *const argv[])
 					"Exiting.\n");
 			exit(errno);
 		}
+
+		tracing = TRACING_CMD;
+
 	} else if (Args.pid > 0) {
 		/* check if process with given PID exists */
 		if (kill(Args.pid, 0) == -1) {
 			fprintf(stderr,	"ERROR: process with PID '%d'"
 					" does not exist: '%m'.\n", Args.pid);
 			exit(errno);
-		} else {
-			tracing_PID = 1;
 		}
 
+		tracing = TRACING_PID;
+	}
+
+	if (tracing == TRACING_ALL) {
+		fprintf(stderr, "Warning: tracing all syscalls "
+				"in the system...\n");
 	}
 
 	/* init array of syscalls */
@@ -216,17 +230,9 @@ main(const int argc, char *const argv[])
 	for (unsigned i = 0; i < b->pr_arr_qty; i++)
 		readers[i] = b->pr_arr[i]->pr;
 
-	/* trace until all children exit */
-	while ((waitpid(-1, NULL, WNOHANG) != -1) || (errno != ECHILD)) {
+	while (AbortTracing == 0) {
 
 		(void) perf_reader_poll((int)b->pr_arr_qty, readers, -1);
-
-		/* check if the process traced by PID exists */
-		if (tracing_PID && kill(Args.pid, 0) == -1) {
-			fprintf(stderr, "ERROR: traced process with PID '%d'"
-					" disappeared : '%m'.\n", Args.pid);
-				break;
-		}
 
 		if (OutputError) {
 			fprintf(stderr, "ERROR: error writing output. "
@@ -237,6 +243,28 @@ main(const int argc, char *const argv[])
 		if (AbortTracing) {
 			fprintf(stderr, "Notice: terminated by signal. "
 					"Exiting...\n");
+			break;
+		}
+
+		switch (tracing) {
+		case TRACING_ALL:
+			/* wait for a terminating signal */
+			break;
+		case TRACING_CMD:
+			/* trace until all children exit */
+			if ((waitpid(-1, NULL, WNOHANG) == -1) &&
+			    (errno == ECHILD)) {
+				AbortTracing = 1;
+			}
+			break;
+		case TRACING_PID:
+			/* check if the process traced by PID exists */
+			if (kill(Args.pid, 0) == -1) {
+				fprintf(stderr, "ERROR: traced process with PID"
+						" '%d' disappeared : '%m'.\n",
+						Args.pid);
+				AbortTracing = 1;
+			}
 			break;
 		}
 	}
