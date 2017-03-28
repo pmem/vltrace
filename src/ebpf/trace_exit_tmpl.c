@@ -44,10 +44,16 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
-	PID_CHECK_HOOK
-
-	/* val and pid are defined in PID_CHECK_HOOK macro */
-	if (val) {
+	u64 pid = (pid_tid >> 32);
+	if (pid != TRACED_PID) {
+		u64 *val = children_map.lookup(&pid);
+		if (NULL == val) {
+			return 0;
+		}
+		if (*val != 1) {
+			return 0;
+		}
+		/* remove because the child exits */
 		children_map.delete(&pid);
 	}
 
