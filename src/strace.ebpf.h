@@ -131,6 +131,7 @@ struct cl_options {
 extern struct cl_options Args;
 extern int OutputError;
 extern int AbortTracing;
+extern pid_t PidToBeKilled;
 
 /* Output logfile */
 extern FILE *Out_lf;

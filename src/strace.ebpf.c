@@ -68,8 +68,11 @@
 struct cl_options Args;		/* command-line arguments */
 FILE *Out_lf;			/* output file */
 enum out_lf_fmt Out_lf_fmt;	/* format of output */
+
 int OutputError;		/* I/O error in perf callback occured */
 int AbortTracing;		/* terminating signal received */
+
+pid_t PidToBeKilled;		/* PID of started traced process */
 
 /* what are we tracing ? */
 enum {
@@ -155,14 +158,18 @@ main(const int argc, char *const argv[])
 		}
 	}
 
+	attach_signals_handlers();
+
 	if (Args.command) {
 		/* run the command */
-		Args.pid = start_command_with_signals(argc - st_optind,
-							argv + st_optind);
+		Args.pid = start_command(argv + st_optind);
 		if (Args.pid == -1) {
 			ERROR("failed to start the command");
 			exit(-1);
 		}
+
+		/* if tracing is aborted, kill the started process */
+		PidToBeKilled = Args.pid;
 	}
 
 	/* init array of syscalls */
@@ -253,17 +260,20 @@ main(const int argc, char *const argv[])
 		readers[i] = b->pr_arr[i]->pr;
 
 	INFO("Starting tracing...");
-	while (AbortTracing == 0) {
+	int stop_tracing = 0;
+	while (!stop_tracing) {
 
 		(void) perf_reader_poll((int)b->pr_arr_qty, readers, -1);
 
 		if (OutputError) {
-			ERROR("error while writing output");
+			ERROR("error while writing to output");
+			stop_tracing = 1;
 			break;
 		}
 
 		if (AbortTracing) {
-			INFO("Notice: terminated by signal. Exiting...\n");
+			INFO("Notice: terminated by signal. Exiting...");
+			stop_tracing = 1;
 			break;
 		}
 
@@ -277,13 +287,13 @@ main(const int argc, char *const argv[])
 				if ((waitpid(-1, NULL, WNOHANG) == -1) &&
 				    (errno == ECHILD)) {
 					INFO("Notice: all children exited");
-					AbortTracing = 1;
+					stop_tracing = 1;
 				}
 			} else {
 				/* trace until the child exits */
 				if (waitpid(-1, NULL, WNOHANG) == Args.pid) {
 					INFO("Notice: the child exited");
-					AbortTracing = 1;
+					stop_tracing = 1;
 				}
 			}
 			break;
@@ -292,7 +302,7 @@ main(const int argc, char *const argv[])
 			if (kill(Args.pid, 0) == -1) {
 				ERROR("traced process with PID '%d' "
 					"disappeared", Args.pid);
-				AbortTracing = 1;
+				stop_tracing = 1;
 			}
 			break;
 		}

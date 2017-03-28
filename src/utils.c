@@ -350,29 +350,26 @@ str_replace_all(char **const text, const char *templt, const char *str)
 }
 
 /*
- * start_command -- This function runs traced command passed through
- *    command line.
+ * start_command -- run traced command passed through command line
  */
 pid_t
-start_command(int argc, char *const argv[])
+start_command(char *const argv[])
 {
-	pid_t pid = -1;
-
-	pid = fork();
-
+	pid_t pid = fork();
 	switch (pid) {
 	case -1:
 		break;
 
 	case 0:
-		/* Wait until parent will be ready */
 		/*
-		 * for unknown reason sigwait(SIGCONT) and pause()
-		 *    do not success with any signal.
+		 * Wait until the parent will be ready.
+		 * For unknown reasons sigwait(SIGCONT) and pause()
+		 * do not success with any signal.
 		 */
 		raise(SIGSTOP);
 
 		execvp(argv[0], argv);
+
 		exit(errno);
 		break;
 
@@ -380,64 +377,46 @@ start_command(int argc, char *const argv[])
 		break;
 	}
 
-	(void) argc;
 	return pid;
 }
 
 /*
- * start_command_with_signals -- This function runs traced command passed
- *    through command line and attach appropriate signal handlers.
+ * sig_abort_handler -- signal handler, used to abort the tracing and to notify
+ *                      the traced process about the parent's death
  */
-pid_t
-start_command_with_signals(int argc, char *const argv[])
+static void
+sig_abort_handler(int sig, siginfo_t *si, void *unused)
+{
+	if (PidToBeKilled > 0)
+		kill(PidToBeKilled, SIGSEGV == sig ? SIGHUP : sig);
+
+	AbortTracing = 1;
+
+	(void) si;
+	(void) unused;
+}
+
+/*
+ * attach_signals_handlers -- attach signal handlers
+ */
+void
+attach_signals_handlers(void)
 {
 	struct sigaction sa;
 
-	pid_t pid = start_command(argc, argv);
-
-	if (pid == -1) {
-		int err_no = errno;
-
-		fprintf(stderr, "ERROR: "
-			"Failed to run: '%s': %m. Exiting.\n",
-			*argv);
-
-		errno = err_no;
-		return -1;
-	}
-
-	sa.sa_sigaction = sig_transmit_handler;
-	sa.sa_flags = SA_RESTART;
+	sa.sa_sigaction = sig_abort_handler;
 	sigemptyset(&sa.sa_mask);
 
-	(void) sigaction(SIGINT, &sa, NULL);
-	(void) sigaction(SIGHUP, &sa, NULL);
+	sa.sa_flags = SA_RESTART;
+
+	(void) sigaction(SIGINT,  &sa, NULL);
+	(void) sigaction(SIGHUP,  &sa, NULL);
 	(void) sigaction(SIGQUIT, &sa, NULL);
 	(void) sigaction(SIGTERM, &sa, NULL);
 
 	sa.sa_flags = SA_RESTART | SA_RESETHAND;
 
 	(void) sigaction(SIGSEGV, &sa, NULL);
-
-	return pid;
-}
-
-/*
- * sig_transmit_handler -- Generic signal handler.
- *
- * Is used for notification of traced process about
- * parent's death.
- */
-void
-sig_transmit_handler(int sig, siginfo_t *si, void *unused)
-{
-	if (Args.pid > 0)
-		kill(Args.pid, SIGSEGV == sig ? SIGHUP : sig);
-
-	AbortTracing = 1;
-
-	(void) si;
-	(void) unused;
 }
 
 /*
