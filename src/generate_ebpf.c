@@ -505,27 +505,37 @@ generate_ebpf()
 void
 apply_process_attach_code(char **const pbpf_str)
 {
+	char strpid[64];
+	int snp_res;
+	char *pid_check_hook;
+	int pid;
+
 	if (0 < Args.pid) {
-		char str[64];
-		int snp_res;
-		char *pid_check_hook;
+		/* traced pid */
+		pid = Args.pid;
 
-		snp_res = snprintf(str, sizeof(str), "%d", Args.pid);
-
+		snp_res = snprintf(strpid, sizeof(strpid), "%d", pid);
 		assert(snp_res > 0);
 
 		pid_check_hook = load_pid_check_hook(Args.ff_mode);
-
 		assert(NULL != pid_check_hook);
 
-		str_replace_all(&pid_check_hook, "TRACED_PID", str);
-
-		str_replace_all(pbpf_str, "PID_CHECK_HOOK", pid_check_hook);
-
-		free(pid_check_hook);
+		str_replace_all(&pid_check_hook, "TRACED_PID", strpid);
 	} else {
-		str_replace_all(pbpf_str, "PID_CHECK_HOOK", "");
+		/* my own pid */
+		pid = getpid();
+		INFO("Notice: will not trace my own PID %i (0x%X)", pid, pid);
+
+		snp_res = snprintf(strpid, sizeof(strpid), "%d", pid);
+		assert(snp_res > 0);
+
+		pid_check_hook = load_file_no_cr(ebpf_pid_check_own_hook_file);
+		assert(NULL != pid_check_hook);
+
+		str_replace_all(&pid_check_hook, "MY_OWN_PID", strpid);
 	}
+	str_replace_all(pbpf_str, "PID_CHECK_HOOK", pid_check_hook);
+	free(pid_check_hook);
 }
 
 /*
