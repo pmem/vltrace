@@ -47,9 +47,9 @@
 #include <bcc/bpf_common.h>
 #include <bcc/perf_reader.h>
 
+#include "utils.h"
 #include "strace.ebpf.h"
 #include "bpf_ctx.h"
-
 
 /*
  * pr_arr_check_quota -- This function checks possibility of intercepting one
@@ -106,8 +106,7 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 	int map_fd = bpf_table_fd(sbcp->module, name);
 
 	if (map_fd < 0) {
-		fprintf(stderr,
-			"ERROR:%s:Can't attach to perf output '%s':%m.\n",
+		ERROR("%s: cannot attach to perf output '%s':%m",
 			__func__, name);
 		return -1;
 	}
@@ -116,8 +115,7 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 	int ttype = bpf_table_type_id(sbcp->module, map_id);
 
 	if (ttype != BPF_MAP_TYPE_PERF_EVENT_ARRAY) {
-		fprintf(stderr, "ERROR:%s:Unknown table type %d.\n",
-				__func__, ttype);
+		ERROR("%s: unknown table type %d", __func__, ttype);
 		return -1;
 	}
 
@@ -128,9 +126,8 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 	long cpu_qty = sysconf(_SC_NPROCESSORS_ONLN);
 
 	if (!pr_arr_check_quota(sbcp, (unsigned)cpu_qty)) {
-		fprintf(stderr,
-			"ERROR:%s:Number of perf readers would exceed"
-			" global quota: %d\n",
+		ERROR("%s: number of perf readers would exceed"
+			" global quota: %d",
 			__func__, Args.pr_arr_max);
 
 		return -1;
@@ -144,11 +141,8 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 					Args.strace_reader_page_cnt);
 
 		if (NULL == reader) {
-			fprintf(stderr,
-				"WARNING:%s:"
-				"Could not open perf buffer on cpu %d."
-				" Ignored.\n",
-				__func__, cpu);
+			WARNING("%s: cannot open perf buffer on cpu %d."
+				" Ignored.", __func__, cpu);
 			continue;
 		}
 
@@ -157,11 +151,8 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 		int res = bpf_update_elem(map_fd, &cpu, &fd, 0);
 
 		if (res < 0) {
-			fprintf(stderr,
-				"WARNING:%s:"
-				"Could not update table on cpu %d: %m."
-				" Ignored.\n",
-				__func__, cpu);
+			WARNING("%s: cannot update table on cpu %d: %m."
+				" Ignored.", __func__, cpu);
 		}
 
 		res = snprintf(reader_name, sizeof(reader_name),
@@ -184,9 +175,9 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 void
 detach_all(struct bpf_ctx *b)
 {
-	fprintf(stderr,
-		"INFO: Detaching. PLEASE wait."
-		" It can hold few tens of seconds.\n");
+	INFO("Finished tracing.\n"
+		"Detaching probes... (please wait, it can take "
+		"few tens of seconds) ...");
 
 	for (unsigned i = 0; i < b->pr_arr_qty; i++) {
 		perf_reader_free(b->pr_arr[i]->pr);
@@ -197,9 +188,12 @@ detach_all(struct bpf_ctx *b)
 		}
 
 		free(b->pr_arr[i]);
+
+		fprintf(stderr, "\r%i of %i done", i + 1, b->pr_arr_qty + 1);
 	}
 
 	bpf_module_destroy(b->module);
+	INFO("\rDone.                    ");
 
 	free(b->pr_arr);
 	free(b);
@@ -216,8 +210,7 @@ load_obj_code_into_ebpf_vm(struct bpf_ctx *sbcp, const char *func_name,
 	void *bfs_res = bpf_function_start(sbcp->module, func_name);
 
 	if (NULL == bfs_res) {
-		fprintf(stderr, "ERROR:%s: Unknown program %s\n",
-				__func__, func_name);
+		ERROR("%s: unknown program %s", __func__, func_name);
 		return -1;
 	}
 
@@ -241,17 +234,15 @@ load_obj_code_into_ebpf_vm(struct bpf_ctx *sbcp, const char *func_name,
 
 	if (sbcp->debug && (NULL != log_buf)) {
 		/* XXX Command line options to save it to separate file */
-		fprintf(stderr, "DEBUG:%s('%s'):\n%s\n",
+		fprintf(stderr, "DEBUG: %s('%s'):\n%s\n",
 				__func__, func_name, log_buf);
 
 		free(log_buf);
 	}
 
 	if (fd < 0) {
-		fprintf(stderr,
-			"ERROR:%s:Failed to load BPF program %s: %m\n",
+		ERROR("%s: failed to load BPF program %s: %m",
 			__func__, func_name);
-
 		return -1;
 	}
 
@@ -309,11 +300,8 @@ load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
 	int fn_fd;
 
 	if (!pr_arr_check_quota(sbcp, 1)) {
-		fprintf(stderr,
-			"ERROR:%s:Number of perf readers would exceed"
-			" global quota: %d\n",
-			__func__, Args.pr_arr_max);
-
+		ERROR("%s: number of perf readers would exceed"
+			" global quota: %d", __func__, Args.pr_arr_max);
 		return -1;
 	}
 
@@ -332,13 +320,9 @@ load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
 				NULL, NULL);
 
 	if (NULL == pr) {
-		fprintf(stderr,
-			"ERROR:%s:Failed to attach eBPF function '%s'"
-			" to kprobe '%s': %m\n",
-			__func__, fn_name, event);
-
+		ERROR("%s: failed to attach eBPF function '%s'"
+			" to kprobe '%s': %m", __func__, fn_name, event);
 		free(ev_name);
-
 		return -1;
 	}
 
@@ -362,10 +346,8 @@ load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 	int fn_fd;
 
 	if (!pr_arr_check_quota(sbcp, 1)) {
-		fprintf(stderr,
-			"ERROR:%s:Number of perf readers would exceed"
-			" global quota: %d\n",
-			__func__, Args.pr_arr_max);
+		ERROR("%s: number of perf readers would exceed"
+			" global quota: %d", __func__, Args.pr_arr_max);
 
 		return -1;
 	}
@@ -385,10 +367,8 @@ load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 				NULL, NULL);
 
 	if (NULL == pr) {
-		fprintf(stderr,
-			"ERROR:%s:Failed to attach eBPF function '%s'"
-			" to kprobe '%s': %m\n",
-			__func__, fn_name, event);
+		ERROR("%s: failed to attach eBPF function '%s'"
+			" to kprobe '%s': %m", __func__, fn_name, event);
 
 		return -1;
 	}
@@ -411,10 +391,8 @@ load_fn_and_attach_to_tp(struct bpf_ctx *sbcp,
 		int pid, unsigned cpu, int group_fd)
 {
 	if (!pr_arr_check_quota(sbcp, 1)) {
-		fprintf(stderr,
-			"ERROR:%s:Number of perf readers would exceed"
-			" global quota: %d\n",
-			__func__, Args.pr_arr_max);
+		ERROR("%s: number of perf readers would exceed"
+			" global quota: %d", __func__, Args.pr_arr_max);
 
 		return -1;
 	}
@@ -427,9 +405,8 @@ load_fn_and_attach_to_tp(struct bpf_ctx *sbcp,
 			pid, (int)cpu, group_fd, NULL, NULL);
 
 	if (NULL == pr) {
-		fprintf(stderr,
-			"ERROR:%s:Failed to attach eBPF function '%s'"
-			" to tracepoint '%s:%s': %m\n",
+		ERROR("%s: failed to attach eBPF function '%s'"
+			" to tracepoint '%s:%s': %m",
 			__func__, fn_name, tp_category, tp_name);
 
 		return -1;

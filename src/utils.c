@@ -228,33 +228,29 @@ check_bpf_jit_status(FILE *file)
 
 	switch (status) {
 	case -1:
-		fprintf(file,
-			"ERROR:%s: could not read bpf_jit status: '%m'\n",
-			__func__);
+		fprintf(file, "ERROR: cannot read status of "
+				"eBPF JIT compiler: '%m'\n", __func__);
 		return;
 
 	case  0:
-		fprintf(file,
-			"WARNING:%s: DISABLED.\n"
-			"\tPlease refer to `man strace.ebpf`,"
+		fprintf(file, "WARNING: eBPF JIT compiler is DISABLED.\n"
+				"\tPlease refer to `man strace.ebpf`,"
 				" section 'Configuration'.\n"
-			"\tEnabling this will improve performance\n"
-			"\tsignificantly and fix some problems.\n",
-			__func__);
+				"\tEnabling this will improve performance\n"
+				"\tsignificantly and fix some problems.\n");
 		return;
 
 	case  1:
-		fprintf(file, "INFO:%s: ENABLED.\n", __func__);
+		fprintf(file, "Notice: eBPF JIT compiler is enabled.\n");
 		return;
 
 	case  2:
-		fprintf(file, "INFO:%s: DEBUG.\n", __func__);
+		fprintf(file, "Notice: eBPF JIT compiler is in DEBUG mode.\n");
 		return;
 
 	default:
-		fprintf(file,
-			"WARNING:%s: UNKNOWN. Please notify the author.\n",
-			__func__);
+		fprintf(file, "WARNING: unknown status of eBPF JIT compiler. "
+				"Please notify the author.\n");
 		return;
 	}
 }

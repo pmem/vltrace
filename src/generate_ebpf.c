@@ -215,7 +215,7 @@ static unsigned SyS_sigsuspend = 0;
  *
  * Primary purpose of generated handler - new and unknown syscalls.
  */
-static void
+static int
 generate_ebpf_kp_kern_all(FILE *ts)
 {
 	char *text = NULL;
@@ -228,8 +228,8 @@ generate_ebpf_kp_kern_all(FILE *ts)
 	FILE *in = fopen(Debug_tracing_aff, "r");
 
 	if (NULL == in) {
-		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);
-		return;
+		ERROR("error opening '%s': %m", Debug_tracing_aff);
+		return -1;
 	}
 
 	while ((read = getline(&line, &len, in)) != -1) {
@@ -255,30 +255,33 @@ generate_ebpf_kp_kern_all(FILE *ts)
 		} else {
 			text = load_file_no_cr(ebpf_kern_tmpl_file);
 			if (Args.debug)
-				fprintf(stderr, "Notice: syscall %s is not "
-						"defined in the table\n", line);
+				INFO("Notice: syscall %s is not "
+					"defined in the table", line);
 		}
 
+		assert(text != NULL);
 		str_replace_all(&text, "SYSCALL_NAME", line);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
-
-		assert(fw_res > 0);
+		if (fw_res < 1) {
+			perror("fwrite");
+			free(text);
+			return -1;
+		}
 
 		free(text);
-
-		text = NULL;
 	}
 
 	free(line);
 	fclose(in);
+	return 0;
 }
 
 /*
- * generate_ebpf_kp_file -- This function generates eBPF syscall handlers
- *     specific for syscalls with filename in arguments.
+ * generate_ebpf_kp_file -- generate eBPF syscall handlers specific
+ *                          for syscalls with filename in arguments
  */
-static void
+static int
 generate_ebpf_kp_file(FILE *ts)
 {
 	char *text = NULL;
@@ -300,20 +303,22 @@ generate_ebpf_kp_file(FILE *ts)
 				Syscall_array[i].handler_name);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
-
-		assert(fw_res > 0);
+		if (fw_res < 1) {
+			perror("fwrite");
+			free(text);
+			return -1;
+		}
 
 		free(text);
-
-		text = NULL;
 	}
+	return 0;
 }
 
 /*
- * generate_ebpf_kp_fileat -- This function generates eBPF syscall handlers
- *     specific for syscalls with relative filename in arguments.
+ * generate_ebpf_kp_fileat -- generate eBPF syscall handlers specific
+ *                            for syscalls with relative filename in arguments
  */
-static void
+static int
 generate_ebpf_kp_fileat(FILE *ts)
 {
 	char *text = NULL;
@@ -335,20 +340,22 @@ generate_ebpf_kp_fileat(FILE *ts)
 				Syscall_array[i].handler_name);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
-
-		assert(fw_res > 0);
+		if (fw_res < 1) {
+			perror("fwrite");
+			free(text);
+			return -1;
+		}
 
 		free(text);
-
-		text = NULL;
 	}
+	return 0;
 }
 
 /*
- * generate_ebpf_kp_desc -- This function generates eBPF syscall handlers
- *     specific for syscalls with file-descriptor in arguments.
+ * generate_ebpf_kp_desc -- generate eBPF syscall handlers specific
+ *                          for syscalls with file-descriptor in arguments
  */
-static void
+static int
 generate_ebpf_kp_desc(FILE *ts)
 {
 	char *text = NULL;
@@ -370,54 +377,70 @@ generate_ebpf_kp_desc(FILE *ts)
 				Syscall_array[i].handler_name);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
-
-		assert(fw_res > 0);
+		if (fw_res < 1) {
+			perror("fwrite");
+			free(text);
+			return -1;
+		}
 
 		free(text);
-
-		text = NULL;
 	}
+	return 0;
 }
 
 /*
- * generate_ebpf_kp_fileio -- This function generates eBPF syscall handlers
- *     specific for syscalls which operate on files.
+ * generate_ebpf_kp_fileio -- generate eBPF syscall handlers specific
+ *                            for syscalls which operate on files
  */
-static void
+static int
 generate_ebpf_kp_fileio(FILE *ts)
 {
-	generate_ebpf_kp_file(ts);
-	generate_ebpf_kp_desc(ts);
-	generate_ebpf_kp_fileat(ts);
+	int ret = generate_ebpf_kp_file(ts);
+	if (ret)
+		return ret;
+
+	ret = generate_ebpf_kp_desc(ts);
+	if (ret)
+		return ret;
+
+	return generate_ebpf_kp_fileat(ts);
 }
 
 /*
- * generate_ebpf_tp_all -- This function generates eBPF syscall handler
- *     specific for tracepoint feature.
+ * generate_ebpf_tp_all -- generate eBPF syscall handler
+ *                         specific for tracepoint feature
  */
-static void
+static int
 generate_ebpf_tp_all(FILE *ts)
 {
 	char *text = load_file_no_cr(ebpf_tp_all_file);
+	int ret = 0;
 
 	size_t fw_res = fwrite(text, strlen(text), 1, ts);
-
-	assert(fw_res > 0);
+	if (fw_res < 1) {
+		perror("fwrite");
+		ret = -1;
+	}
 
 	free(text);
 
-	text = NULL;
+	return ret;
 }
 
 /*
- * generate_ebpf_common -- This function generates eBPF syscall handler
- *     specific for kprobes and tracepoints.
+ * generate_ebpf_common -- generate eBPF syscall handler
+ *                         specific for kprobes and tracepoints
  */
-static void
+static int
 generate_ebpf_common(FILE *ts)
 {
-	generate_ebpf_kp_kern_all(ts);
-	generate_ebpf_tp_all(ts);
+	int ret;
+
+	ret = generate_ebpf_kp_kern_all(ts);
+	if (ret)
+		return ret;
+
+	return generate_ebpf_tp_all(ts);
 }
 
 /*
@@ -428,35 +451,38 @@ generate_ebpf()
 {
 	char *text = NULL;
 	size_t text_size = 0;
+	int ret;
 
 	FILE *ts = open_memstream(&text, &text_size);
+	if (ts == NULL)
+		return NULL;
 
-	/* Let's from header */
 	char *head = load_file(ebpf_head_file);
 	size_t fw_res = fwrite(head, strlen(head), 1, ts);
+	if (fw_res < 1) {
+		perror("fwrite");
+		free(head);
+		return NULL;
+	}
 
-	assert(fw_res > 0);
 	free(head);
 
-	head = NULL;
-
 	if (NULL == Args.expr) {
-		fprintf(stderr, "%s: defaulting to 'trace=common'.\n",
-				__func__);
-		generate_ebpf_common(ts);
+		INFO("Notice: defaulting to 'trace=common'");
+		ret = generate_ebpf_common(ts);
 	} else if (!strcasecmp(Args.expr, "trace=common")) {
-		generate_ebpf_common(ts);
+		ret = generate_ebpf_common(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-kern-all")) {
-		generate_ebpf_kp_kern_all(ts);
+		ret = generate_ebpf_kp_kern_all(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
-		generate_ebpf_kp_file(ts);
+		ret = generate_ebpf_kp_file(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
-		generate_ebpf_kp_desc(ts);
+		ret = generate_ebpf_kp_desc(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
-		generate_ebpf_kp_fileio(ts);
+		ret = generate_ebpf_kp_fileio(ts);
 	} else {
-		fprintf(stderr, "ERROR: %s: unknown option: '%s'\n",
-				__func__, Args.expr);
+		ERROR("unknown option: '%s'", Args.expr);
+		ret = -1;
 	}
 	/*
 	 * else if (!strcasecmp(Args.expr, "trace=tp-all")) {
@@ -464,11 +490,17 @@ generate_ebpf()
 	 */
 
 	fclose(ts);
+	if (ret) {
+		free(text);
+		return NULL;
+	}
+
 	return text;
 }
 
 /*
- * This function apply process-attach code to generated code with handlers
+ * apply_process_attach_code -- apply process-attach code
+ *                              to generated code with handlers
  */
 void
 apply_process_attach_code(char **const pbpf_str)
@@ -512,7 +544,7 @@ apply_trace_h_header(char **const pbpf_str)
 /*
  * Print ebpf code with marks for debug reason
  */
-void
+int
 fprint_ebpf_code_with_debug_marks(FILE *f, const char *bpf_str)
 {
 	fprintf(f, "\t>>>>> Generated eBPF code <<<<<\n");
@@ -521,9 +553,12 @@ fprint_ebpf_code_with_debug_marks(FILE *f, const char *bpf_str)
 		size_t fw_res;
 
 		fw_res = fwrite(bpf_str, strlen(bpf_str), 1, f);
-
-		assert(fw_res > 0);
+		if (fw_res < 1) {
+			perror("fwrite");
+			return -1;
+		}
 	}
 
 	fprintf(f, "\t>>>>> EndOf generated eBPF code <<<<<<\n");
+	return 0;
 }

@@ -118,15 +118,6 @@ cl_parser(struct cl_options *const clo,
 
 				exit(EXIT_FAILURE);
 			}
-			if (kill(clo->pid, 0) == -1) {
-				fprintf(stderr,
-					"ERROR: Process with pid '%d'"
-					" does not exist : '%m'.\n",
-					clo->pid);
-
-				fprintf(stderr, "Exit.\n");
-				exit(EXIT_FAILURE);
-			}
 			break;
 
 		case 'o':

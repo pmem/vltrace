@@ -42,6 +42,10 @@
 
 #include "strace.ebpf.h"
 
+#define   ERROR(str, ...) fprintf(stderr, "ERROR: "   str "\n", ##__VA_ARGS__);
+#define WARNING(str, ...) fprintf(stderr, "Warning: " str "\n", ##__VA_ARGS__);
+#define    INFO(str, ...) fprintf(stderr,             str "\n", ##__VA_ARGS__);
+
 char *load_file(const char *fn);
 char *load_file_no_cr(const char *const fn);
 char *load_pid_check_hook(enum ff_mode ff_mode);

@@ -78,6 +78,36 @@ enum {
 	TRACING_PID = 2,	/* a process given by the PID */
 };
 
+/*
+ * check_args -- check input arguments
+ */
+int
+check_args(struct cl_options const *args)
+{
+	if (args->command && args->pid > 0) {
+		ERROR("command and PID cannot be set together");
+		fprint_help(stderr);
+		exit(-1);
+	}
+
+	if (args->pid > 0) {
+		/* check if process with given PID exists */
+		if (kill(Args.pid, 0) == -1) {
+			ERROR("process with PID '%d' does not exist", Args.pid);
+			exit(-1);
+		}
+		return TRACING_PID;
+	}
+
+	if (args->command) {
+		return TRACING_CMD;
+	}
+
+	WARNING("will trace all syscalls in the system...");
+
+	return TRACING_ALL;
+}
+
 int
 main(const int argc, char *const argv[])
 {
@@ -99,22 +129,19 @@ main(const int argc, char *const argv[])
 	/* parse command-line options */
 	st_optind = cl_parser(&Args, argc, argv);
 
-	if (Args.command && Args.pid > 0) {
-		fprintf(stderr, "ERROR: command and PID cannot be set together."
-			" Exiting.\n");
-		fprint_help(stderr);
-		exit(EXIT_FAILURE);
-	}
+	/* check input arguments */
+	tracing = check_args(&Args);
 
 	setup_out_lf();
 	if (NULL == Out_lf) {
-		fprintf(stderr, "ERROR: failed to set up the output file. "
-				"Exiting\n");
-		exit(errno);
+		ERROR("failed to set up the output file");
+		exit(-1);
 	}
 
 	/* check JIT acceleration of BPF */
 	check_bpf_jit_status(stderr);
+
+	INFO("Initializing...");
 
 	if (Args.ff_mode) { /* only in follow-fork mode */
 		/*
@@ -122,9 +149,9 @@ main(const int argc, char *const argv[])
 		 * to wait for all children and grandchildren.
 		 */
 		if (prctl(PR_SET_CHILD_SUBREAPER, 1) == -1) {
-			fprintf(stderr, "ERROR: failed to set the 'child "
-					"subreaper' attribute. Exiting\n");
-			exit(errno);
+			perror("prctl");
+			ERROR("failed to set 'child subreaper' attribute");
+			exit(-1);
 		}
 	}
 
@@ -133,34 +160,22 @@ main(const int argc, char *const argv[])
 		Args.pid = start_command_with_signals(argc - st_optind,
 							argv + st_optind);
 		if (Args.pid == -1) {
-			fprintf(stderr, "ERROR: failed to start the command. "
-					"Exiting.\n");
-			exit(errno);
+			ERROR("failed to start the command");
+			exit(-1);
 		}
-
-		tracing = TRACING_CMD;
-
-	} else if (Args.pid > 0) {
-		/* check if process with given PID exists */
-		if (kill(Args.pid, 0) == -1) {
-			fprintf(stderr,	"ERROR: process with PID '%d'"
-					" does not exist: '%m'.\n", Args.pid);
-			exit(errno);
-		}
-
-		tracing = TRACING_PID;
-	}
-
-	if (tracing == TRACING_ALL) {
-		fprintf(stderr, "Warning: tracing all syscalls "
-				"in the system...\n");
 	}
 
 	/* init array of syscalls */
 	init_sc_tbl();
 
+	INFO("Generating eBPF code...");
+
 	/* generate BPF program */
 	char *bpf_str = generate_ebpf();
+	if (bpf_str == NULL) {
+		ERROR("cannot generate eBPF code");
+		exit(-1);
+	}
 
 	apply_process_attach_code(&bpf_str);
 
@@ -177,19 +192,26 @@ main(const int argc, char *const argv[])
 	/* initialize BPF */
 	struct bpf_ctx *b = calloc(1, sizeof(*b));
 	if (b == NULL) {
-		fprintf(stderr, "ERROR: out of memory. Exiting.\n");
-		return EXIT_FAILURE;
+		ERROR("out of memory");
+		free(bpf_str);
+		exit(-1);
 	}
 
 	/* compile generated eBPF code */
+	INFO("Compiling generated eBPF code...");
 	b->module = bpf_module_create_c_from_string(bpf_str, 0, NULL, 0);
+	free(bpf_str);
+	if (b->module == NULL) {
+		ERROR("cannot compile eBPF code");
+		return EXIT_FAILURE;
+	}
+
 	b->debug  = Args.debug;
 
-	free(bpf_str);
-
+	INFO("Attaching probes...");
 	if (!attach_probes(b)) {
 		/* no probes were attached */
-		fprintf(stderr, "ERROR: no probes were attached. Exiting.\n");
+		ERROR("no probes were attached");
 		if (Args.command) {
 			/* kill the started child */
 			kill(Args.pid, SIGKILL);
@@ -215,8 +237,8 @@ main(const int argc, char *const argv[])
 			kill(Args.pid, SIGCONT);
 		}
 	} else {
-		fprintf(stderr, "ERROR: can't attach callbacks to perf output"
-				" '%s'. Exiting.\n", PERF_OUTPUT_NAME);
+		ERROR("cannot attach callbacks to perf output '%s'",
+			PERF_OUTPUT_NAME);
 		if (Args.command) {
 			/* kill the started child */
 			kill(Args.pid, SIGKILL);
@@ -230,19 +252,18 @@ main(const int argc, char *const argv[])
 	for (unsigned i = 0; i < b->pr_arr_qty; i++)
 		readers[i] = b->pr_arr[i]->pr;
 
+	INFO("Starting tracing...");
 	while (AbortTracing == 0) {
 
 		(void) perf_reader_poll((int)b->pr_arr_qty, readers, -1);
 
 		if (OutputError) {
-			fprintf(stderr, "ERROR: error writing output. "
-					"Exiting...\n");
+			ERROR("error while writing output");
 			break;
 		}
 
 		if (AbortTracing) {
-			fprintf(stderr, "Notice: terminated by signal. "
-					"Exiting...\n");
+			INFO("Notice: terminated by signal. Exiting...\n");
 			break;
 		}
 
@@ -255,11 +276,13 @@ main(const int argc, char *const argv[])
 				/* trace until all children exit */
 				if ((waitpid(-1, NULL, WNOHANG) == -1) &&
 				    (errno == ECHILD)) {
+					INFO("Notice: all children exited");
 					AbortTracing = 1;
 				}
 			} else {
 				/* trace until the child exits */
 				if (waitpid(-1, NULL, WNOHANG) == Args.pid) {
+					INFO("Notice: the child exited");
 					AbortTracing = 1;
 				}
 			}
@@ -267,9 +290,8 @@ main(const int argc, char *const argv[])
 		case TRACING_PID:
 			/* check if the process traced by PID exists */
 			if (kill(Args.pid, 0) == -1) {
-				fprintf(stderr, "ERROR: traced process with PID"
-						" '%d' disappeared : '%m'.\n",
-						Args.pid);
+				ERROR("traced process with PID '%d' "
+					"disappeared", Args.pid);
 				AbortTracing = 1;
 			}
 			break;
