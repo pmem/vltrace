@@ -40,6 +40,22 @@
 #include "ebpf_syscalls.h"
 #include "syscalls_unknown.h"
 
+#ifdef __SYSCALL_X32
+#undef __SYSCALL_X32
+#endif /* __SYSCALL_X32 */
+#define __SYSCALL_X32(nr, sysname, ptregs)	[nr] = { "?", 1 },
+
+#ifdef __SYSCALL_COMMON
+#undef __SYSCALL_COMMON
+#endif /* __SYSCALL_COMMON */
+#define __SYSCALL_COMMON(nr, sysname, ptregs)	[nr] = {\
+	.name = #sysname, \
+	.length = 0, \
+},
+
+#ifdef __SYSCALL_64
+#undef __SYSCALL_64
+#endif /* __SYSCALL_64 */
 #define __SYSCALL_64(nr, sysname, ptregs)	[nr] = {\
 	.name = #sysname, \
 	.length = 0, \
