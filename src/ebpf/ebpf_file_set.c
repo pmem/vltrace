@@ -71,7 +71,6 @@ const char *ebpf_clone_tmpl_file = "trace_clone_tmpl.c";
 const char *ebpf_exit_tmpl_file = "trace_exit_tmpl.c";
 
 const char *ebpf_libc_tmpl_file = "trace_libc_tmpl.c";
-const char *ebpf_kern_tmpl_file = "trace_kern_tmpl.c";
 const char *ebpf_tp_all_file = "trace_tp_all.c";
 
 const char *ebpf_pid_check_own_hook_file =
@@ -104,8 +103,6 @@ ebpf_load_file(const char *const fn)
 		return BINARY_FILE_CONTENT(trace_fileat_tmpl_ml_c);
 	} else if (0 == strcmp(ebpf_fileat_tmpl_sl_file, fn)) {
 		return BINARY_FILE_CONTENT(trace_fileat_tmpl_sl_c);
-	} else if (0 == strcmp(ebpf_kern_tmpl_file, fn)) {
-		return BINARY_FILE_CONTENT(trace_kern_tmpl_c);
 	} else if (0 == strcmp(ebpf_tp_all_file, fn)) {
 		return BINARY_FILE_CONTENT(trace_tp_all_c);
 	} else if (0 == strcmp(ebpf_trace_h_file, fn)) {

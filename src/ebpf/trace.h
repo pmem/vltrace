@@ -44,13 +44,6 @@ enum {
 	E_SC_TP		= 2
 };
 
-/*
- * The longest syscall's name is equal to 26 characters:
- *    'SyS_sched_get_priority_max'.
- * Let's add a space for '\0' and few extra bytes.
- */
-enum { E_SC_NAME_SIZE = 32 };
-
 struct data_entry_t {
 	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
 
@@ -69,7 +62,7 @@ struct data_entry_t {
 	 *   serial number 'packet_type'.
 	 *
 	 * Content of additional packets is defined by syscall number in
-	 *    first packet. There are no additional packets for "sc_id == -2"
+	 *    first packet.
 	 */
 	s64 packet_type;
 
@@ -78,23 +71,14 @@ struct data_entry_t {
 	 *    syscall. We need two time stamps here, because syscalls can nest
 	 *    from one pid_tid by calling syscall from signal handler, before
 	 *    syscall called from main context has returned.
-	 *
-	 * XXX In fact sc_id is not needed here, but its presence simplifies
-	 *    a lot of processing, so let's keep it here.
 	 */
 	struct {
 		u64 pid_tid;
 
-		/* Timestamps */
+		/* timestamp */
 		u64 start_ts_nsec;
 
-		/*
-		 * the value equal to -1 means "header"
-		 *
-		 * the value equal to -2 means that syscall's num is
-		 *    unknown for glibc and the field sc_name should be
-		 *    used to figuring out syscall.
-		 */
+		/* value -1 means "header" */
 		s64 sc_id;
 	};
 
@@ -108,16 +92,12 @@ struct data_entry_t {
 			s64 arg_5;
 			s64 arg_6;
 
-			union {
-				/* should be last in this structure */
-				char sc_name[E_SC_NAME_SIZE];
-				/*
-				 * Body of string argument. The content and
-				 *    meaning of argument is defined by
-				 *    syscall's number in the sc_id field.
-				 */
-				char aux_str[1];	/* NAME_MAX */
-			};
+			/*
+			 * Body of string argument. The content and
+			 *    meaning of argument is defined by
+			 *    syscall's number in the sc_id field.
+			 */
+			char aux_str[1];	/* NAME_MAX */
 		};
 
 		/* Body of header */
@@ -153,7 +133,7 @@ struct data_exit_t {
 	 *   serial number 'packet_type'.
 	 *
 	 * Content of additional packets is defined by syscall number in
-	 *    first packet. There are no additional packets for "sc_id == -2"
+	 *    first packet.
 	 */
 	s64 packet_type;
 
@@ -162,30 +142,18 @@ struct data_exit_t {
 	 *    syscall. We need two time stamps here, because syscalls can nest
 	 *    from one pid_tid by calling syscall from signal handler, before
 	 *    syscall called from main context has returned.
-	 *
-	 * XXX In fact sc_id is not needed here, but its presence simplifies
-	 *    a lot of processing, so let's keep it here.
 	 */
 	struct {
 		u64 pid_tid;
 
-		/* Timestamps */
+		/* timestamp */
 		u64 finish_ts_nsec;
 
-		/*
-		 * the value equal to -1 means "header"
-		 *
-		 * the value equal to -2 means that syscall's num is
-		 *    unknown for glibc and the field sc_name should be
-		 *    used to figuring out syscall.
-		 */
+		/* value -1 means "header" */
 		s64 sc_id;
 	};
 
 	s64 ret;
-
-	/* should be last in this structure */
-	char sc_name[E_SC_NAME_SIZE];
 };
 
 struct tp_s {

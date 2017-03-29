@@ -38,7 +38,7 @@
 #define SYSCALLS_UNKNOWN_H
 
 enum {
-	__NR_FIRST_UNKNOWN = 900,
+	__NR_FIRST_UNKNOWN = 700,
 
 #ifndef __NR_arch_prctl
 	__NR_arch_prctl,
@@ -1172,6 +1172,9 @@ enum {
 	DUP__NR_lstat,
 	DUP__NR_fstat,
 	DUP__NR_sendfile,
+
+	/* it has to be the last one in this enum */
+	__NR_LAST_UNKNOWN,
 };
 
 #endif /* SYSCALLS_UNKNOWN_H */

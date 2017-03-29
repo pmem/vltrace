@@ -120,10 +120,7 @@ print_event_strace(void *cb_cookie, void *data, int size)
 				(double)((double)delta_nsec / 1000000000.0));
 	}
 
-	if (0 <= event->sc_id)
-		fprintf(Out_lf, "%-7s ", sc_num2str(event->sc_id));
-	else
-		fprintf(Out_lf, "%-7s ", event->sc_name + 4);
+	fprintf(Out_lf, "%-7s ", sc_num2str(event->sc_id));
 
 	if (0 == event->packet_type)
 		/*
@@ -341,19 +338,14 @@ out:
  * fwrite_sc_name -- write syscall's name to stream
  */
 static void
-fwrite_sc_name(FILE *f, const s64 sc_id, char const *sc_name, int size)
+fwrite_sc_name(FILE *f, const s64 sc_id)
 {
-	/* XXX Temporarily */
-	(void) size;
 
-	if (sc_id >= 0 && sc_id < SC_TBL_SIZE &&
-	    Syscall_array[sc_id].handler_name != NULL) {
-		fwrite(Syscall_array[sc_id].handler_name + LEN_SYS,
-			Syscall_array[sc_id].name_length - LEN_SYS, 1, f);
-	} else {
-		/* XXX Check presence of string body by checking size arg */
-		fwrite(sc_name + LEN_SYS, strlen(sc_name + LEN_SYS), 1, f);
-	}
+	assert(sc_id >= 0 && sc_id < SC_TBL_SIZE
+		&& Syscall_array[sc_id].handler_name != NULL);
+
+	fwrite(Syscall_array[sc_id].handler_name + LEN_SYS,
+		Syscall_array[sc_id].name_length - LEN_SYS, 1, f);
 }
 
 /*
@@ -847,7 +839,7 @@ print_event_hex_entry(FILE *f, void *data, int size)
 	fwrite(str_line, len_str_line, 1, f);
 	fwrite_out_lf_fld_sep(f);
 
-	fwrite_sc_name(f, event->sc_id, event->sc_name, size);
+	fwrite_sc_name(f, event->sc_id);
 	fwrite_out_lf_fld_sep(f);
 
 	/* "ARG1" */
@@ -923,7 +915,7 @@ print_event_hex_exit(FILE *f, void *data, int size)
 	fprint_i64(f, (uint64_t)res);
 	fwrite_out_lf_fld_sep(f);
 
-	fwrite_sc_name(f, event->sc_id, event->sc_name, size);
+	fwrite_sc_name(f, event->sc_id);
 
 	fwrite("\n", 1, 1, f);
 }

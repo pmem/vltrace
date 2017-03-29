@@ -95,9 +95,9 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	u.ev.finish_ts_nsec = cur_nsec;
 	u.ev.ret = PT_REGS_RC(ctx);
 	/* XXX enum ??? */
-	// const size_t ev_size = offsetof(struct data_entry_t, sc_name);
+	// const size_t ev_size = offsetof(struct data_entry_t, aux_str);
 	// events.perf_submit(ctx, &u.ev, ev_size);
-	events.perf_submit(ctx, &u.ev, offsetof(struct data_entry_t, sc_name));
+	events.perf_submit(ctx, &u.ev, offsetof(struct data_entry_t, aux_str));
 
 	u.ev.packet_type = -1; /* first additional packet */
 	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp->arg_2);

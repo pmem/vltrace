@@ -44,15 +44,19 @@
 #include "utils.h"
 #include "ebpf_syscalls.h"
 #include "generate_ebpf.h"
+#include "syscalls_unknown.h"
 
 /*
  * get_sc_num -- this function returns syscall number by name
  *               according to the table of syscalls
  */
-static int
+static unsigned int
 get_sc_num(const char *sc_name)
 {
-	for (int i = 0; i < SC_TBL_SIZE; i++) {
+	static int last_free = __NR_LAST_UNKNOWN;
+	unsigned int i;
+
+	for (i = 0; i < __NR_LAST_UNKNOWN; i++) {
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
@@ -65,7 +69,23 @@ get_sc_num(const char *sc_name)
 		}
 	}
 
-	return -1;
+	/* add unknown syscall to the array */
+	i = last_free++;
+
+	Syscall_array[i].num = i;
+	sprintf(Syscall_array[i].num_str, "%u", Syscall_array[i].num);
+
+	/* will be freed in free_sc_tbl() */
+	Syscall_array[i].handler_name = strdup(sc_name);
+
+	Syscall_array[i].name_length = strlen(Syscall_array[i].handler_name);
+	Syscall_array[i].args_qty = 6;
+	Syscall_array[i].masks = 0;
+	Syscall_array[i].attached = 1;
+
+	INFO("Notice: syscall was added to the table: %s", sc_name);
+
+	return i;
 }
 
 static char *
@@ -233,7 +253,7 @@ generate_ebpf_kp_kern_all(FILE *ts)
 	}
 
 	while ((read = getline(&line, &len, in)) != -1) {
-		int sc_num;
+		unsigned sc_num;
 		size_t fw_res;
 
 		if (!is_a_sc(line, read - 1))
@@ -245,19 +265,11 @@ generate_ebpf_kp_kern_all(FILE *ts)
 		if (!strcasecmp("SyS_sigsuspend", line)) {
 			if (SyS_sigsuspend)
 				continue;
-
-			SyS_sigsuspend ++;
+			SyS_sigsuspend = 1;
 		}
 
 		sc_num = get_sc_num(line);
-		if (sc_num >= 0) {
-			text = get_template((unsigned)sc_num);
-		} else {
-			text = load_file_no_cr(ebpf_kern_tmpl_file);
-			if (Args.debug)
-				INFO("Notice: syscall %s is not "
-					"defined in the table", line);
-		}
+		text = get_template(sc_num);
 
 		assert(text != NULL);
 		str_replace_all(&text, "SYSCALL_NAME", line);

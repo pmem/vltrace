@@ -50,6 +50,7 @@
 #include "utils.h"
 #include "strace.ebpf.h"
 #include "bpf_ctx.h"
+#include "ebpf_syscalls.h"
 
 /*
  * pr_arr_check_quota -- This function checks possibility of intercepting one
@@ -178,6 +179,8 @@ detach_all(struct bpf_ctx *b)
 	INFO("Finished tracing.\n"
 		"Detaching probes... (please wait, it can take "
 		"few tens of seconds) ...");
+
+	free_sc_tbl();
 
 	for (unsigned i = 0; i < b->pr_arr_qty; i++) {
 		perf_reader_free(b->pr_arr[i]->pr);

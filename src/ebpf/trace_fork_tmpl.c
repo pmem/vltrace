@@ -60,8 +60,6 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.arg_5 = PT_REGS_PARM5(ctx);
 	ev.arg_6 = PT_REGS_PARM6(ctx);
 
-	memset(ev.sc_name, 0, sizeof(ev.sc_name));
-
 	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, arg_1));
 
 	return 0;

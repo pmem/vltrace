@@ -504,15 +504,34 @@ void
 init_sc_tbl(void)
 {
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		Syscall_names[i].length = strlen(Syscall_names[i].name);
+		/* init Syscall_names[] */
+		if (Syscall_names[i].name)
+			Syscall_names[i].length = strlen(Syscall_names[i].name);
 
+		/* init Syscall_array[] */
+		Syscall_array[i].attached = 0;
 		if (NULL != Syscall_array[i].handler_name) {
 			Syscall_array[i].name_length =
 				strlen(Syscall_array[i].handler_name);
-			Syscall_array[i].attached = 0;
 			Syscall_array[i].num = i;
 			sprintf(Syscall_array[i].num_str, "%u",
 				Syscall_array[i].num);
+		}
+	}
+}
+
+/*
+ * free_sc_tbl -- free names from Syscall_array[] allocated by get_sc_num()
+ */
+void
+free_sc_tbl(void)
+{
+	for (unsigned i = __NR_LAST_UNKNOWN; i < SC_TBL_SIZE; i++) {
+		if (!Syscall_array[i].attached)
+			continue;
+		if (Syscall_array[i].handler_name) {
+			free(Syscall_array[i].handler_name);
+			Syscall_array[i].handler_name = NULL;
 		}
 	}
 }

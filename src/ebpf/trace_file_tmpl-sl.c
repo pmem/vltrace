@@ -91,7 +91,7 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.finish_ts_nsec = cur_nsec;
 	ev.ret = PT_REGS_RC(ctx);
 
-	events.perf_submit(ctx, &ev, offsetof(struct data_exit_t, sc_name));
+	events.perf_submit(ctx, &ev, sizeof(struct data_exit_t));
 
 	return 0;
 }

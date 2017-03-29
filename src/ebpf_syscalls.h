@@ -127,7 +127,7 @@ struct syscall_descriptor {
 	/* Syscall number as string */
 	char num_str[SC_NUM_LEN];
 	/* The name of in-kernel syscall's handler */
-	const char *handler_name;
+	char *handler_name;
 	/* length of the name of in-kernel syscall's handler */
 	size_t name_length;
 	/* Number of args for this syscall */
@@ -149,6 +149,7 @@ extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
 extern struct syscall_name Syscall_names[SC_TBL_SIZE];
 
 void init_sc_tbl(void);
+void free_sc_tbl(void);
 int fprint_sc_tbl(FILE *f);
 
 #endif /* EBPF_SYSCALLS_H */

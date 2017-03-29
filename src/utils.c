@@ -262,14 +262,13 @@ check_bpf_jit_status(FILE *file)
 bool
 is_a_sc(const char *const line, const ssize_t size)
 {
-	static const char template[] = "sys_";
+	static const char prefix[] = "sys_";
+	static const size_t prefix_len = 4; /* = strlen(prefix) */
 
-	const size_t template_len = strlen(template);
-
-	if (size <= (ssize_t)template_len)
+	if (size <= (ssize_t)prefix_len)
 		return false;
 
-	if (strncasecmp(line, template, template_len))
+	if (strncasecmp(line, prefix, prefix_len))
 		return false;
 
 	if (line[size - 1] == ']')
