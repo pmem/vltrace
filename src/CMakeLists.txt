@@ -32,7 +32,7 @@
 cmake_minimum_required(VERSION 2.8.7)
 project(strace.ebpf.exe C)
 
-execute_process(COMMAND ./copy_syscalls_64.sh
+execute_process(COMMAND ../utils/copy_syscalls_64.sh
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		RESULT_VARIABLE KERNEL_HEADER)
 
@@ -40,7 +40,7 @@ if (NOT ${KERNEL_HEADER} EQUAL 0)
 	message( FATAL_ERROR "ERROR: missing kernel header. Aborting..." )
 endif ()
 
-add_custom_target(syscalls_64 ALL ./copy_syscalls_64.sh make
+add_custom_target(syscalls_64 ALL ../utils/copy_syscalls_64.sh make
                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 # .txt sources
