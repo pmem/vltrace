@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -70,10 +70,11 @@ open_close()
 static void
 loop_tx(char *name, tx_t tx_f, uint64_t qty, FILE *f)
 {
-	uint64_t i;
-
-	uint64_t tu_start, tu_end, delta;
+	uint64_t i, tu_start, tu_end, delta;
 	struct timeval tv_start, tv_end;
+
+	if (qty == 0)
+		return;
 
 	gettimeofday(&tv_start, NULL);
 
@@ -103,11 +104,16 @@ main(int argc, char *argv[])
 	uint64_t iters_qty;
 
 	if (argc != 2) {
-		printf("usage: %s iters qty\n", argv[0]);
+		printf("Usage: %s <number-of-iterations>\n", argv[0]);
+		printf("\t <number-of-iterations> must be greater than 0\n");
 		return 1;
 	}
 
 	iters_qty = atol(argv[1]);
+	if (iters_qty == 0) {
+		printf("Error: number of iterations must be greater than 0\n");
+		return 1;
+	}
 
 	/* WARM-UP */
 	loop_tx("open_read_write_close",
