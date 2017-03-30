@@ -1,6 +1,8 @@
 strace.ebpf: tool tracing syscalls using eBPF
 =================================
 
+[![Build Status](https://travis-ci.org/ldorau/strace.ebpf.svg)](https://travis-ci.org/ldorau/strace.ebpf)
+
 This is the top-level README.md of strace.ebpf.
 
 strace.ebpf is a tool tracing syscalls in a fast way using eBPF linux kernel feature.
@@ -20,13 +22,13 @@ is /usr/lib/x86_64-linux-gnu/pkgconfig/libbcc.pc.
 
 ### SYSTEM REQUIREMENTS ###
 
- - kernel v4.4 or later (for Perf Event Circular Buffer)
+ - kernel v4.7 or later [(to attach eBPF to tracepoints)](https://github.com/iovisor/bcc/blob/master/docs/kernel-versions.md)
  - kernel headers installed:
     - 'kernel-devel' package on RHEL, Fedora and CentOS or
     - 'linux-headers' package on Debian and Ubuntu
  - libbcc v0.2.0-313-g6c99958 or later
  - CAP_SYS_ADMIN capability (required by the bpf() syscall)
- - mounted tracefs
+ - mounted debugfs and tracefs
 
 ### CONTACTS ###
 
