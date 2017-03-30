@@ -267,13 +267,11 @@ main(const int argc, char *const argv[])
 
 		if (OutputError) {
 			ERROR("error while writing to output");
-			stop_tracing = 1;
 			break;
 		}
 
 		if (AbortTracing) {
 			INFO("Notice: terminated by signal. Exiting...");
-			stop_tracing = 1;
 			break;
 		}
 
