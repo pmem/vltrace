@@ -239,7 +239,7 @@ check_bpf_jit_status(FILE *file)
 	switch (status) {
 	case -1:
 		fprintf(file, "ERROR: cannot read status of "
-				"eBPF JIT compiler: '%m'\n", __func__);
+				"eBPF JIT compiler: '%m'\n");
 		return;
 
 	case  0:
