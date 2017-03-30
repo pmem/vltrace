@@ -99,19 +99,29 @@ out:
 void
 save_trace_h(void)
 {
-	int fd;
+	int res, fd;
 
-	long res = access(ebpf_trace_h_file, R_OK);
-
-	if (res == 0)
+	res = access(ebpf_trace_h_file, R_OK);
+	if (res == 0) {
+		/* file exists, exiting */
 		return;
+	}
 
 	fd = open(ebpf_trace_h_file, O_WRONLY | O_CREAT, 0666);
-
-	if (fd == -1)
+	if (fd == -1) {
+		perror("open");
+		WARNING("cannot create the file: %s", ebpf_trace_h_file);
 		return;
+	}
 
 	res = write(fd, _binary_trace_h_start, BINARY_FILE_SIZE(trace_h));
+	if (res != (int)BINARY_FILE_SIZE(trace_h)) {
+		perror("write");
+		WARNING("error while saving the file: %s", ebpf_trace_h_file);
+		close(fd);
+		unlink(ebpf_trace_h_file);
+		return;
+	}
 
 	close(fd);
 }
