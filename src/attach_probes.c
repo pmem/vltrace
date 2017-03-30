@@ -315,7 +315,7 @@ static const char tp_all_exit_fn[]  = "tracepoint__sys_exit";
 /*
  * attach_tp_exit -- intercept raw syscall sys_exit using TracePoints.
  *
- * Should be faster and better but requires kernel >= 4.6.
+ * Should be faster and better but requires kernel >= v4.7
  *
  */
 static bool
@@ -339,7 +339,7 @@ attach_tp_exit(struct bpf_ctx *b)
 /*
  * attach_tp_all -- intercept all syscalls using TracePoints.
  *
- * Should be faster and better but requires kernel >= 4.6.
+ * Should be faster and better but requires kernel >= v4.7
  *
  */
 static bool
@@ -376,7 +376,7 @@ attach_tp_all(struct bpf_ctx *b)
 /*
  * attach_common -- intercept all syscalls using kprobes and tracepoints.
  *
- * Requires kernel >= 4.6.
+ * Requires kernel >= v4.7
  *
  */
 static bool

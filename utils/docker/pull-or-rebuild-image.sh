@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # Copyright 2016-2017, Intel Corporation
 #
@@ -47,6 +47,9 @@
 # the Docker Hub.
 #
 
+export DOCKER_USER=ldorau
+export DOCKER_PROJECT=strace.ebpf
+
 if [[ -z "$OS" || -z "$OS_VER" ]]; then
 	echo "ERROR: The variables OS and OS_VER have to be set properly " \
              "(eg. OS=ubuntu, OS_VER=16.04)."
@@ -55,7 +58,7 @@ fi
 
 if [[ -z "$HOST_WORKDIR" ]]; then
 	echo "ERROR: The variable HOST_WORKDIR has to contain a path to " \
-		"the root of the nvml project on the host machine"
+	"the root of this project on the host machine"
 	exit 1
 fi
 
@@ -84,31 +87,30 @@ for file in $files; do
 	if [[ $file =~ ^($base_dir)\/Dockerfile\.($OS)-($OS_VER)$ ]] \
 		|| [[ $file =~ ^($base_dir)\/.*\.sh$ ]]
 	then
-		# Rebuild Docker image for the current OS version
-		echo "Rebuilding the Docker image for the Dockerfile.$OS-$OS_VER"
-		pushd $images_dir_name
-		./build-image.sh $OS:$OS_VER
-		popd
-
-		# Check if the image has to be pushed to the Docker Hub
-		# (i.e. the build is triggered by commits to the pmem/nvml
-		# repository's master branch, and the Travis build is not
-		# of the "pull_request" type). In that case, create the empty
-		# file.
-		if [[ $TRAVIS_REPO_SLUG == "pmem/nvml" \
-			&& $TRAVIS_BRANCH == "master" \
-			&& $TRAVIS_EVENT_TYPE != "pull_request" ]]
-		then
-			echo "The image will be pushed to the Docker Hub"
-			touch push_image_to_repo_flag
-		else
-			echo "Skip pushing the image to the Docker Hub"
-		fi
-		exit 0
+		DOCKER_REBUILD=1
 	fi
 done
 
-# Getting here means rebuilding the Docker image is not required.
-# Pull the image from the Docker Hub.
-sudo docker pull nvml/$OS:$OS_VER
+if [ "$DOCKER_REBUILD" == "1" ]; then
+	# Rebuild Docker image for the current OS version
+	echo "Rebuilding the Docker image for the Dockerfile.$OS-$OS_VER"
+	pushd $images_dir_name
+	./build-image.sh $OS:$OS_VER
+	popd
 
+	# Check if the image has to be pushed to the Docker Hub
+	# (i.e. the build is triggered by commits to the ${DOCKER_USER}/${DOCKER_PROJECT}
+	# repository's master branch, and the Travis build is not
+	# of the "pull_request" type). In that case, create the empty file.
+	if [[ $TRAVIS_BRANCH == "master" && $TRAVIS_EVENT_TYPE != "pull_request"
+		|| $DOCKER_PUSH == "1" ]]
+	then
+		echo "The image will be pushed to the Docker Hub"
+		touch push_image_to_repo_flag
+	else
+		echo "Skip pushing the image to the Docker Hub"
+	fi
+else
+	# Pull the image from the Docker Hub.
+	sudo docker pull ${DOCKER_USER}/${DOCKER_PROJECT}_$OS:$OS_VER
+fi

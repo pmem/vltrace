@@ -30,40 +30,43 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Dockerfile - a 'recipe' for Docker to build an image of ubuntu-based
+# Dockerfile - a 'recipe' for Docker to build an image of fedora-based
 #              environment for building strace.ebpf
 #
 
 # Pull base image
-FROM ubuntu:16.04
+FROM fedora:25
 MAINTAINER lukasz.dorau@intel.com
 
-# Update the Apt cache and install basic tools
-RUN apt-get update && apt-get install -y apt-transport-https apt-utils
-RUN echo "deb [trusted=yes] https://repo.iovisor.org/apt/xenial xenial-nightly main" \
-	| tee /etc/apt/sources.list.d/iovisor.list
-RUN apt-get update && apt-get install -y \
+# Install basic tools
+RUN echo -e '[iovisor]\nbaseurl=https://repo.iovisor.org/yum/nightly/f25/$basearch\nenabled=1\ngpgcheck=0' \
+	| tee /etc/yum.repos.d/iovisor.repo
+RUN dnf install -y \
 	clang \
 	cmake \
+	gcc \
 	git \
+	make \
 	pandoc \
-	pkg-config \
-	debhelper \
-	devscripts \
+	rpm-build \
+	passwd \
 	sudo \
+	which \
 	whois \
 	bcc-tools
 
 # Add user
 ENV USER user
 ENV USERPASS pass
-RUN useradd -m $USER -g sudo -p `mkpasswd $USERPASS`
-RUN echo "$USER ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers
+RUN useradd -m $USER
+RUN echo $USERPASS | passwd $USER --stdin
+RUN gpasswd wheel -a $USER
+RUN echo "$USER	ALL=(ALL)	NOPASSWD: ALL" >> /etc/sudoers
 
 USER $USER
 
 # Set required environment variables
-ENV OS ubuntu
-ENV OS_VER 16.04
-ENV PACKAGE_MANAGER deb
+ENV OS fedora
+ENV OS_VER 25
+ENV PACKAGE_MANAGER rpm
 ENV NOTTY 1

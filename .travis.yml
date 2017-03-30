@@ -1,0 +1,23 @@
+language: c
+
+env:
+  matrix:
+    - OS=fedora OS_VER=25
+    - OS=ubuntu OS_VER=16.04
+
+before_install:
+  - uname -a
+  - sudo apt-get install -y linux-headers-$(uname -r)
+  - sudo find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated'
+  - export HOST_WORKDIR=`pwd`
+  - cd utils/docker
+  - ./prepare-environment.sh
+  - ./pull-or-rebuild-image.sh
+  - if [[ -f push_image_to_repo_flag ]]; then PUSH_THE_IMAGE=1; fi
+  - rm -f push_image_to_repo_flag
+
+script:
+  - ./build.sh
+
+after_success:
+  - if [[ $PUSH_THE_IMAGE -eq 1 ]]; then images/push-image.sh $OS:$OS_VER; fi

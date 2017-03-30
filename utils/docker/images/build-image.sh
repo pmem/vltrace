@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # Copyright 2016-2017, Intel Corporation
 #
@@ -32,9 +32,9 @@
 
 #
 # build-image.sh <OS:VER> - prepares a Docker image with <OS>-based
-#                           environment for building NVML project, according
-#                           to the Dockerfile.<OS:VER> file located
-#                           in the same directory.
+#                           environment for building the project,
+#                           according to the Dockerfile.<OS:VER> file
+#                           located in the same directory.
 #
 # The script can be run locally.
 #
@@ -62,7 +62,7 @@ if [[ ! -f "Dockerfile.$os_ver" ]]; then
 fi
 
 # Build a Docker image tagged with nvml/OS:VER
-tag=nvml/$1
+tag=${DOCKER_USER}/${DOCKER_PROJECT}_$1
 sudo docker build -t $tag \
 	--build-arg http_proxy=$http_proxy \
 	--build-arg https_proxy=$https_proxy \

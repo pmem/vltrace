@@ -31,22 +31,66 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# run-build.sh - is called inside a Docker container; prepares the environment
-#                and starts a build of NVML project.
+# run-build.sh - is called inside a Docker container;
+#		starts a build of strace.ebpf
 #
 
-# Get and prepare NVML source
-./prepare-for-build.sh
+SKIP_MESSAGE="Notice: skipping tests (too old kernel: required >= 4.7, actual = $(uname -r))"
+REQ_KV=470
 
-# Build librpmem even if libfabric is not compiled with ibverbs
-export RPMEM_DISABLE_LIBIBVERBS=y
+#
+# get_kernel_version -- get kernel version, e.g.: v3.13 => 313
+#
+function get_kernel_version()
+{
+	local VER=$(uname -r)
+	local N1=$(echo $VER | cut -d'.' -f1)
+	local N2=$(echo $VER | cut -d'.' -f2)
+	echo $((100 * N1 + N2))
+}
 
 # Build all and run tests
 cd $WORKDIR
-make check-license \
-	&& make cstyle \
-	&& make -j2 USE_LIBUNWIND=1 BUILD_STATIC=n \
-	&& make -j2 test USE_LIBUNWIND=1 BUILD_STATIC=n \
-	&& make -j2 pcheck BUILD_STATIC=n \
-	&& make DESTDIR=/tmp source
+if [ -n "$COMPILER" ]; then
+	export CC=$COMPILER
+fi
 
+mkdir build
+cd build
+
+cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf \
+		-DCMAKE_BUILD_TYPE=Debug && echo
+
+make && echo
+
+if [ $(get_kernel_version) -ge $REQ_KV ]; then
+	sudo mount -t debugfs debugfs /sys/kernel/debug
+	# ctest --output-on-failure
+	ctest -V && echo
+else
+	echo $SKIP_MESSAGE && echo
+fi
+
+echo make install SKIPPED && echo
+
+cd ..
+rm -rf build
+mkdir build
+cd build
+
+cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf \
+		-DCMAKE_BUILD_TYPE=Release && echo
+
+make && echo
+
+if [ $(get_kernel_version) -ge $REQ_KV ]; then
+	# ctest --output-on-failure
+	ctest -V && echo
+else
+	echo $SKIP_MESSAGE && echo
+fi
+
+echo make install SKIPPED && echo
+
+cd ..
+rm -rf build

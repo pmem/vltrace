@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # Copyright 2016-2017, Intel Corporation
 #
@@ -32,11 +32,10 @@
 
 #
 # prepare-environment.sh - installs Docker on the host environment and
-#                          pulls a Docker image for building NVML project.
+#                          pulls a Docker image for building strace.ebpf.
 #
 
 # Install the newest Docker engine
 sudo sh -c "echo deb https://apt.dockerproject.org/repo ubuntu-precise main >> /etc/apt/sources.list.d/docker.list"
 sudo apt-get update
 sudo apt-get install --force-yes docker-engine apt-transport-https ca-certificates
-

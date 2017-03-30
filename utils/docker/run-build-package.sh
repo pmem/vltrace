@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # Copyright 2016-2017, Intel Corporation
 #
@@ -31,18 +31,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# run-build-package.sh - is called inside a Docker container; prepares
-#                        the environment and starts a build of NVML project.
+# run-build-package.sh - is called inside a Docker container;
+#                		 starts a build of strace.ebpf
 #
-
-# Get and prepare nvml source
-./prepare-for-build.sh
-
-# Build librpmem even if libfabric is not compiled with ibverbs
-export RPMEM_DISABLE_LIBIBVERBS=y
 
 # Build all and run tests
 cd $WORKDIR
-export PCHECK_OPTS=-j2
-make -j2 $PACKAGE_MANAGER
-
+./utils/build-${PACKAGE_MANAGER}.sh

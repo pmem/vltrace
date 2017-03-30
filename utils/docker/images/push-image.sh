@@ -31,7 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# push-image.sh <OS:VER> - pushes the Docker image tagged with $OS:$OS_VER
+# push-image.sh <OS:VER> - pushes the Docker image tagged with ${DOCKER_PROJECT}_$OS:$OS_VER
 #                          to the Docker Hub
 #
 # The script utilizes $DOCKER_PASSWORD variable to log in to the Docker Hub.
@@ -39,11 +39,14 @@
 # If it is not set, the user will be asked to provide the password.
 #
 
+export DOCKER_USER=ldorau
+export DOCKER_PROJECT=strace.ebpf
+
 function usage {
 	echo "Usage:"
 	echo "    push-image.sh <OS:VER>"
 	echo "where <OS:VER>, for example, can be 'ubuntu:16.04', provided " \
-		"a Docker image tagged with nvml/ubuntu:16.04 exists locally."
+	"a Docker image tagged with ${DOCKER_USER}/${DOCKER_PROJECT}_ubuntu:16.04 exists locally."
 }
 
 # Check if the first argument is nonempty
@@ -52,8 +55,8 @@ if [[ -z "$1" ]]; then
 	exit 1
 fi
 
-# Check if the image tagged with nvml/OS:VER exists locally
-if [[ ! $(sudo docker images -a | awk -v pattern="^nvml/$1\$" \
+# Check if the image tagged with ${DOCKER_USER}/${DOCKER_PROJECT}_OS:VER exists locally
+if [[ ! $(sudo docker images -a | awk -v pattern="^${DOCKER_USER}/${DOCKER_PROJECT}_$1\$" \
 	'$1":"$2 ~ pattern') ]]
 then
 	echo "ERROR: wrong argument."
@@ -62,8 +65,7 @@ then
 fi
 
 # Log in to the Docker Hub
-sudo docker login -u="nvml" -p="$DOCKER_PASSWORD"
+sudo docker login -u="${DOCKER_USER}" -p="$DOCKER_PASSWORD"
 
 # Push the image to the repository
-sudo docker push nvml/$1
-
+sudo docker push ${DOCKER_USER}/${DOCKER_PROJECT}_$1

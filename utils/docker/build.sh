@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # Copyright 2016-2017, Intel Corporation
 #
@@ -32,8 +32,11 @@
 
 #
 # build.sh - runs a Docker container from a Docker image with environment
-#            prepared for building NVML project.
+#            prepared for building this project.
 #
+
+export DOCKER_USER=ldorau
+export DOCKER_PROJECT=strace.ebpf
 
 if [[ -z "$OS" || -z "$OS_VER" ]]; then
 	echo "ERROR: The variables OS and OS_VER have to be set properly " \
@@ -43,21 +46,19 @@ fi
 
 if [[ -z "$HOST_WORKDIR" ]]; then
 	echo "ERROR: The variable HOST_WORKDIR has to contain a path to " \
-		"the root of the nvml project on the host machine"
+		"the root of this project on the host machine"
 	exit 1
 fi
 
-imageName=nvml/${OS}:${OS_VER}
-containerName=nvml-${OS}-${OS_VER}
+imageName=${DOCKER_USER}/${DOCKER_PROJECT}_${OS}:${OS_VER}
+containerName=${DOCKER_USER}-${DOCKER_PROJECT}-${OS}-${OS_VER}
 
-if [[ $CC == "clang" ]]; then export CXX="clang++"; else export CXX="g++"; fi
 if [[ $MAKE_PKG -eq 0 ]] ; then command="./run-build.sh"; fi
 if [[ $MAKE_PKG -eq 1 ]] ; then command="./run-build-package.sh"; fi
 
 if [ -n "$DNS_SERVER" ]; then DNS_SETTING=" --dns=$DNS_SERVER "; fi
 
-WORKDIR=/nvml
-SCRIPTSDIR=$WORKDIR/utils/docker
+WORKDIR=/${DOCKER_PROJECT}
 
 # Run a container with
 #  - environment variables set (--env)
@@ -67,21 +68,16 @@ sudo docker run --rm --privileged=true --name=$containerName -ti \
 	$DNS_SETTING \
 	--env http_proxy=$http_proxy \
 	--env https_proxy=$https_proxy \
-	--env CC=$CC \
-	--env CXX=$CXX \
-	--env EXTRA_CFLAGS=$EXTRA_CFLAGS \
-	--env REMOTE_TESTS=$REMOTE_TESTS \
+	--env COMPILER=$COMPILER \
 	--env WORKDIR=$WORKDIR \
-	--env EXPERIMENTAL=$EXPERIMENTAL \
-	--env SCRIPTSDIR=$SCRIPTSDIR \
-	--env CLANG_FORMAT=clang-format-3.8 \
 	--env TRAVIS=$TRAVIS \
 	--env TRAVIS_COMMIT_RANGE=$TRAVIS_COMMIT_RANGE \
 	--env TRAVIS_COMMIT=$TRAVIS_COMMIT \
 	--env TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG \
 	--env TRAVIS_BRANCH=$TRAVIS_BRANCH \
 	--env TRAVIS_EVENT_TYPE=$TRAVIS_EVENT_TYPE \
+	-v /usr/src:/usr/src \
+	-v /lib/modules:/lib/modules \
 	-v $HOST_WORKDIR:$WORKDIR \
-	-w $SCRIPTSDIR \
+	-w $WORKDIR/utils/docker \
 	$imageName $command
-
