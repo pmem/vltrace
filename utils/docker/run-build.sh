@@ -48,58 +48,49 @@ ACT_KV=$(format_kernel_version $V_ACT)
 
 SKIP_MESSAGE="Notice: skipping tests (too old kernel: required >= $V_REQ, actual = $V_ACT)"
 
+echo
+echo
+
 # Build all and run tests
 cd $WORKDIR
 if [ -n "$COMPILER" ]; then
 	export CC=$COMPILER
 fi
 
-mkdir build
-cd build
+for release in Debug Release; do
 
-cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf \
-		-DCMAKE_BUILD_TYPE=Debug && echo
+	mkdir build
+	cd build
 
-make && echo
+	echo "$ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release"
+	cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release && echo
 
-if [ $ACT_KV -ge $REQ_KV ]; then
-	set +e
-	mount | grep -e "debugfs" >/dev/null
-	if [ $? -ne 0 ]; then
-		sudo mount -t debugfs debugfs /sys/kernel/debug
-		if [ $? -eq 0 ]; then
-			echo "Mounted: $(mount | grep -e 'debugfs')"
-		else
-			echo "Error: required mounted debugfs" >&2 && exit 1
+	echo "$ make"
+	make && echo
+
+	if [ $ACT_KV -ge $REQ_KV ]; then
+		# check if debugfs is mounted
+		set +e
+		mount | grep -e "debugfs" >/dev/null
+		if [ $? -ne 0 ]; then
+			sudo mount -t debugfs debugfs /sys/kernel/debug
+			if [ $? -eq 0 ]; then
+				echo "Mounted: $(mount | grep -e 'debugfs')"
+			else
+				echo "Error: required mounted debugfs" >&2 && exit 1
+			fi
 		fi
+		set -e
+
+		echo "$ ctest --output-on-failure"
+		ctest --output-on-failure && echo
+	else
+		echo $SKIP_MESSAGE && echo
 	fi
-	set -e
-	# ctest --output-on-failure
-	ctest -V && echo
-else
-	echo $SKIP_MESSAGE && echo
-fi
 
-make install && echo
+	echo "$ make install"
+	make install && echo
 
-cd ..
-rm -rf build
-mkdir build
-cd build
-
-cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf \
-		-DCMAKE_BUILD_TYPE=Release && echo
-
-make && echo
-
-if [ $ACT_KV -ge $REQ_KV ]; then
-	# ctest --output-on-failure
-	ctest -V && echo
-else
-	echo $SKIP_MESSAGE && echo
-fi
-
-make install && echo
-
-cd ..
-rm -rf build
+	cd ..
+	rm -rf build
+done
