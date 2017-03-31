@@ -31,23 +31,22 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# run-build.sh - is called inside a Docker container;
-#		starts a build of strace.ebpf
+# run-build.sh - is called inside a Docker container,
+#                starts a build of strace.ebpf
 #
 
-SKIP_MESSAGE="Notice: skipping tests (too old kernel: required >= 4.7, actual = $(uname -r))"
-REQ_KV=470
+[ "$1" == "" ] \
+	&& echo "Usage: $0 <required-kernel-version>" \
+	&& exit 1
 
-#
-# get_kernel_version -- get kernel version, e.g.: v3.13 => 313
-#
-function get_kernel_version()
-{
-	local VER=$(uname -r)
-	local N1=$(echo $VER | cut -d'.' -f1)
-	local N2=$(echo $VER | cut -d'.' -f2)
-	echo $((100 * N1 + N2))
-}
+source ../functions.sh
+
+V_REQ=$1
+V_ACT=$(uname -r)
+REQ_KV=$(format_kernel_version $V_REQ)
+ACT_KV=$(format_kernel_version $V_ACT)
+
+SKIP_MESSAGE="Notice: skipping tests (too old kernel: required >= $V_REQ, actual = $V_ACT)"
 
 # Build all and run tests
 cd $WORKDIR
@@ -63,8 +62,18 @@ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf \
 
 make && echo
 
-if [ $(get_kernel_version) -ge $REQ_KV ]; then
-	sudo mount -t debugfs debugfs /sys/kernel/debug
+if [ $ACT_KV -ge $REQ_KV ]; then
+	set +e
+	mount | grep -e "debugfs" >/dev/null
+	if [ $? -ne 0 ]; then
+		sudo mount -t debugfs debugfs /sys/kernel/debug
+		if [ $? -eq 0 ]; then
+			echo "Mounted: $(mount | grep -e 'debugfs')"
+		else
+			echo "Error: required mounted debugfs" >&2 && exit 1
+		fi
+	fi
+	set -e
 	# ctest --output-on-failure
 	ctest -V && echo
 else
@@ -83,7 +92,7 @@ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf \
 
 make && echo
 
-if [ $(get_kernel_version) -ge $REQ_KV ]; then
+if [ $ACT_KV -ge $REQ_KV ]; then
 	# ctest --output-on-failure
 	ctest -V && echo
 else

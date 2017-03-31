@@ -32,6 +32,20 @@
 cmake_minimum_required(VERSION 2.8.7)
 project(strace.ebpf)
 
+# read required kernel version from README.md
+set(README_FILE "README.md")
+execute_process(COMMAND utils/get-required-kernel.sh ${README_FILE}
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+		OUTPUT_VARIABLE STRACE_EBPF_MINIMUM_KERNEL_VERSION
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		RESULT_VARIABLE KERNEL_RESULT)
+
+if (NOT ${KERNEL_RESULT} EQUAL 0)
+	execute_process(COMMAND echo "${STRACE_EBPF_MINIMUM_KERNEL_VERSION}")
+	message(FATAL_ERROR
+		"Error: cannot read required kernel version from the file ${README_FILE}")
+endif ()
+
 # read ChangeLog and parse the version
 FILE (READ "${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog" CHANGELOG)
 

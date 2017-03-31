@@ -53,7 +53,9 @@ fi
 imageName=${DOCKER_USER}/${DOCKER_PROJECT}_${OS}:${OS_VER}
 containerName=${DOCKER_USER}-${DOCKER_PROJECT}-${OS}-${OS_VER}
 
-if [[ $MAKE_PKG -eq 0 ]] ; then command="./run-build.sh"; fi
+REQUIRED_KERNEL=$(../get-required-kernel.sh ../../README.md)
+
+if [[ $MAKE_PKG -eq 0 ]] ; then command="./run-build.sh $REQUIRED_KERNEL"; fi
 if [[ $MAKE_PKG -eq 1 ]] ; then command="./run-build-package.sh"; fi
 
 if [ -n "$DNS_SERVER" ]; then DNS_SETTING=" --dns=$DNS_SERVER "; fi

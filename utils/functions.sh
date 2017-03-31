@@ -1,3 +1,4 @@
+#!/bin/bash -e
 #
 # Copyright 2017, Intel Corporation
 #
@@ -29,61 +30,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# check if the running kernel meets version requirements
-execute_process(COMMAND utils/check-kernel.sh ${STRACE_EBPF_MINIMUM_KERNEL_VERSION}
-		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-		RESULT_VARIABLE STRACE_EBPF_KERNEL_OK)
+#
+# utils/functions.sh - helper functions
+#
 
-if (NOT ${STRACE_EBPF_KERNEL_OK} EQUAL 0)
-        message( WARNING "Tests skipped (required kernel >= ${STRACE_EBPF_MINIMUM_KERNEL_VERSION})" )
-else ()
-
-	# running kernel meets version requirements, so we can add tests
-
-	set(TEST_APP "./test_syscalls")
-	set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-result")
-
-	add_executable(test_syscalls test_syscalls.c)
-
-	#
-	# TESTS
-	#
-
-	# 1
-	add_test(NAME "basic-syscalls"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 0)
-
-	# 2
-	add_test(NAME "basic-syscalls-with-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 1)
-
-	# 3
-	add_test(NAME "basic-syscalls-with-double-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 7)
-
-	# 4
-	add_test(NAME "unsupported-syscalls"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 2)
-
-	# 5
-	add_test(NAME "unsupported-syscalls-with-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 3)
-
-	# 6
-	add_test(NAME "unsupported-syscalls-with-double-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 8)
-
-	# 7
-	add_test(NAME "syscall-vfork"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4)
-
-	# 8
-	add_test(NAME "syscall-umount"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 5)
-
-	# 9
-	add_test(NAME "syscall-xattr"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 6)
-
-endif ()
+#
+# format_kernel_version -- format kernel version, e.g.: v3.13 => 313
+#
+function format_kernel_version()
+{
+	local VER=$1
+	local N1=$(echo $VER | cut -d'.' -f1)
+	local N2=$(echo $VER | cut -d'.' -f2)
+	echo $((100 * N1 + N2))
+}
