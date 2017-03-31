@@ -80,7 +80,7 @@ else
 	echo $SKIP_MESSAGE && echo
 fi
 
-echo make install SKIPPED && echo
+make install && echo
 
 cd ..
 rm -rf build
@@ -99,7 +99,7 @@ else
 	echo $SKIP_MESSAGE && echo
 fi
 
-echo make install SKIPPED && echo
+make install && echo
 
 cd ..
 rm -rf build

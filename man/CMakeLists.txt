@@ -60,6 +60,6 @@ else()
         set(DIR ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
-install(FILES ${DIR}/generated/strace.ebpf.1
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/generated/strace.ebpf.1
 	DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
-	CONFIGURATIONS Release None)
+	CONFIGURATIONS Release Debug None)

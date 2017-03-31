@@ -46,6 +46,8 @@ if (NOT ${KERNEL_RESULT} EQUAL 0)
 		"Error: cannot read required kernel version from the file ${README_FILE}")
 endif ()
 
+include(GNUInstallDirs)
+
 # read ChangeLog and parse the version
 FILE (READ "${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog" CHANGELOG)
 
@@ -61,13 +63,6 @@ set(CMAKE_C_STANDARD 99)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
-
-enable_testing()
-add_subdirectory(test)
-add_subdirectory(doc)
-add_subdirectory(man)
-add_subdirectory(src)
-add_subdirectory(utils)
 
 add_custom_target(cstyle
 	COMMAND perl ${PROJECT_SOURCE_DIR}/utils/cstyle
@@ -92,3 +87,9 @@ add_custom_target(check-license
 	${PROJECT_SOURCE_DIR}/LICENSE -a)
 
 add_dependencies(check-license check_license_executable)
+
+enable_testing()
+add_subdirectory(test)
+add_subdirectory(src)
+add_subdirectory(utils)
+add_subdirectory(man)

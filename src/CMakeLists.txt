@@ -103,3 +103,8 @@ endif()
 add_subdirectory(ebpf)
 
 target_link_libraries(strace.ebpf ebpf ${LIBBCC_LIBRARIES})
+
+install(TARGETS strace.ebpf
+        CONFIGURATIONS Release Debug None
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
