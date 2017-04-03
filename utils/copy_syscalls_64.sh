@@ -35,11 +35,11 @@
 # copy_syscalls_64.sh -- shell script for finding and coping syscalls_64.sh header
 #
 
-HEADER_MOD="gen_syscalls_64_mod.h"
-HEADER_NUM="gen_syscalls_64_num.h"
+HEADER_MOD="syscalls_64_mod.h_gen"
+HEADER_NUM="syscalls_64_num.h_gen"
 
-DEFINE_MOD="GEN_SYSCALLS_64_MOD_H"
-DEFINE_NUM="GEN_SYSCALLS_64_NUM_H"
+DEFINE_MOD="SYSCALLS_64_MOD_H_GEN"
+DEFINE_NUM="SYSCALLS_64_NUM_H_GEN"
 
 KERNEL=$(uname -r)
 

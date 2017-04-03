@@ -65,6 +65,9 @@ for release in Debug Release; do
 	echo "$ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release"
 	cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release && echo
 
+	echo "$ make cstyle"
+	make cstyle && echo
+
 	echo "$ make"
 	make && echo
 

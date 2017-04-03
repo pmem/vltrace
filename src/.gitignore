@@ -1,5 +1,5 @@
 strace.ebpf
 nondebug/
 config.h
-gen_syscalls_64_mod.h
-gen_syscalls_64_num.h
+syscalls_64_mod.h_gen
+syscalls_64_num.h_gen

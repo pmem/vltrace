@@ -341,8 +341,8 @@ static void
 fwrite_sc_name(FILE *f, const s64 sc_id)
 {
 
-	assert(sc_id >= 0 && sc_id < SC_TBL_SIZE
-		&& Syscall_array[sc_id].handler_name != NULL);
+	assert(sc_id >= 0 && sc_id < SC_TBL_SIZE &&
+		Syscall_array[sc_id].handler_name != NULL);
 
 	fwrite(Syscall_array[sc_id].handler_name + LEN_SYS,
 		Syscall_array[sc_id].name_length - LEN_SYS, 1, f);

@@ -65,7 +65,7 @@
 struct syscall_name Syscall_names[SC_TBL_SIZE] = {
 	[0 ... SC_TBL_SIZE - 1] = {"?", 1},
 /* fill the array with names from the generater header */
-#include "gen_syscalls_64_mod.h"
+#include "syscalls_64_mod.h_gen"
 };
 #undef __SYSCALL_64
 

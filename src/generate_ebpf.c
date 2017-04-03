@@ -50,11 +50,11 @@
  * get_sc_num -- this function returns syscall number by name
  *               according to the table of syscalls
  */
-static unsigned int
+static unsigned
 get_sc_num(const char *sc_name)
 {
 	static int last_free = __NR_LAST_UNKNOWN;
-	unsigned int i;
+	unsigned i;
 
 	for (i = 0; i < __NR_LAST_UNKNOWN; i++) {
 		if (NULL == Syscall_array[i].handler_name)
