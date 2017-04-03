@@ -125,19 +125,6 @@ test_unsupported_syscalls(void)
 {
 	chroot(NON_EXIST_PATH_1);
 
-	/* open - unsupported flags */
-	syscall(SYS_open, NON_EXIST_PATH_2, FLAGS_SET, FLAGS_SET, FLAGS_SET,
-		FLAGS_SET, FLAGS_SET);
-
-	/* clone - unsupported flags */
-	syscall(SYS_clone, FLAGS_SET, FLAGS_SET, FLAGS_SET, FLAGS_SET,
-		FLAGS_SET, FLAGS_SET);
-
-	epoll_ctl(0x101, 0x102, 0x103, (struct epoll_event *)0x104);
-	epoll_wait(0x102, (struct epoll_event *)0x103, 0x104, 0x105);
-	epoll_pwait(0x103, (struct epoll_event *)0x104, 0x105, 0x106,
-			(const sigset_t *)0x107);
-
 	/* fcntl - unsupported flags */
 	syscall(SYS_fcntl, 0x104, FLAGS_SET, FLAGS_SET, 0x105, 0x106, 0x107);
 
@@ -181,13 +168,44 @@ test_unsupported_syscalls(void)
 	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, NON_EXIST_PATH_1,
 		0x101, (void *)0x102);
 
+	umount(NON_EXIST_PATH_1);
+	umount2(NON_EXIST_PATH_2, 0x123);
+
+	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
+		 (const void *)0x101, 0x102, 0x103);
+	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
+		  (const void *)0x104, 0x105, 0x106);
+	fsetxattr(0x107, NON_EXIST_PATH_2,
+		  (const void *)0x108, 0x109, 0x110);
+
+	getxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, (void *)0x101, 0x102);
+	lgetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, (void *)0x103, 0x104);
+	fgetxattr(0x105, NON_EXIST_PATH_2, (void *)0x106, 0x107);
+
+	listxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, 0x101);
+	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x102);
+	flistxattr(0x103, NON_EXIST_PATH_2, 0x104);
+
+	removexattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
+	lremovexattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1);
+	fremovexattr(0x101, NON_EXIST_PATH_2);
+
 	syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
-	/*
-	 *   vfork            - moved to test_4
-	 *   umount & umount2 - moved to test_5
-	 *   *xattr           - moved to test_6
-	 */
+	epoll_ctl(0x101, 0x102, 0x103, (struct epoll_event *)0x104);
+	epoll_wait(0x102, (struct epoll_event *)0x103, 0x104, 0x105);
+	epoll_pwait(0x103, (struct epoll_event *)0x104, 0x105, 0x106,
+			(const sigset_t *)0x107);
+
+	/* open - unsupported flags */
+	syscall(SYS_open, NON_EXIST_PATH_2, FLAGS_SET, FLAGS_SET, FLAGS_SET,
+		FLAGS_SET, FLAGS_SET);
+
+	/* clone - unsupported flags */
+	syscall(SYS_clone, FLAGS_SET, FLAGS_SET, FLAGS_SET, FLAGS_SET,
+		FLAGS_SET, FLAGS_SET);
+
+	/* vfork - moved to test_4 */
 }
 
 /*
@@ -258,57 +276,20 @@ static void test_4(void)
 	MARK_END();
 }
 
+
 /*
- * test_5 -- test umount()
+ * test_5 -- test basic syscalls after double fork()
  */
 static void test_5(void)
-{
-	MARK_START();
-	umount(NON_EXIST_PATH_1);
-	umount2(NON_EXIST_PATH_2, 0x123);
-	MARK_END();
-}
-
-/*
- * test_6 -- test *xattr()
- */
-static void test_6(void)
-{
-	MARK_START();
-	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
-		 (const void *)0x101, 0x102, 0x103);
-	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
-		  (const void *)0x104, 0x105, 0x106);
-	fsetxattr(0x107, NON_EXIST_PATH_2,
-		  (const void *)0x108, 0x109, 0x110);
-
-	getxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, (void *)0x101, 0x102);
-	lgetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, (void *)0x103, 0x104);
-	fgetxattr(0x105, NON_EXIST_PATH_2, (void *)0x106, 0x107);
-
-	listxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, 0x101);
-	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x102);
-	flistxattr(0x103, NON_EXIST_PATH_2, 0x104);
-
-	removexattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
-	lremovexattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1);
-	fremovexattr(0x101, NON_EXIST_PATH_2);
-	MARK_END();
-}
-
-/*
- * test_7 -- test basic syscalls after double fork()
- */
-static void test_7(void)
 {
 	syscall(SYS_fork);
 	test_1();
 }
 
 /*
- * test_8 -- test unsupported syscalls after double fork()
+ * test_6 -- test unsupported syscalls after double fork()
  */
-static void test_8(void)
+static void test_6(void)
 {
 	syscall(SYS_fork);
 	test_3();
@@ -324,9 +305,7 @@ static void (*run_test[])(void) = {
 	test_3,
 	test_4,
 	test_5,
-	test_6,
-	test_7,
-	test_8
+	test_6
 };
 
 int

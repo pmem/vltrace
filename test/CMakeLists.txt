@@ -60,7 +60,7 @@ else ()
 
 	# 3
 	add_test(NAME "basic-syscalls-with-double-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 7)
+		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 5)
 
 	# 4
 	add_test(NAME "unsupported-syscalls"
@@ -72,18 +72,10 @@ else ()
 
 	# 6
 	add_test(NAME "unsupported-syscalls-with-double-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 8)
+		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 6)
 
 	# 7
 	add_test(NAME "syscall-vfork"
 		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4)
-
-	# 8
-	add_test(NAME "syscall-umount"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 5)
-
-	# 9
-	add_test(NAME "syscall-xattr"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 6)
 
 endif ()
