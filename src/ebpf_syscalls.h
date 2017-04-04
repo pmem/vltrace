@@ -56,30 +56,30 @@ enum sc_arg_type {
 /* XXX Subject to re-develop */
 enum masks_t {
 	/* syscall has fs path as a first arg */
-	EM_fs_path_1_arg = 1 << 0,
+	EM_fs_path_1 = 1 << 0,
 	/* syscall has fs path as second arg */
-	EM_fs_path_2_arg = 1 << 1,
+	EM_fs_path_2 = 1 << 1,
 	/* syscall has fs path as third arg */
-	EM_fs_path_3_arg = 1 << 2,
+	EM_fs_path_3 = 1 << 2,
 	/* syscall has fs path as fourth arg */
-	EM_fs_path_4_arg = 1 << 3,
+	EM_fs_path_4 = 1 << 3,
 	/* syscall has fs path as fifth arg. For future syscalls. */
-	EM_fs_path_5_arg = 1 << 4,
+	EM_fs_path_5 = 1 << 4,
 	/* syscall has fs path as sixth arg. For future syscalls. */
-	EM_fs_path_6_arg = 1 << 5,
+	EM_fs_path_6 = 1 << 5,
 
 	/* syscall fd path as a first arg */
-	EM_fd_1_arg = 1 << 6,
+	EM_fd_1 = 1 << 6,
 	/* syscall fd path as second arg */
-	EM_fd_2_arg = 1 << 7,
+	EM_fd_2 = 1 << 7,
 	/* syscall fd path as third arg */
-	EM_fd_3_arg = 1 << 8,
+	EM_fd_3 = 1 << 8,
 	/* syscall fd path as fourth arg */
-	EM_fd_4_arg = 1 << 9,
+	EM_fd_4 = 1 << 9,
 	/* syscall fd path as fifth arg. For future syscalls. */
-	EM_fd_5_arg = 1 << 10,
+	EM_fd_5 = 1 << 10,
 	/* syscall fd path as sixth arg. For future syscalls. */
-	EM_fd_6_arg = 1 << 11,
+	EM_fd_6 = 1 << 11,
 
 	/* syscall returns a fd */
 	EM_rdesc = 1 << 12,
@@ -100,17 +100,17 @@ enum masks_t {
 
 
 	/* syscall accepts fd as a first arg */
-	EM_desc = EM_fd_1_arg,
+	EM_desc = EM_fd_1,
 	/* syscall accepts fs path as a first arg */
-	EM_file = EM_fs_path_1_arg,
+	EM_file = EM_fs_path_1,
 	/* syscall accepts dir fd as a first arg and path as a second */
-	EM_fileat = EM_fd_1_arg | EM_fs_path_2_arg,
+	EM_fileat = EM_fd_1 | EM_fs_path_2,
 	/* syscall has fs paths as first and second Args. rename() */
-	EM_fs_path_1_2_arg = EM_fs_path_1_arg | EM_fs_path_2_arg,
+	EM_fs_path_1_2 = EM_fs_path_1 | EM_fs_path_2,
 	/* syscall has fs paths as first and third Args. linkat() */
-	EM_fs_path_1_3_arg = EM_fs_path_1_arg | EM_fs_path_3_arg,
+	EM_fs_path_1_3 = EM_fs_path_1 | EM_fs_path_3,
 	/* syscall has fs paths as second and forth Args. renameat() */
-	EM_fs_path_2_4_arg = EM_fs_path_2_arg | EM_fs_path_4_arg,
+	EM_fs_path_2_4 = EM_fs_path_2 | EM_fs_path_4,
 
 	EM_ALL = -1,
 };

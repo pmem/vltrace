@@ -158,8 +158,8 @@ get_template(unsigned i)
 		};
 	}
 
-	if (EM_fs_path_1_2_arg ==
-			(EM_fs_path_1_2_arg & Syscall_array[i].masks)) {
+	if (EM_fs_path_1_2 ==
+			(EM_fs_path_1_2 & Syscall_array[i].masks)) {
 		switch (Args.fnr_mode) {
 		case E_FNR_FAST:
 			text = load_file_no_cr(
@@ -175,8 +175,8 @@ get_template(unsigned i)
 			assert(false);
 			break;
 		}
-	} else if (EM_fs_path_1_3_arg ==
-			(EM_fs_path_1_3_arg & Syscall_array[i].masks)) {
+	} else if (EM_fs_path_1_3 ==
+			(EM_fs_path_1_3 & Syscall_array[i].masks)) {
 		switch (Args.fnr_mode) {
 		case E_FNR_FAST:
 			text = load_file_no_cr(
@@ -192,8 +192,8 @@ get_template(unsigned i)
 			assert(false);
 			break;
 		}
-	} else if (EM_fs_path_2_4_arg ==
-			(EM_fs_path_2_4_arg & Syscall_array[i].masks)) {
+	} else if (EM_fs_path_2_4 ==
+			(EM_fs_path_2_4 & Syscall_array[i].masks)) {
 		switch (Args.fnr_mode) {
 		case E_FNR_FAST:
 			text = load_file_no_cr(

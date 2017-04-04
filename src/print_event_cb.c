@@ -242,21 +242,21 @@ fprint_first_str(FILE *f, struct data_entry_t *const event, int size)
 
 
 	/* Half-lenth strings */
-	if (EM_fs_path_1_2_arg == (EM_fs_path_1_2_arg &
+	if (EM_fs_path_1_2 == (EM_fs_path_1_2 &
 				Syscall_array[event->sc_id].masks)) {
 		fwrite(event->aux_str,
 				strnlen(event->aux_str, NAME_MAX / 2), 1, f);
 		return;
 	}
 
-	if (EM_fs_path_1_3_arg == (EM_fs_path_1_3_arg &
+	if (EM_fs_path_1_3 == (EM_fs_path_1_3 &
 				Syscall_array[event->sc_id].masks)) {
 		fwrite(event->aux_str,
 				strnlen(event->aux_str, NAME_MAX / 2), 1, f);
 		return;
 	}
 
-	if (EM_fs_path_2_4_arg == (EM_fs_path_2_4_arg &
+	if (EM_fs_path_2_4 == (EM_fs_path_2_4 &
 				Syscall_array[event->sc_id].masks)) {
 		fwrite(event->aux_str,
 				strnlen(event->aux_str, NAME_MAX / 2), 1, f);
@@ -286,21 +286,21 @@ fprint_second_str(FILE *f, struct data_entry_t *const event, int size)
 	(void) size;
 
 	/* Half-lenth strings */
-	if (EM_fs_path_1_2_arg == (EM_fs_path_1_2_arg &
+	if (EM_fs_path_1_2 == (EM_fs_path_1_2 &
 				Syscall_array[event->sc_id].masks)) {
 		const char *const p = event->aux_str + (NAME_MAX / 2);
 		fwrite(p, strnlen(p, NAME_MAX - (NAME_MAX / 2)), 1, f);
 		return;
 	}
 
-	if (EM_fs_path_1_3_arg == (EM_fs_path_1_3_arg &
+	if (EM_fs_path_1_3 == (EM_fs_path_1_3 &
 				Syscall_array[event->sc_id].masks)) {
 		const char *const p = event->aux_str + (NAME_MAX / 2);
 		fwrite(p, strnlen(p, NAME_MAX - (NAME_MAX / 2)), 1, f);
 		return;
 	}
 
-	if (EM_fs_path_2_4_arg == (EM_fs_path_2_4_arg &
+	if (EM_fs_path_2_4 == (EM_fs_path_2_4 &
 				Syscall_array[event->sc_id].masks)) {
 		const char *const p = event->aux_str + (NAME_MAX / 2);
 		fwrite(p, strnlen(p, NAME_MAX - (NAME_MAX / 2)), 1, f);
@@ -354,11 +354,11 @@ fwrite_sc_name(FILE *f, const s64 sc_id)
 static enum sc_arg_type
 get_type_of_arg1(unsigned sc_num)
 {
-	if (EM_fs_path_1_2_arg == (EM_fs_path_1_2_arg &
+	if (EM_fs_path_1_2 == (EM_fs_path_1_2 &
 				Syscall_array[sc_num].masks))
 		return EAT_path;
 
-	if (EM_fs_path_1_3_arg == (EM_fs_path_1_3_arg &
+	if (EM_fs_path_1_3 == (EM_fs_path_1_3 &
 				Syscall_array[sc_num].masks))
 		return EAT_path;
 
@@ -423,11 +423,11 @@ fprint_arg1_hex(FILE *f, struct data_entry_t *const event, int size)
 static enum sc_arg_type
 get_type_of_arg2(unsigned sc_num)
 {
-	if (EM_fs_path_1_2_arg == (EM_fs_path_1_2_arg &
+	if (EM_fs_path_1_2 == (EM_fs_path_1_2 &
 				Syscall_array[sc_num].masks))
 		return EAT_path;
 
-	if (EM_fs_path_2_4_arg == (EM_fs_path_2_4_arg &
+	if (EM_fs_path_2_4 == (EM_fs_path_2_4 &
 				Syscall_array[sc_num].masks))
 		return EAT_path;
 
@@ -447,13 +447,13 @@ get_type_of_arg2(unsigned sc_num)
 static void
 fprint_arg2_path(FILE *f, struct data_entry_t *const event, int size)
 {
-	if (EM_fs_path_1_2_arg == (EM_fs_path_1_2_arg &
+	if (EM_fs_path_1_2 == (EM_fs_path_1_2 &
 				Syscall_array[event->sc_id].masks)) {
 		if (0 == event->packet_type)
 			fprint_second_str(f, event, size);
 		else
 			fprint_first_str(f, event, size);
-	} else if (EM_fs_path_2_4_arg == (EM_fs_path_2_4_arg &
+	} else if (EM_fs_path_2_4 == (EM_fs_path_2_4 &
 				Syscall_array[event->sc_id].masks)) {
 		fprint_first_str(f, event, size);
 	} else if (EM_fileat == (EM_fileat &
@@ -507,7 +507,7 @@ fprint_arg2_hex(FILE *f, struct data_entry_t *const event, int size)
 static enum sc_arg_type
 get_type_of_arg3(unsigned sc_num)
 {
-	if (EM_fs_path_1_3_arg == (EM_fs_path_1_3_arg &
+	if (EM_fs_path_1_3 == (EM_fs_path_1_3 &
 				Syscall_array[sc_num].masks))
 		return EAT_path;
 
@@ -524,7 +524,7 @@ get_type_of_arg3(unsigned sc_num)
 static void
 fprint_arg3_path(FILE *f, struct data_entry_t *const event, int size)
 {
-	if (EM_fs_path_1_3_arg == (EM_fs_path_1_3_arg &
+	if (EM_fs_path_1_3 == (EM_fs_path_1_3 &
 				Syscall_array[event->sc_id].masks)) {
 		if (0 == event->packet_type)
 			fprint_second_str(f, event, size);
@@ -581,7 +581,7 @@ fprint_arg3_hex(FILE *f, struct data_entry_t *const event, int size)
 static enum sc_arg_type
 get_type_of_arg4(unsigned sc_num)
 {
-	if (EM_fs_path_2_4_arg == (EM_fs_path_2_4_arg &
+	if (EM_fs_path_2_4 == (EM_fs_path_2_4 &
 				Syscall_array[sc_num].masks))
 		return EAT_path;
 
@@ -598,7 +598,7 @@ get_type_of_arg4(unsigned sc_num)
 static void
 fprint_arg4_path(FILE *f, struct data_entry_t *const event, int size)
 {
-	if (EM_fs_path_2_4_arg == (EM_fs_path_2_4_arg &
+	if (EM_fs_path_2_4 == (EM_fs_path_2_4 &
 				Syscall_array[event->sc_id].masks)) {
 		if (0 == event->packet_type)
 			fprint_second_str(f, event, size);
