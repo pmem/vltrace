@@ -90,14 +90,14 @@ check_args(struct cl_options const *args)
 	if (args->command && args->pid > 0) {
 		ERROR("command and PID cannot be set together");
 		fprint_help(stderr);
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (args->pid > 0) {
 		/* check if process with given PID exists */
 		if (kill(Args.pid, 0) == -1) {
 			ERROR("process with PID '%d' does not exist", Args.pid);
-			exit(-1);
+			exit(EXIT_FAILURE);
 		}
 		return TRACING_PID;
 	}
@@ -138,7 +138,7 @@ main(const int argc, char *const argv[])
 	setup_out_lf();
 	if (NULL == Out_lf) {
 		ERROR("failed to set up the output file");
-		exit(-1);
+		return EXIT_FAILURE;
 	}
 
 	/* check JIT acceleration of BPF */
@@ -154,7 +154,7 @@ main(const int argc, char *const argv[])
 		if (prctl(PR_SET_CHILD_SUBREAPER, 1) == -1) {
 			perror("prctl");
 			ERROR("failed to set 'child subreaper' attribute");
-			exit(-1);
+			return EXIT_FAILURE;
 		}
 	}
 
@@ -165,7 +165,7 @@ main(const int argc, char *const argv[])
 		Args.pid = start_command(argv + st_optind);
 		if (Args.pid == -1) {
 			ERROR("failed to start the command");
-			exit(-1);
+			return EXIT_FAILURE;
 		}
 
 		/* if tracing is aborted, kill the started process */
@@ -181,7 +181,7 @@ main(const int argc, char *const argv[])
 	char *bpf_str = generate_ebpf();
 	if (bpf_str == NULL) {
 		ERROR("cannot generate eBPF code");
-		exit(-1);
+		return EXIT_FAILURE;
 	}
 
 	apply_process_attach_code(&bpf_str);
@@ -201,7 +201,7 @@ main(const int argc, char *const argv[])
 	if (b == NULL) {
 		ERROR("out of memory");
 		free(bpf_str);
-		exit(-1);
+		return EXIT_FAILURE;
 	}
 
 	/* compile generated eBPF code */
@@ -217,13 +217,8 @@ main(const int argc, char *const argv[])
 
 	INFO("Attaching probes...");
 	if (!attach_probes(b)) {
-		/* no probes were attached */
 		ERROR("no probes were attached");
-		if (Args.command) {
-			/* kill the started child */
-			kill(Args.pid, SIGKILL);
-		}
-		return EXIT_FAILURE;
+		goto error_kill;
 	}
 
 	/* header */
@@ -246,12 +241,7 @@ main(const int argc, char *const argv[])
 	} else {
 		ERROR("cannot attach callbacks to perf output '%s'",
 			PERF_OUTPUT_NAME);
-		if (Args.command) {
-			/* kill the started child */
-			kill(Args.pid, SIGKILL);
-		}
-		detach_all(b);
-		return EXIT_FAILURE;
+		goto error_detach;
 	}
 
 	struct perf_reader *readers[b->pr_arr_qty];
@@ -307,6 +297,14 @@ main(const int argc, char *const argv[])
 	}
 
 	detach_all(b);
-
 	return EXIT_SUCCESS;
+
+error_detach:
+	detach_all(b);
+error_kill:
+	if (PidToBeKilled) {
+		/* kill the started child */
+		kill(PidToBeKilled, SIGKILL);
+	}
+	return EXIT_FAILURE;
 }
