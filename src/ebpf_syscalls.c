@@ -505,10 +505,10 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 };
 
 /*
- * init_sc_tbl -- init the table of syscalls
+ * init_syscalls_table -- init the table of syscalls
  */
 void
-init_sc_tbl(void)
+init_syscalls_table(void)
 {
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		/* init Syscall_names[] */
@@ -528,10 +528,11 @@ init_sc_tbl(void)
 }
 
 /*
- * free_sc_tbl -- free names from Syscall_array[] allocated by get_sc_num()
+ * free_syscalls_table -- free names from Syscall_array[]
+ *                        allocated by get_sc_num()
  */
 void
-free_sc_tbl(void)
+free_syscalls_table(void)
 {
 	for (unsigned i = __NR_LAST_UNKNOWN; i < SC_TBL_SIZE; i++) {
 		if (!Syscall_array[i].attached)
@@ -544,14 +545,14 @@ free_sc_tbl(void)
 }
 
 /*
- * fprint_sc_tbl -- print the table of syscalls
+ * print_syscalls_table -- print the table of syscalls
  */
 int
-fprint_sc_tbl(FILE *f)
+print_syscalls_table(FILE *f)
 {
 	int res;
 
-	init_sc_tbl();
+	init_syscalls_table();
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		if (i == __NR_FIRST_UNKNOWN)

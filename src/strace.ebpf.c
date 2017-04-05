@@ -147,8 +147,7 @@ main(const int argc, char *const argv[])
 
 	INFO("Initializing...");
 	init_printing_events();
-	/* init array of syscalls */
-	init_sc_tbl();
+	init_syscalls_table();
 
 	if (Args.ff_mode) { /* only in follow-fork mode */
 		/*

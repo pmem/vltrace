@@ -179,7 +179,7 @@ cl_parser(struct cl_options *const clo,
 			exit(EXIT_SUCCESS);
 
 		case 'B':
-			res = fprint_sc_tbl(stdout);
+			res = print_syscalls_table(stdout);
 
 			switch (res) {
 			case 1: exit(EXIT_SUCCESS);

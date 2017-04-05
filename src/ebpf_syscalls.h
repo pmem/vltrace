@@ -146,8 +146,8 @@ enum { SC_TBL_SIZE = 1024 };
 extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
 extern struct syscall_name Syscall_names[SC_TBL_SIZE];
 
-void init_sc_tbl(void);
-void free_sc_tbl(void);
-int fprint_sc_tbl(FILE *f);
+void init_syscalls_table(void);
+void free_syscalls_table(void);
+int print_syscalls_table(FILE *f);
 
 #endif /* EBPF_SYSCALLS_H */

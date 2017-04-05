@@ -75,7 +75,7 @@ get_sc_num(const char *sc_name)
 	Syscall_array[i].num = i;
 	sprintf(Syscall_array[i].num_str, "%u", Syscall_array[i].num);
 
-	/* will be freed in free_sc_tbl() */
+	/* will be freed in free_syscalls_table() */
 	Syscall_array[i].handler_name = strdup(sc_name);
 
 	Syscall_array[i].name_length = strlen(Syscall_array[i].handler_name);
