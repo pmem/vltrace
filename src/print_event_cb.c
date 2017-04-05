@@ -35,6 +35,7 @@
  */
 
 #include <stdio.h>
+#include <stddef.h>
 #include <assert.h>
 #include <string.h>
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
@@ -75,21 +76,21 @@ static inline char b2hex(char b);
  */
 
 /*
- * print_header_strace -- Print logs header.
- *
- * XXX A blank for human-readable strace-like logs
+ * print_header_strace -- print logs header in human-readable strace-like logs
  */
-static void
+static int
 print_header_strace(int argc, char *const argv[])
 {
+	(void) argc;
+	(void) argv;
+
 	if (Args.timestamp)
 		fprintf(Out_lf, "%-14s", "TIME(s)");
 
 	fprintf(Out_lf, "%-7s %-6s %4s %3s %s\n",
-		"SYSCALL", "PID_TID", "ARG1", "ERR", "PATH");
+			"SYSCALL", "PID_TID", "ARG1", "ERR", "PATH");
 
-	(void) argc;
-	(void) argv;
+	return 0;
 }
 
 /*
@@ -139,9 +140,9 @@ print_event_strace(void *cb_cookie, void *data, int size)
 /* ** Hex logs ** */
 
 /*
- * print_header_hex -- This function prints header for hexadecimal logs.
+ * print_header_hex -- print header for hexadecimal logs
  */
-static void
+static int
 print_header_hex(int argc, char *const argv[])
 {
 	for (int i = 0; i < argc; i++) {
@@ -172,6 +173,8 @@ print_header_hex(int argc, char *const argv[])
 	fprintf(Out_lf, "%s", "AUX_DATA");
 
 	fprintf(Out_lf, "\n");
+
+	return 0;
 }
 
 /*
@@ -1042,68 +1045,58 @@ print_event_hex_sl(void *cb_cookie, void *data, int size)
 /* ** Binary logs ** */
 
 /*
- * XXX We should think about writing 64-bit packet number before length
- *    of packet, but there is probability that counting packets will be very
- *    expensive, because we run in multi-thread environment.
+ * print_header_bin -- write header into stream
  */
-
-/*
- * print_header_bin -- This function writes header in stream.
- */
-static void
+static int
 print_header_bin(int argc, char *const argv[])
 {
-	size_t  argv_size = 0;
+#define MAX_LEN_STR 1024
 
-	struct data_entry_t d = { .sc_id = -1 };
+	struct header_s {
+		s64 argc;
+		char argv[MAX_LEN_STR];
+	} header;
 
-	const size_t d_size = sizeof(d);
-	d.header.argc = argc;
+	int data_size = 0;
+	int next_size = 0;
 
-	/*
-	 * here we assume that our command line will not be longer
-	 * than 255 bytes
-	 */
 	for (int i = 0; i < argc; i++) {
-		strcpy(d.header.argv + argv_size, argv[i]);
-		argv_size += strlen(argv[i]) + 1;
+		next_size = strlen(argv[i]) + 1;
+		if (data_size + next_size >= MAX_LEN_STR)
+			return -1;
+		strcpy(header.argv + data_size, argv[i]);
+		data_size += next_size;
 	}
 
-	if (1 != fwrite(&d_size, sizeof(d_size), 1, Out_lf)) {
-		/* ERROR */
-		OutputError = 1;
+	header.argc = argc;
+	data_size += offsetof(struct header_s, argv);
+
+	if (1 != fwrite(&data_size, sizeof(int), 1, Out_lf)) {
+		return -1;
 	}
 
-	if (1 != fwrite(&d, sizeof(d), 1, Out_lf)) {
-		/* ERROR */
-		OutputError = 1;
+	if (1 != fwrite(&header, data_size, 1, Out_lf)) {
+		return -1;
 	}
+
+	return 0;
 }
 
 /*
- * print_event_bin -- This function writes syscall's log entry in stream
+ * print_event_bin -- write syscall's log entry into stream
  */
 static void
 print_event_bin(void *cb_cookie, void *data, int size)
 {
-	struct data_entry_t *const event = data;
+	(void) cb_cookie;
 
-	/* XXX Check size arg */
-
-	if (Args.failed /* && (event->ret >= 0) */)
-		return;
-
-	if (1 != fwrite(&size, sizeof(size), 1, Out_lf)) {
-		/* ERROR */
+	if (1 != fwrite(&size, sizeof(int), 1, Out_lf)) {
 		OutputError = 1;
 	}
 
 	if (1 != fwrite(data, (size_t)size, 1, Out_lf)) {
-		/* ERROR */
 		OutputError = 1;
 	}
-
-	(void) cb_cookie;
 }
 
 /*
@@ -1131,12 +1124,12 @@ perf_reader_raw_cb Print_event_cb[EOF_QTY + 1] = {
 	[EOF_HEX_RAW]	= print_event_hex_raw,
 	[EOF_HEX_SL]	= print_event_hex_sl,
 	[EOF_BIN]	= print_event_bin,
-	[EOF_STRACE] = print_event_strace,
+	[EOF_STRACE]	= print_event_strace,
 };
 
 print_header_t Print_header[EOF_QTY + 1] = {
 	[EOF_HEX_RAW]	= print_header_hex,
 	[EOF_HEX_SL]	= print_header_hex,
 	[EOF_BIN]	= print_header_bin,
-	[EOF_STRACE] = print_header_strace,
+	[EOF_STRACE]	= print_header_strace,
 };

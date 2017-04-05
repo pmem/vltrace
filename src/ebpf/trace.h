@@ -100,12 +100,6 @@ struct data_entry_t {
 			char aux_str[1];	/* NAME_MAX */
 		};
 
-		/* Body of header */
-		struct {
-			s64 argc;
-			char argv[];
-		} header;
-
 		/*
 		 * Body of string argument. The content and meaning of argument
 		 *    is defined by syscall's number (in the first packet) in

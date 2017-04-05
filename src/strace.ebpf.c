@@ -114,6 +114,7 @@ check_args(struct cl_options const *args)
 int
 main(const int argc, char *const argv[])
 {
+	struct perf_reader **readers;
 	int tracing = TRACING_ALL; /* what are we tracing ? */
 	int st_optind;
 
@@ -221,8 +222,12 @@ main(const int argc, char *const argv[])
 		goto error_kill;
 	}
 
-	/* header */
-	Print_header[Out_lf_fmt](argc, argv);
+	INFO("Starting tracing...");
+
+	if (Print_header[Out_lf_fmt](argc, argv)) {
+		ERROR("error while printing header");
+		goto error_detach;
+	}
 
 	/*
 	 * Attach callback to perf output. "events" is a name of class declared
@@ -244,12 +249,15 @@ main(const int argc, char *const argv[])
 		goto error_detach;
 	}
 
-	struct perf_reader *readers[b->pr_arr_qty];
+	readers = calloc(b->pr_arr_qty, sizeof(struct perf_reader *));
+	if (readers == NULL) {
+		ERROR("out of memory");
+		goto error_detach;
+	}
 
 	for (unsigned i = 0; i < b->pr_arr_qty; i++)
 		readers[i] = b->pr_arr[i]->pr;
 
-	INFO("Starting tracing...");
 	int stop_tracing = 0;
 	while (!stop_tracing) {
 
@@ -296,6 +304,8 @@ main(const int argc, char *const argv[])
 		}
 	}
 
+	fflush(Out_lf);
+	free(readers);
 	detach_all(b);
 	return EXIT_SUCCESS;
 
