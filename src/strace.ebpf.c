@@ -146,6 +146,9 @@ main(const int argc, char *const argv[])
 	check_bpf_jit_status(stderr);
 
 	INFO("Initializing...");
+	init_printing_events();
+	/* init array of syscalls */
+	init_sc_tbl();
 
 	if (Args.ff_mode) { /* only in follow-fork mode */
 		/*
@@ -172,9 +175,6 @@ main(const int argc, char *const argv[])
 		/* if tracing is aborted, kill the started process */
 		PidToBeKilled = Args.pid;
 	}
-
-	/* init array of syscalls */
-	init_sc_tbl();
 
 	INFO("Generating eBPF code...");
 

@@ -804,6 +804,25 @@ fwrite_out_lf_fld_sep(FILE *f)
 	assert(1 == res);
 }
 
+static char *Str_entry; /* will be initialized by init_printing_events() */
+static size_t Len_str_entry; /* will be initialized by init_printing_events() */
+
+/*
+ * init_printing_events -- initialize Str_entry and Len_str_entry
+ */
+void
+init_printing_events(void)
+{
+	static char str[] = "_----------------_----------------_";
+
+	str[0]  = Args.out_lf_fld_sep_ch;
+	str[17] = Args.out_lf_fld_sep_ch;
+	str[34] = Args.out_lf_fld_sep_ch;
+
+	Str_entry = str;
+	Len_str_entry = strlen(str);
+}
+
 /*
  * print_event_hex_entry -- This function prints syscall's logs entry in stream.
  *
@@ -816,8 +835,6 @@ static void
 print_event_hex_entry(FILE *f, void *data, int size)
 {
 	struct data_entry_t *const event = data;
-	const char *str_line = "----------------";
-	const size_t len_str_line = 16; /* length of the string above */
 
 	/* XXX Check size arg */
 	(void) size;
@@ -834,13 +851,8 @@ print_event_hex_entry(FILE *f, void *data, int size)
 	}
 
 	fprint_i64(f, event->pid_tid);
-	fwrite_out_lf_fld_sep(f);
 
-	fwrite(str_line, len_str_line, 1, f);
-	fwrite_out_lf_fld_sep(f);
-
-	fwrite(str_line, len_str_line, 1, f);
-	fwrite_out_lf_fld_sep(f);
+	fwrite(Str_entry, Len_str_entry, 1, f);
 
 	fwrite_sc_name(f, event->sc_id);
 	fwrite_out_lf_fld_sep(f);
