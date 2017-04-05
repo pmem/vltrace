@@ -105,7 +105,7 @@ Could be useful with old libbcc versions.
 
 # SYSTEM REQUIREMENTS #
 
- - kernel v4.4 or later (for Perf Event Circular Buffer)
+ - kernel v4.7 or later (to attach eBPF to tracepoints)
  - kernel headers installed:
     - 'kernel-devel' package on RHEL, Fedora and CentOS or
     - 'linux-headers' package on Debian and Ubuntu
