@@ -53,12 +53,12 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.sc_id = SYSCALL_NR; /* SysCall ID */
 	ev.pid_tid = pid_tid;
 
-	ev.arg_1 = PT_REGS_PARM1(ctx);
-	ev.arg_2 = PT_REGS_PARM2(ctx);
-	ev.arg_3 = PT_REGS_PARM3(ctx);
-	ev.arg_4 = PT_REGS_PARM4(ctx);
-	ev.arg_5 = PT_REGS_PARM5(ctx);
-	ev.arg_6 = PT_REGS_PARM6(ctx);
+	ev.args[0] = PT_REGS_PARM1(ctx);
+	ev.args[1] = PT_REGS_PARM2(ctx);
+	ev.args[2] = PT_REGS_PARM3(ctx);
+	ev.args[3] = PT_REGS_PARM4(ctx);
+	ev.args[4] = PT_REGS_PARM5(ctx);
+	ev.args[5] = PT_REGS_PARM6(ctx);
 
 	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, aux_str));
 

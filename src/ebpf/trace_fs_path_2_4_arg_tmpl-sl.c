@@ -60,17 +60,17 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
 	u.ev.pid_tid = pid_tid;
 
-	u.ev.arg_1 = PT_REGS_PARM1(ctx);
-	u.ev.arg_2 = PT_REGS_PARM2(ctx);
-	u.ev.arg_3 = PT_REGS_PARM3(ctx);
-	u.ev.arg_4 = PT_REGS_PARM4(ctx);
-	u.ev.arg_5 = PT_REGS_PARM5(ctx);
-	u.ev.arg_6 = PT_REGS_PARM6(ctx);
+	u.ev.args[0] = PT_REGS_PARM1(ctx);
+	u.ev.args[1] = PT_REGS_PARM2(ctx);
+	u.ev.args[2] = PT_REGS_PARM3(ctx);
+	u.ev.args[3] = PT_REGS_PARM4(ctx);
+	u.ev.args[4] = PT_REGS_PARM5(ctx);
+	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
-	bpf_probe_read(&u.ev.aux_str, NAME_MAX / 2, (void *)u.ev.arg_2);
+	bpf_probe_read(&u.ev.aux_str, NAME_MAX / 2, (void *)u.ev.args[1]);
 	bpf_probe_read((&u.ev.aux_str) + (NAME_MAX / 2),
 		       NAME_MAX - (NAME_MAX / 2),
-		       (void *)u.ev.arg_4);
+		       (void *)u.ev.args[3]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	return 0;

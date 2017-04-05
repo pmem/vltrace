@@ -47,12 +47,12 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	PID_CHECK_HOOK
 
 	fs.start_ts_nsec = bpf_ktime_get_ns();
-	fs.arg_1 = PT_REGS_PARM1(ctx);
-	fs.arg_2 = PT_REGS_PARM2(ctx);
-	fs.arg_3 = PT_REGS_PARM3(ctx);
-	fs.arg_4 = PT_REGS_PARM4(ctx);
-	fs.arg_5 = PT_REGS_PARM5(ctx);
-	fs.arg_6 = PT_REGS_PARM6(ctx);
+	fs.args[0] = PT_REGS_PARM1(ctx);
+	fs.args[1] = PT_REGS_PARM2(ctx);
+	fs.args[2] = PT_REGS_PARM3(ctx);
+	fs.args[3] = PT_REGS_PARM4(ctx);
+	fs.args[4] = PT_REGS_PARM5(ctx);
+	fs.args[5] = PT_REGS_PARM6(ctx);
 
 	tmp_i.update(&pid_tid, &fs);
 
@@ -83,12 +83,12 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 
 	u.ev.packet_type = 2; /* 2 additional packets */
 	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
-	u.ev.arg_1 = fsp->arg_1;
-	u.ev.arg_2 = fsp->arg_2;
-	u.ev.arg_3 = fsp->arg_3;
-	u.ev.arg_4 = fsp->arg_4;
-	u.ev.arg_5 = fsp->arg_5;
-	u.ev.arg_6 = fsp->arg_6;
+	u.ev.args[0] = fsp->arg_1;
+	u.ev.args[1] = fsp->arg_2;
+	u.ev.args[2] = fsp->arg_3;
+	u.ev.args[3] = fsp->arg_4;
+	u.ev.args[4] = fsp->arg_5;
+	u.ev.args[5] = fsp->arg_6;
 	u.ev.pid_tid = pid_tid;
 	u.ev.start_ts_nsec = fsp->start_ts_nsec;
 	u.ev.finish_ts_nsec = cur_nsec;
@@ -99,11 +99,11 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	events.perf_submit(ctx, &u.ev, offsetof(struct data_entry_t, aux_str));
 
 	u.ev.packet_type = -1; /* first additional packet */
-	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp->arg_1);
+	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp-.args[0]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	u.ev.packet_type = -2; /* second additional packet */
-	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp->arg_3);
+	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp-.args[2]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	tmp_i.delete(&pid_tid);

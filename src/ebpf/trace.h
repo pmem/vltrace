@@ -85,12 +85,7 @@ struct data_entry_t {
 	union {
 		/* Body of first packet */
 		struct {
-			s64 arg_1;
-			s64 arg_2;
-			s64 arg_3;
-			s64 arg_4;
-			s64 arg_5;
-			s64 arg_6;
+			s64 args[6];
 
 			/*
 			 * Body of string argument. The content and
