@@ -63,13 +63,16 @@ for release in Debug Release; do
 	cd build
 
 	echo "$ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release"
-	cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release && echo
+	cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release
+	echo
 
 	echo "$ make cstyle"
-	make cstyle && echo
+	make cstyle
+	echo
 
 	echo "$ make"
-	make && echo
+	make
+	echo
 
 	if [ $ACT_KV -ge $REQ_KV ]; then
 		# check if debugfs is mounted
@@ -86,13 +89,16 @@ for release in Debug Release; do
 		set -e
 
 		echo "$ ctest --output-on-failure"
-		ctest --output-on-failure && echo
+		ctest --output-on-failure
+		echo
 	else
-		echo $SKIP_MESSAGE && echo
+		echo $SKIP_MESSAGE
+		echo
 	fi
 
 	echo "$ make install"
-	make install && echo
+	make install
+	echo
 
 	cd ..
 	rm -rf build
