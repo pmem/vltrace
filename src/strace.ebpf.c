@@ -181,7 +181,7 @@ main(const int argc, char *const argv[])
 	char *bpf_str = generate_ebpf();
 	if (bpf_str == NULL) {
 		ERROR("cannot generate eBPF code");
-		return EXIT_FAILURE;
+		goto error_kill;
 	}
 
 	apply_process_attach_code(&bpf_str);
@@ -197,28 +197,28 @@ main(const int argc, char *const argv[])
 	save_trace_h();
 
 	/* initialize BPF */
-	struct bpf_ctx *b = calloc(1, sizeof(*b));
-	if (b == NULL) {
+	struct bpf_ctx *bpf = calloc(1, sizeof(*bpf));
+	if (bpf == NULL) {
 		ERROR("out of memory");
 		free(bpf_str);
-		return EXIT_FAILURE;
+		goto error_kill;
 	}
 
 	/* compile generated eBPF code */
 	INFO("Compiling generated eBPF code...");
-	b->module = bpf_module_create_c_from_string(bpf_str, 0, NULL, 0);
+	bpf->module = bpf_module_create_c_from_string(bpf_str, 0, NULL, 0);
 	free(bpf_str);
-	if (b->module == NULL) {
+	if (bpf->module == NULL) {
 		ERROR("cannot compile eBPF code");
-		return EXIT_FAILURE;
+		goto error_free_bpf;
 	}
 
-	b->debug  = Args.debug;
+	bpf->debug  = Args.debug;
 
 	INFO("Attaching probes...");
-	if (!attach_probes(b)) {
+	if (!attach_probes(bpf)) {
 		ERROR("no probes were attached");
-		goto error_kill;
+		goto error_free_bpf;
 	}
 
 	INFO("Starting tracing...");
@@ -235,7 +235,7 @@ main(const int argc, char *const argv[])
 	 * XXX We should use str_replace here.
 	 */
 #define PERF_OUTPUT_NAME "events"
-	int res = attach_callback_to_perf_output(b, PERF_OUTPUT_NAME,
+	int res = attach_callback_to_perf_output(bpf, PERF_OUTPUT_NAME,
 						Print_event_cb[Out_lf_fmt]);
 	if (res == 0) {
 		if (Args.command) {
@@ -248,19 +248,19 @@ main(const int argc, char *const argv[])
 		goto error_detach;
 	}
 
-	readers = calloc(b->pr_arr_qty, sizeof(struct perf_reader *));
+	readers = calloc(bpf->pr_arr_qty, sizeof(struct perf_reader *));
 	if (readers == NULL) {
 		ERROR("out of memory");
 		goto error_detach;
 	}
 
-	for (unsigned i = 0; i < b->pr_arr_qty; i++)
-		readers[i] = b->pr_arr[i]->pr;
+	for (unsigned i = 0; i < bpf->pr_arr_qty; i++)
+		readers[i] = bpf->pr_arr[i]->pr;
 
 	int stop_tracing = 0;
 	while (!stop_tracing) {
 
-		(void) perf_reader_poll((int)b->pr_arr_qty, readers, -1);
+		(void) perf_reader_poll((int)bpf->pr_arr_qty, readers, -1);
 
 		if (OutputError) {
 			ERROR("error while writing to output");
@@ -305,11 +305,14 @@ main(const int argc, char *const argv[])
 
 	fflush(Out_lf);
 	free(readers);
-	detach_all(b);
+	detach_all(bpf);
+	free(bpf);
 	return EXIT_SUCCESS;
 
 error_detach:
-	detach_all(b);
+	detach_all(bpf);
+error_free_bpf:
+	free(bpf);
 error_kill:
 	if (PidToBeKilled) {
 		/* kill the started child */

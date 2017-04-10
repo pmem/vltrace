@@ -199,7 +199,6 @@ detach_all(struct bpf_ctx *b)
 	INFO("\rDone.                    ");
 
 	free(b->pr_arr);
-	free(b);
 }
 
 /*
