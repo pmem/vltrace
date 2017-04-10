@@ -31,8 +31,7 @@
  */
 
 /*
- * trace_libc_tmpl.c -- Trace syscalls with numbers known from libc.
- *    Uses BCC, eBPF.
+ * trace_basic_tmpl.c -- basic template of syscalls' handlers
  */
 
 /*

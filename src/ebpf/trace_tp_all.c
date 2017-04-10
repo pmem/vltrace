@@ -31,11 +31,11 @@
  */
 
 /*
- * trace_tp_all.c -- Trace syscalls. Uses BCC, eBPF.
+ * trace_tp_all.c -- trace syscalls using tracepoints
  */
 
 /*
- * tracepoint__sys_enter -- Syscall's entry handler.
+ * tracepoint__sys_enter -- syscall's entry handler
  */
 int
 tracepoint__sys_enter(struct tracepoint__raw_syscalls__sys_enter *args)
@@ -44,7 +44,7 @@ tracepoint__sys_enter(struct tracepoint__raw_syscalls__sys_enter *args)
 }
 
 /*
- * tracepoint__sys_exit -- Syscall's exit handler.
+ * tracepoint__sys_exit -- syscall's exit handler
  */
 int
 tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)

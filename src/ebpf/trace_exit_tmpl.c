@@ -32,7 +32,7 @@
 
 /*
  * trace_exit_tmpl.c -- trace exit() and exit_group() syscalls
- *                      in full-follow-fork mode. Uses BCC, eBPF.
+ *                      in full-follow-fork mode
  */
 
 /*

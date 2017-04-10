@@ -31,7 +31,7 @@
  */
 
 /*
- * ebpf_syscalls.h -- a list of glibc-supported syscalls.
+ * ebpf_syscalls.h -- definitions for table of known syscalls
  */
 
 #ifndef EBPF_SYSCALLS_H
@@ -90,14 +90,8 @@ enum masks_t {
 
 	/* syscall should be traced in 'kern-all' mode only */
 	EM_kern_all = 1 << 15,
-	/* syscall should be traced in 'kern-all' and 'libc-all' modes */
-	EM_libc_all = 1 << 16,
-	/*
-	 * syscall should be traced in 'kern-all', 'libc-all' and 'fileio'
-	 *    modes
-	 */
-	EM_fileio = 1 << 17,
-
+	/* syscall should be traced in 'fileio' mode only */
+	EM_fileio = 1 << 16,
 
 	/* syscall accepts fd as a first arg */
 	EM_desc = EM_fd_1,
@@ -141,8 +135,9 @@ struct syscall_name {
 	size_t length;
 };
 
-/* Currently glibc does not have appropriate macro for it */
+/* size of table of syscalls */
 enum { SC_TBL_SIZE = 1024 };
+
 extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
 extern struct syscall_name Syscall_names[SC_TBL_SIZE];
 

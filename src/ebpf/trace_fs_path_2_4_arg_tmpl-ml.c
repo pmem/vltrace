@@ -31,9 +31,9 @@
  */
 
 /*
- * trace_fs_path_2_4_arg_tmpl-ml.c -- Trace syscalls with numbers known from
- *    libc and filename as first argument. Multi-packet version.
- *    Uses BCC, eBPF.
+ * trace_fs_path_2_4_arg_tmpl-ml.c -- trace syscalls with filename
+ *                                    as the 2nd and the 4th argument,
+ *                                    multi-packet version.
  */
 
 /*

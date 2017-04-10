@@ -31,9 +31,9 @@
  */
 
 /*
- * trace_fileat_tmpl-ml.c -- Trace syscalls with numbers known from libc and
- *    a fd as first arg and a filename as second argument. Multi-packet
- *    version. Uses BCC, eBPF.
+ * trace_fileat_tmpl-ml.c -- trace syscalls with a file descriptor as the first
+ *                           and a filename as the second argument,
+ *                           multi-packet version
  */
 
 /*

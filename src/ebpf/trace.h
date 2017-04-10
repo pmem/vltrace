@@ -48,8 +48,7 @@ struct data_entry_t {
 	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
 
 	/*
-	 * This field is set for glibc-defined syscalls and describe
-	 *    a series of packets for every syscall.
+	 * This field describes a series of packets for every syscall.
 	 *
 	 * It is needed because stack size is limited to 512 bytes and used part
 	 * of the stack is initialized with zero on every call of syscall handlers.
@@ -108,8 +107,7 @@ struct data_exit_t {
 	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
 
 	/*
-	 * This field is set for glibc-defined syscalls and describe
-	 *    a series of packets for every syscall.
+	 * This field describes a series of packets for every syscall.
 	 *
 	 * It is needed because stack size is limited to 512 bytes and used part
 	 * of the stack is initialized with zero on every call of syscall handlers.

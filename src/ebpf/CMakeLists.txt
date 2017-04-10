@@ -37,8 +37,8 @@ project(libebpf C)
 set (BIN_SRCS
 	trace.h
 	trace_head.c
+	trace_basic_tmpl.c
 	trace_tp_all.c
-	trace_libc_tmpl.c
 	trace_file_tmpl-ml.c
 	trace_fileat_tmpl-ml.c
 	trace_file_tmpl-sl.c

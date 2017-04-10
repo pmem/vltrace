@@ -72,7 +72,7 @@ Miscellaneous:
         Print a list of all traceable low-level funcs of the running kernel.
         WARNING: really long. ~45000 functions.
     -B, --builtin-list
-        Print a list of all syscalls known by glibc.
+        Print a list of all known syscalls.
 
 Examples:
     ./strace.ebpf           # trace all syscalls in the system

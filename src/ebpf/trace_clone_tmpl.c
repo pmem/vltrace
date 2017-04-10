@@ -31,8 +31,7 @@
  */
 
 /*
- * trace_clone_tmpl.c -- Trace clone() syscall in full-follow-fork mode.
- *                       Uses BCC, eBPF.
+ * trace_clone_tmpl.c -- trace clone() syscall in full-follow-fork mode
  */
 
 /*

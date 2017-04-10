@@ -62,7 +62,7 @@ extern const char *ebpf_vfork_tmpl_file;
 extern const char *ebpf_clone_tmpl_file;
 extern const char *ebpf_exit_tmpl_file;
 
-extern const char *ebpf_libc_tmpl_file;
+extern const char *ebpf_basic_tmpl_file;
 extern const char *ebpf_tp_all_file;
 
 extern const char *ebpf_pid_check_own_hook_file;
@@ -123,8 +123,8 @@ extern const char _binary_trace_head_c_start[];
 extern const char _binary_trace_h_end[];
 extern const char _binary_trace_h_start[];
 
-extern const char _binary_trace_libc_tmpl_c_end[];
-extern const char _binary_trace_libc_tmpl_c_start[];
+extern const char _binary_trace_basic_tmpl_c_end[];
+extern const char _binary_trace_basic_tmpl_c_start[];
 
 extern const char _binary_trace_tp_all_c_end[];
 extern const char _binary_trace_tp_all_c_start[];

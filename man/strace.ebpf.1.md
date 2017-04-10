@@ -239,7 +239,7 @@ WARNING: really long. ~45000 functions for 4.4 kernel.
 
 `-B, --builtin-list`
 
-Print a list of all syscalls known by glibc.
+Print a list of all known syscalls.
 
 
 # CONFIGURATION #

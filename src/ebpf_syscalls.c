@@ -31,7 +31,7 @@
  */
 
 /*
- * ebpf_syscalls.c -- a table of glibc-supported syscalls
+ * ebpf_syscalls.c -- a table of known syscalls
  */
 
 #include <stdlib.h>

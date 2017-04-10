@@ -70,7 +70,7 @@ const char *ebpf_vfork_tmpl_file = "trace_vfork_tmpl.c";
 const char *ebpf_clone_tmpl_file = "trace_clone_tmpl.c";
 const char *ebpf_exit_tmpl_file = "trace_exit_tmpl.c";
 
-const char *ebpf_libc_tmpl_file = "trace_libc_tmpl.c";
+const char *ebpf_basic_tmpl_file = "trace_basic_tmpl.c";
 const char *ebpf_tp_all_file = "trace_tp_all.c";
 
 const char *ebpf_pid_check_own_hook_file =
@@ -93,8 +93,8 @@ ebpf_load_file(const char *const fn)
 	/* fallback to embedded ones */
 	if (0 == strcmp(ebpf_head_file, fn)) {
 		return BINARY_FILE_CONTENT(trace_head_c);
-	} else if (0 == strcmp(ebpf_libc_tmpl_file, fn)) {
-		return BINARY_FILE_CONTENT(trace_libc_tmpl_c);
+	} else if (0 == strcmp(ebpf_basic_tmpl_file, fn)) {
+		return BINARY_FILE_CONTENT(trace_basic_tmpl_c);
 	} else if (0 == strcmp(ebpf_file_tmpl_ml_file, fn)) {
 		return BINARY_FILE_CONTENT(trace_file_tmpl_ml_c);
 	} else if (0 == strcmp(ebpf_file_tmpl_sl_file, fn)) {
