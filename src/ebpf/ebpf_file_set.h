@@ -45,25 +45,25 @@ extern const char *ebpf_trace_h_file;
 
 extern const char *ebpf_head_file;
 
-extern const char *ebpf_file_tmpl_ml_file;
-extern const char *ebpf_fileat_tmpl_ml_file;
-extern const char *ebpf_fs_path_1_2_arg_tmpl_ml_file;
-extern const char *ebpf_fs_path_1_3_arg_tmpl_ml_file;
-extern const char *ebpf_fs_path_2_4_arg_tmpl_ml_file;
+extern const char *ebpf_path_1_ml_file;
+extern const char *ebpf_path_2_ml_file;
+extern const char *ebpf_path_1_2_ml_file;
+extern const char *ebpf_path_1_3_ml_file;
+extern const char *ebpf_path_2_4_ml_file;
 
-extern const char *ebpf_file_tmpl_sl_file;
-extern const char *ebpf_fileat_tmpl_sl_file;
-extern const char *ebpf_fs_path_1_2_arg_tmpl_sl_file;
-extern const char *ebpf_fs_path_1_3_arg_tmpl_sl_file;
-extern const char *ebpf_fs_path_2_4_arg_tmpl_sl_file;
+extern const char *ebpf_path_1_sl_file;
+extern const char *ebpf_path_2_sl_file;
+extern const char *ebpf_path_1_2_sl_file;
+extern const char *ebpf_path_1_3_sl_file;
+extern const char *ebpf_path_2_4_sl_file;
 
-extern const char *ebpf_fork_tmpl_file;
-extern const char *ebpf_vfork_tmpl_file;
-extern const char *ebpf_clone_tmpl_file;
-extern const char *ebpf_exit_tmpl_file;
+extern const char *ebpf_fork_file;
+extern const char *ebpf_vfork_file;
+extern const char *ebpf_clone_file;
+extern const char *ebpf_exit_file;
 
-extern const char *ebpf_basic_tmpl_file;
-extern const char *ebpf_tp_all_file;
+extern const char *ebpf_basic_file;
+extern const char *ebpf_tracepoints_file;
 
 extern const char *ebpf_pid_check_own_hook_file;
 extern const char *ebpf_pid_check_ff_disabled_hook_file;
@@ -75,47 +75,47 @@ char *ebpf_load_file(const char *fn);
 
 /* bodies */
 
-extern const char _binary_trace_file_tmpl_sl_c_end[];
-extern const char _binary_trace_file_tmpl_sl_c_start[];
+extern const char _binary_template_path_1_sl_c_end[];
+extern const char _binary_template_path_1_sl_c_start[];
 
-extern const char _binary_trace_fileat_tmpl_sl_c_end[];
-extern const char _binary_trace_fileat_tmpl_sl_c_start[];
+extern const char _binary_template_path_2_sl_c_end[];
+extern const char _binary_template_path_2_sl_c_start[];
 
-extern const char _binary_trace_fs_path_1_2_arg_tmpl_sl_c_end[];
-extern const char _binary_trace_fs_path_1_2_arg_tmpl_sl_c_start[];
+extern const char _binary_template_path_1_2_sl_c_end[];
+extern const char _binary_template_path_1_2_sl_c_start[];
 
-extern const char _binary_trace_fs_path_1_3_arg_tmpl_sl_c_end[];
-extern const char _binary_trace_fs_path_1_3_arg_tmpl_sl_c_start[];
+extern const char _binary_template_path_1_3_sl_c_end[];
+extern const char _binary_template_path_1_3_sl_c_start[];
 
-extern const char _binary_trace_fs_path_2_4_arg_tmpl_sl_c_end[];
-extern const char _binary_trace_fs_path_2_4_arg_tmpl_sl_c_start[];
+extern const char _binary_template_path_2_4_sl_c_end[];
+extern const char _binary_template_path_2_4_sl_c_start[];
 
-extern const char _binary_trace_file_tmpl_ml_c_end[];
-extern const char _binary_trace_file_tmpl_ml_c_start[];
+extern const char _binary_template_path_1_ml_c_end[];
+extern const char _binary_template_path_1_ml_c_start[];
 
-extern const char _binary_trace_fileat_tmpl_ml_c_end[];
-extern const char _binary_trace_fileat_tmpl_ml_c_start[];
+extern const char _binary_template_path_2_ml_c_end[];
+extern const char _binary_template_path_2_ml_c_start[];
 
-extern const char _binary_trace_fs_path_1_2_arg_tmpl_ml_c_end[];
-extern const char _binary_trace_fs_path_1_2_arg_tmpl_ml_c_start[];
+extern const char _binary_template_path_1_2_ml_c_end[];
+extern const char _binary_template_path_1_2_ml_c_start[];
 
-extern const char _binary_trace_fs_path_1_3_arg_tmpl_ml_c_end[];
-extern const char _binary_trace_fs_path_1_3_arg_tmpl_ml_c_start[];
+extern const char _binary_template_path_1_3_ml_c_end[];
+extern const char _binary_template_path_1_3_ml_c_start[];
 
-extern const char _binary_trace_fs_path_2_4_arg_tmpl_ml_c_end[];
-extern const char _binary_trace_fs_path_2_4_arg_tmpl_ml_c_start[];
+extern const char _binary_template_path_2_4_ml_c_end[];
+extern const char _binary_template_path_2_4_ml_c_start[];
 
-extern const char _binary_trace_fork_tmpl_c_end[];
-extern const char _binary_trace_fork_tmpl_c_start[];
+extern const char _binary_template_fork_c_end[];
+extern const char _binary_template_fork_c_start[];
 
-extern const char _binary_trace_vfork_tmpl_c_end[];
-extern const char _binary_trace_vfork_tmpl_c_start[];
+extern const char _binary_template_vfork_c_end[];
+extern const char _binary_template_vfork_c_start[];
 
-extern const char _binary_trace_clone_tmpl_c_end[];
-extern const char _binary_trace_clone_tmpl_c_start[];
+extern const char _binary_template_clone_c_end[];
+extern const char _binary_template_clone_c_start[];
 
-extern const char _binary_trace_exit_tmpl_c_end[];
-extern const char _binary_trace_exit_tmpl_c_start[];
+extern const char _binary_template_exit_c_end[];
+extern const char _binary_template_exit_c_start[];
 
 extern const char _binary_trace_head_c_end[];
 extern const char _binary_trace_head_c_start[];
@@ -123,11 +123,11 @@ extern const char _binary_trace_head_c_start[];
 extern const char _binary_trace_h_end[];
 extern const char _binary_trace_h_start[];
 
-extern const char _binary_trace_basic_tmpl_c_end[];
-extern const char _binary_trace_basic_tmpl_c_start[];
+extern const char _binary_template_no_path_c_end[];
+extern const char _binary_template_no_path_c_start[];
 
-extern const char _binary_trace_tp_all_c_end[];
-extern const char _binary_trace_tp_all_c_start[];
+extern const char _binary_template_tracepoints_c_end[];
+extern const char _binary_template_tracepoints_c_start[];
 
 extern const char _binary_pid_check_own_hook_c_end[];
 extern const char _binary_pid_check_own_hook_c_start[];

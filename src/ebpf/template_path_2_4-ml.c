@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, Intel Corporation
+ * Copyright 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,8 +31,9 @@
  */
 
 /*
- * trace_file_tmpl-ml.c -- trace syscalls with filename as the first argument,
- *                         multi-packet version
+ * template_path_2_4-ml.c -- templates for syscalls with filename
+ *                           as the 2nd and the 4th argument,
+ *                           multi-packet version.
  */
 
 /*
@@ -81,7 +82,7 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	if (fsp == 0)
 		return 0;
 
-	u.ev.packet_type = 1; /* 1 additional packets */
+	u.ev.packet_type = 2; /* 2 additional packets */
 	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
 	u.ev.args[0] = fsp->arg_1;
 	u.ev.args[1] = fsp->arg_2;
@@ -99,7 +100,11 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	events.perf_submit(ctx, &u.ev, offsetof(struct data_entry_t, aux_str));
 
 	u.ev.packet_type = -1; /* first additional packet */
-	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp-.args[0]);
+	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp-.args[1]);
+	events.perf_submit(ctx, &u.ev, _pad_size);
+
+	u.ev.packet_type = -2; /* second additional packet */
+	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp-.args[3]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	tmp_i.delete(&pid_tid);

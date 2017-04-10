@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, Intel Corporation
+ * Copyright 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,8 +31,7 @@
  */
 
 /*
- * trace_exit_tmpl.c -- trace exit() and exit_group() syscalls
- *                      in full-follow-fork mode
+ * template_clone.c -- templates for clone() syscall in full-follow-fork mode
  */
 
 /*
@@ -44,18 +43,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
-	u64 pid = (pid_tid >> 32);
-	if (pid != TRACED_PID) {
-		u64 *val = children_map.lookup(&pid);
-		if (NULL == val) {
-			return 0;
-		}
-		if (*val != 1) {
-			return 0;
-		}
-		/* remove because the child exits */
-		children_map.delete(&pid);
-	}
+	PID_CHECK_HOOK
 
 	ev.type = E_SC_ENTRY;
 	ev.start_ts_nsec = bpf_ktime_get_ns();
@@ -95,6 +83,11 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.pid_tid = pid_tid;
 	ev.finish_ts_nsec = cur_nsec;
 	ev.ret = PT_REGS_RC(ctx);
+
+	if (0 < ev.ret) {
+		u64 one = 1;
+		children_map.update(&ev.ret, &one);
+	}
 
 	events.perf_submit(ctx, &ev, sizeof(struct data_exit_t));
 

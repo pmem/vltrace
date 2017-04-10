@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, Intel Corporation
+ * Copyright 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,46 +31,72 @@
  */
 
 /*
- * trace_tp_all.c -- trace syscalls using tracepoints
+ * template_path_1_3-sl.c -- templates for syscalls with filename
+ *                           as the 1st and the 3rd argument,
+ *                           single-packet version.
  */
 
 /*
- * tracepoint__sys_enter -- syscall's entry handler
+ * kprobe__SYSCALL_NAME -- SYSCALL_NAME() entry handler
  */
 int
-tracepoint__sys_enter(struct tracepoint__raw_syscalls__sys_enter *args)
+kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	return 0;
-}
-
-/*
- * tracepoint__sys_exit -- syscall's exit handler
- */
-int
-tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
-{
-	struct tp_s tp;
 	u64 pid_tid = bpf_get_current_pid_tgid();
-
-	tp.finish_ts_nsec = bpf_ktime_get_ns();
-	tp.id = args->id;
-	tp.ret = args->ret;
 
 	PID_CHECK_HOOK
 
-	if (tp.id == __NR_clone ||
-	    tp.id == __NR_fork  ||
-	    tp.id == __NR_vfork) {
-		if (tp.ret > 0) {
-			u64 one = 1;
-			children_map.update(&tp.ret, &one);
-		}
-	}
+	enum { _pad_size = offsetof(struct data_entry_t, aux_str) + NAME_MAX };
 
-	tp.type = E_SC_TP;
-	tp.pid_tid = pid_tid;
+	union {
+		struct data_entry_t ev;
+		char _pad[_pad_size];
+	} u;
 
-	events.perf_submit(args, &tp, sizeof(tp));
+	u.ev.type = E_SC_ENTRY;
+	u.ev.start_ts_nsec = bpf_ktime_get_ns();
+
+	u.ev.packet_type = 0; /* No additional packets */
+	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	u.ev.pid_tid = pid_tid;
+
+	u.ev.args[0] = PT_REGS_PARM1(ctx);
+	u.ev.args[1] = PT_REGS_PARM2(ctx);
+	u.ev.args[2] = PT_REGS_PARM3(ctx);
+	u.ev.args[3] = PT_REGS_PARM4(ctx);
+	u.ev.args[4] = PT_REGS_PARM5(ctx);
+	u.ev.args[5] = PT_REGS_PARM6(ctx);
+
+	bpf_probe_read(&u.ev.aux_str, NAME_MAX / 2, (void *)u.ev.args[0]);
+	bpf_probe_read((&u.ev.aux_str) + (NAME_MAX / 2),
+		       NAME_MAX - (NAME_MAX / 2),
+		       (void *)u.ev.args[2]);
+	events.perf_submit(ctx, &u.ev, _pad_size);
+
+	return 0;
+};
+
+/*
+ * kretprobe__SYSCALL_NAME -- SYSCALL_NAME() exit handler
+ */
+int
+kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
+{
+	struct data_exit_t ev;
+
+	u64 cur_nsec = bpf_ktime_get_ns();
+	u64 pid_tid = bpf_get_current_pid_tgid();
+
+	PID_CHECK_HOOK
+
+	ev.type = E_SC_EXIT;
+	ev.packet_type = 0; /* No additional packets */
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.pid_tid = pid_tid;
+	ev.finish_ts_nsec = cur_nsec;
+	ev.ret = PT_REGS_RC(ctx);
+
+	events.perf_submit(ctx, &ev, sizeof(struct data_exit_t));
 
 	return 0;
 }

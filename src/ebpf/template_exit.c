@@ -31,9 +31,8 @@
  */
 
 /*
- * trace_fileat_tmpl-ml.c -- trace syscalls with a file descriptor as the first
- *                           and a filename as the second argument,
- *                           multi-packet version
+ * template_exit.c -- templates for exit() and exit_group() syscalls
+ *                    in full-follow-fork mode
  */
 
 /*
@@ -42,20 +41,37 @@
 int
 kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct first_step_t fs;
+	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
-	PID_CHECK_HOOK
+	u64 pid = (pid_tid >> 32);
+	if (pid != TRACED_PID) {
+		u64 *val = children_map.lookup(&pid);
+		if (NULL == val) {
+			return 0;
+		}
+		if (*val != 1) {
+			return 0;
+		}
+		/* remove because the child exits */
+		children_map.delete(&pid);
+	}
 
-	fs.start_ts_nsec = bpf_ktime_get_ns();
-	fs.args[0] = PT_REGS_PARM1(ctx);
-	fs.args[1] = PT_REGS_PARM2(ctx);
-	fs.args[2] = PT_REGS_PARM3(ctx);
-	fs.args[3] = PT_REGS_PARM4(ctx);
-	fs.args[4] = PT_REGS_PARM5(ctx);
-	fs.args[5] = PT_REGS_PARM6(ctx);
+	ev.type = E_SC_ENTRY;
+	ev.start_ts_nsec = bpf_ktime_get_ns();
 
-	tmp_i.update(&pid_tid, &fs);
+	ev.packet_type = 0; /* No additional packets */
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.pid_tid = pid_tid;
+
+	ev.args[0] = PT_REGS_PARM1(ctx);
+	ev.args[1] = PT_REGS_PARM2(ctx);
+	ev.args[2] = PT_REGS_PARM3(ctx);
+	ev.args[3] = PT_REGS_PARM4(ctx);
+	ev.args[4] = PT_REGS_PARM5(ctx);
+	ev.args[5] = PT_REGS_PARM6(ctx);
+
+	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, aux_str));
 
 	return 0;
 };
@@ -66,44 +82,21 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 int
 kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct first_step_t *fsp;
-
-	enum { _pad_size = offsetof(struct data_entry_t, str) + NAME_MAX };
-
-	union {
-		struct data_entry_t ev;
-		char _pad[_pad_size];
-	} u;
+	struct data_exit_t ev;
 
 	u64 cur_nsec = bpf_ktime_get_ns();
-
 	u64 pid_tid = bpf_get_current_pid_tgid();
-	fsp = tmp_i.lookup(&pid_tid);
-	if (fsp == 0)
-		return 0;
 
-	u.ev.packet_type = 1; /* 1 additional packets */
-	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
-	u.ev.args[0] = fsp->arg_1;
-	u.ev.args[1] = fsp->arg_2;
-	u.ev.args[2] = fsp->arg_3;
-	u.ev.args[3] = fsp->arg_4;
-	u.ev.args[4] = fsp->arg_5;
-	u.ev.args[5] = fsp->arg_6;
-	u.ev.pid_tid = pid_tid;
-	u.ev.start_ts_nsec = fsp->start_ts_nsec;
-	u.ev.finish_ts_nsec = cur_nsec;
-	u.ev.ret = PT_REGS_RC(ctx);
-	/* XXX enum ??? */
-	// const size_t ev_size = offsetof(struct data_entry_t, aux_str);
-	// events.perf_submit(ctx, &u.ev, ev_size);
-	events.perf_submit(ctx, &u.ev, offsetof(struct data_entry_t, aux_str));
+	PID_CHECK_HOOK
 
-	u.ev.packet_type = -1; /* first additional packet */
-	bpf_probe_read(&u.ev.str, NAME_MAX, (void *)fsp-.args[1]);
-	events.perf_submit(ctx, &u.ev, _pad_size);
+	ev.type = E_SC_EXIT;
+	ev.packet_type = 0; /* No additional packets */
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.pid_tid = pid_tid;
+	ev.finish_ts_nsec = cur_nsec;
+	ev.ret = PT_REGS_RC(ctx);
 
-	tmp_i.delete(&pid_tid);
+	events.perf_submit(ctx, &ev, sizeof(struct data_exit_t));
 
 	return 0;
 }

@@ -31,9 +31,9 @@
  */
 
 /*
- * trace_fs_path_2_4_arg_tmpl-sl.c -- trace syscalls with filename
- *                                    as the 2nd and the 4th argument,
- *                                    single-packet version.
+ * template_path_2_4-sl.c -- templates for syscalls with filename
+ *                           as the 2nd and the 4th argument,
+ *                           single-packet version.
  */
 
 /*

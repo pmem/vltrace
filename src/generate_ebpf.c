@@ -95,10 +95,10 @@ load_ebpf_fileat_tmpl(void)
 
 	switch (Args.fnr_mode) {
 	case E_FNR_FAST:
-		text = load_file_no_cr(ebpf_fileat_tmpl_sl_file);
+		text = load_file_no_cr(ebpf_path_2_sl_file);
 		break;
 	case E_FNR_NAME_MAX:
-		text = load_file_no_cr(ebpf_fileat_tmpl_ml_file);
+		text = load_file_no_cr(ebpf_path_2_ml_file);
 		break;
 	case E_FNR_FULL:
 		/* XXX */
@@ -117,10 +117,10 @@ load_ebpf_file_tmpl(void)
 
 	switch (Args.fnr_mode) {
 	case E_FNR_FAST:
-		text = load_file_no_cr(ebpf_file_tmpl_sl_file);
+		text = load_file_no_cr(ebpf_path_1_sl_file);
 		break;
 	case E_FNR_NAME_MAX:
-		text = load_file_no_cr(ebpf_file_tmpl_ml_file);
+		text = load_file_no_cr(ebpf_path_1_ml_file);
 		break;
 	case E_FNR_FULL:
 		/* XXX */
@@ -143,17 +143,17 @@ get_template(unsigned i)
 	if (Args.ff_mode == E_FF_FULL) {
 		switch (i) {
 		case __NR_clone:
-			text = load_file_no_cr(ebpf_clone_tmpl_file);
+			text = load_file_no_cr(ebpf_clone_file);
 			break;
 		case __NR_vfork:
-			text = load_file_no_cr(ebpf_vfork_tmpl_file);
+			text = load_file_no_cr(ebpf_vfork_file);
 			break;
 		case __NR_fork:
-			text = load_file_no_cr(ebpf_fork_tmpl_file);
+			text = load_file_no_cr(ebpf_fork_file);
 			break;
 		case __NR_exit:
 		case __NR_exit_group:
-			text = load_file_no_cr(ebpf_exit_tmpl_file);
+			text = load_file_no_cr(ebpf_exit_file);
 			break;
 		};
 	}
@@ -162,12 +162,10 @@ get_template(unsigned i)
 			(EM_fs_path_1_2 & Syscall_array[i].masks)) {
 		switch (Args.fnr_mode) {
 		case E_FNR_FAST:
-			text = load_file_no_cr(
-					ebpf_fs_path_1_2_arg_tmpl_sl_file);
+			text = load_file_no_cr(ebpf_path_1_2_sl_file);
 			break;
 		case E_FNR_NAME_MAX:
-			text = load_file_no_cr(
-					ebpf_fs_path_1_2_arg_tmpl_ml_file);
+			text = load_file_no_cr(ebpf_path_1_2_ml_file);
 			break;
 		case E_FNR_FULL:
 			/* XXX */
@@ -179,12 +177,10 @@ get_template(unsigned i)
 			(EM_fs_path_1_3 & Syscall_array[i].masks)) {
 		switch (Args.fnr_mode) {
 		case E_FNR_FAST:
-			text = load_file_no_cr(
-					ebpf_fs_path_1_3_arg_tmpl_sl_file);
+			text = load_file_no_cr(ebpf_path_1_3_sl_file);
 			break;
 		case E_FNR_NAME_MAX:
-			text = load_file_no_cr(
-					ebpf_fs_path_1_3_arg_tmpl_ml_file);
+			text = load_file_no_cr(ebpf_path_1_3_ml_file);
 			break;
 		case E_FNR_FULL:
 			/* XXX */
@@ -196,12 +192,10 @@ get_template(unsigned i)
 			(EM_fs_path_2_4 & Syscall_array[i].masks)) {
 		switch (Args.fnr_mode) {
 		case E_FNR_FAST:
-			text = load_file_no_cr(
-					ebpf_fs_path_2_4_arg_tmpl_sl_file);
+			text = load_file_no_cr(ebpf_path_2_4_sl_file);
 			break;
 		case E_FNR_NAME_MAX:
-			text = load_file_no_cr(
-					ebpf_fs_path_2_4_arg_tmpl_ml_file);
+			text = load_file_no_cr(ebpf_path_2_4_ml_file);
 			break;
 		case E_FNR_FULL:
 			/* XXX */
@@ -214,7 +208,7 @@ get_template(unsigned i)
 	} else if (EM_fileat == (EM_fileat & Syscall_array[i].masks)) {
 		text = load_ebpf_fileat_tmpl();
 	} else {
-		text = load_file_no_cr(ebpf_basic_tmpl_file);
+		text = load_file_no_cr(ebpf_basic_file);
 	}
 
 	if (NULL == text)
@@ -381,7 +375,7 @@ generate_ebpf_kp_desc(FILE *ts)
 		if (EM_desc != (EM_desc & Syscall_array[i].masks))
 			continue;
 
-		text = load_file_no_cr(ebpf_basic_tmpl_file);
+		text = load_file_no_cr(ebpf_basic_file);
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);
@@ -425,7 +419,7 @@ generate_ebpf_kp_fileio(FILE *ts)
 static int
 generate_ebpf_tp_all(FILE *ts)
 {
-	char *text = load_file_no_cr(ebpf_tp_all_file);
+	char *text = load_file_no_cr(ebpf_tracepoints_file);
 	int ret = 0;
 
 	size_t fw_res = fwrite(text, strlen(text), 1, ts);

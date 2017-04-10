@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,7 +31,9 @@
  */
 
 /*
- * trace_clone_tmpl.c -- trace clone() syscall in full-follow-fork mode
+ * template_path_2-sl.c -- templates for syscalls with filename
+ *                         as the 2nd argument,
+ *                         single-packet version
  */
 
 /*
@@ -40,26 +42,32 @@
 int
 kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 {
-	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
 
-	ev.type = E_SC_ENTRY;
-	ev.start_ts_nsec = bpf_ktime_get_ns();
+	enum { _pad_size = offsetof(struct data_entry_t, aux_str) + NAME_MAX };
+	union {
+		struct data_entry_t ev;
+		char _pad[_pad_size];
+	} u;
 
-	ev.packet_type = 0; /* No additional packets */
-	ev.sc_id = SYSCALL_NR; /* SysCall ID */
-	ev.pid_tid = pid_tid;
+	u.ev.type = E_SC_ENTRY;
+	u.ev.start_ts_nsec = bpf_ktime_get_ns();
 
-	ev.args[0] = PT_REGS_PARM1(ctx);
-	ev.args[1] = PT_REGS_PARM2(ctx);
-	ev.args[2] = PT_REGS_PARM3(ctx);
-	ev.args[3] = PT_REGS_PARM4(ctx);
-	ev.args[4] = PT_REGS_PARM5(ctx);
-	ev.args[5] = PT_REGS_PARM6(ctx);
+	u.ev.packet_type = 0; /* No additional packets */
+	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	u.ev.pid_tid = pid_tid;
 
-	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, aux_str));
+	u.ev.args[0] = PT_REGS_PARM1(ctx);
+	u.ev.args[1] = PT_REGS_PARM2(ctx);
+	u.ev.args[2] = PT_REGS_PARM3(ctx);
+	u.ev.args[3] = PT_REGS_PARM4(ctx);
+	u.ev.args[4] = PT_REGS_PARM5(ctx);
+	u.ev.args[5] = PT_REGS_PARM6(ctx);
+
+	bpf_probe_read(&u.ev.aux_str, NAME_MAX, (void *)u.ev.args[1]);
+	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	return 0;
 };
@@ -83,11 +91,6 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.pid_tid = pid_tid;
 	ev.finish_ts_nsec = cur_nsec;
 	ev.ret = PT_REGS_RC(ctx);
-
-	if (0 < ev.ret) {
-		u64 one = 1;
-		children_map.update(&ev.ret, &one);
-	}
 
 	events.perf_submit(ctx, &ev, sizeof(struct data_exit_t));
 

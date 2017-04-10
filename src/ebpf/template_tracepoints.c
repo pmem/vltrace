@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,65 +31,46 @@
  */
 
 /*
- * trace_fork_tmpl.c -- trace fork() syscall in full-follow-fork mode
+ * template_tracepoints.c -- trace syscalls using tracepoints
  */
 
 /*
- * kprobe__SYSCALL_NAME -- SYSCALL_NAME() entry handler
+ * tracepoint__sys_enter -- syscall's entry handler
  */
 int
-kprobe__SYSCALL_NAME(struct pt_regs *ctx)
+tracepoint__sys_enter(struct tracepoint__raw_syscalls__sys_enter *args)
 {
-	struct data_entry_t ev;
-	u64 pid_tid = bpf_get_current_pid_tgid();
-
-	PID_CHECK_HOOK
-
-	ev.type = E_SC_ENTRY;
-	ev.start_ts_nsec = bpf_ktime_get_ns();
-
-	ev.packet_type = 0; /* No additional packets */
-	ev.sc_id = SYSCALL_NR; /* SysCall ID */
-	ev.pid_tid = pid_tid;
-
-	ev.args[0] = PT_REGS_PARM1(ctx);
-	ev.args[1] = PT_REGS_PARM2(ctx);
-	ev.args[2] = PT_REGS_PARM3(ctx);
-	ev.args[3] = PT_REGS_PARM4(ctx);
-	ev.args[4] = PT_REGS_PARM5(ctx);
-	ev.args[5] = PT_REGS_PARM6(ctx);
-
-	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, args));
-
 	return 0;
-};
+}
 
 /*
- * kretprobe__SYSCALL_NAME -- SYSCALL_NAME() exit handler
+ * tracepoint__sys_exit -- syscall's exit handler
  */
 int
-kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
+tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 {
-	struct data_exit_t ev;
-
-	u64 cur_nsec = bpf_ktime_get_ns();
+	struct tp_s tp;
 	u64 pid_tid = bpf_get_current_pid_tgid();
+
+	tp.finish_ts_nsec = bpf_ktime_get_ns();
+	tp.id = args->id;
+	tp.ret = args->ret;
 
 	PID_CHECK_HOOK
 
-	ev.type = E_SC_EXIT;
-	ev.packet_type = 0; /* No additional packets */
-	ev.sc_id = SYSCALL_NR; /* SysCall ID */
-	ev.pid_tid = pid_tid;
-	ev.finish_ts_nsec = cur_nsec;
-	ev.ret = PT_REGS_RC(ctx);
-
-	if (0 < ev.ret) {
-		u64 one = 1;
-		children_map.update(&ev.ret, &one);
+	if (tp.id == __NR_clone ||
+	    tp.id == __NR_fork  ||
+	    tp.id == __NR_vfork) {
+		if (tp.ret > 0) {
+			u64 one = 1;
+			children_map.update(&tp.ret, &one);
+		}
 	}
 
-	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, args));
+	tp.type = E_SC_TP;
+	tp.pid_tid = pid_tid;
+
+	events.perf_submit(args, &tp, sizeof(tp));
 
 	return 0;
 }

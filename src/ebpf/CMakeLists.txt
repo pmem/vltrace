@@ -37,22 +37,22 @@ project(libebpf C)
 set (BIN_SRCS
 	trace.h
 	trace_head.c
-	trace_basic_tmpl.c
-	trace_tp_all.c
-	trace_file_tmpl-ml.c
-	trace_fileat_tmpl-ml.c
-	trace_file_tmpl-sl.c
-	trace_fileat_tmpl-sl.c
-	trace_clone_tmpl.c
-	trace_fork_tmpl.c
-	trace_vfork_tmpl.c
-	trace_exit_tmpl.c
-	trace_fs_path_1_2_arg_tmpl-ml.c
-	trace_fs_path_1_3_arg_tmpl-ml.c
-	trace_fs_path_2_4_arg_tmpl-ml.c
-	trace_fs_path_1_2_arg_tmpl-sl.c
-	trace_fs_path_1_3_arg_tmpl-sl.c
-	trace_fs_path_2_4_arg_tmpl-sl.c
+	template_no_path.c
+	template_path_1-sl.c
+	template_path_2-sl.c
+	template_path_1_2-sl.c
+	template_path_1_3-sl.c
+	template_path_2_4-sl.c
+	template_path_1-ml.c
+	template_path_2-ml.c
+	template_path_1_2-ml.c
+	template_path_1_3-ml.c
+	template_path_2_4-ml.c
+	template_clone.c
+	template_fork.c
+	template_vfork.c
+	template_exit.c
+	template_tracepoints.c
 	pid_check_own_hook.c
 	pid_check_ff_disabled_hook.c
 	pid_check_ff_full_hook.c
