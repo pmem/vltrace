@@ -51,8 +51,11 @@ RUN apt-get update && apt-get install -y \
 	debhelper \
 	devscripts \
 	sudo \
-	whois \
-	bcc-tools
+	whois
+
+RUN apt-get install -y bcc-tools # 1
+
+RUN grep -A2 bpf_open_perf_buffer /usr/include/bcc/libbpf.h
 
 # Add user
 ENV USER user
