@@ -71,8 +71,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.args[4] = PT_REGS_PARM5(ctx);
 	ev.args[5] = PT_REGS_PARM6(ctx);
 
-	enum { ev_size = offsetof(struct data_entry_t, aux_str) };
-	events.perf_submit(ctx, &ev, ev_size);
+	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, aux_str));
 
 	return 0;
 };

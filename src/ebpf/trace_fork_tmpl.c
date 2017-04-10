@@ -31,8 +31,7 @@
  */
 
 /*
- * trace_fork_tmpl.c -- Trace fork() syscall in full-follow-fork mode.
- *                      Uses BCC, eBPF.
+ * trace_fork_tmpl.c -- trace fork() syscall in full-follow-fork mode
  */
 
 /*
@@ -60,7 +59,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	ev.args[4] = PT_REGS_PARM5(ctx);
 	ev.args[5] = PT_REGS_PARM6(ctx);
 
-	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t,.args[0]));
+	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, args));
 
 	return 0;
 };
@@ -90,7 +89,7 @@ kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
 		children_map.update(&ev.ret, &one);
 	}
 
-	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t,.args[0]));
+	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, args));
 
 	return 0;
 }
