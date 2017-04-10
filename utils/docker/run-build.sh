@@ -100,6 +100,10 @@ for release in Debug Release; do
 	make install
 	echo
 
+	echo "$ make uninstall"
+	make uninstall
+	echo
+
 	cd ..
 	rm -rf build
 done
