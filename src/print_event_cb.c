@@ -524,8 +524,7 @@ print_event_hex_tp(FILE *f, void *data, int size)
 	fwrite_out_lf_fld_sep(f);
 
 	if (event->id >= 0 && event->id < SC_TBL_SIZE) {
-		fwrite(Syscall_names[event->id].name,
-			Syscall_names[event->id].length, 1, f);
+		fwrite_sc_name(f, event->id);
 	} else {
 		fwrite(str_sys_exit, len_sys_exit, 1, f);
 		fprint_i64(f, (uint64_t)(event->id));

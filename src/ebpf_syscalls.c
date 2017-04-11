@@ -39,35 +39,34 @@
 
 #include "syscalls_numbers.h"
 #include "ebpf_syscalls.h"
+#include "utils.h"
 
 #ifdef __SYSCALL_X32
 #undef __SYSCALL_X32
 #endif /* __SYSCALL_X32 */
-#define __SYSCALL_X32(nr, sysname, ptregs)	[nr] = { "?", 1 },
-
-#ifdef __SYSCALL_COMMON
-#undef __SYSCALL_COMMON
-#endif /* __SYSCALL_COMMON */
-#define __SYSCALL_COMMON(nr, sysname, ptregs)	[nr] = {\
-	.name = #sysname, \
-	.length = 0, \
-},
 
 #ifdef __SYSCALL_64
 #undef __SYSCALL_64
 #endif /* __SYSCALL_64 */
-#define __SYSCALL_64(nr, sysname, ptregs)	[nr] = {\
-	.name = #sysname, \
-	.length = 0, \
-},
+
+#ifdef __SYSCALL_COMMON
+#undef __SYSCALL_COMMON
+#endif /* __SYSCALL_COMMON */
+
+#define __SYSCALL_X32(nr, sysname, ptregs)	[nr] = NULL,
+#define __SYSCALL_64(nr, sysname, ptregs)	[nr] = #sysname,
+#define __SYSCALL_COMMON(nr, sysname, ptregs)	[nr] = #sysname,
 
 /* array of syscall names */
-struct syscall_name Syscall_names[SC_TBL_SIZE] = {
-	[0 ... SC_TBL_SIZE - 1] = {"?", 1},
+char *syscall_names[SC_TBL_SIZE] = {
+	[0 ... SC_TBL_SIZE - 1] = NULL,
 /* fill the array with names from the generater header */
 #include "syscalls_64_mod.h_gen"
 };
+
+#undef __SYSCALL_X32
 #undef __SYSCALL_64
+#undef __SYSCALL_COMMON
 
 #define EBPF_SYSCALL(nr, sym, aq)    [nr] = {\
 	.num = nr, \
@@ -503,13 +502,14 @@ void
 init_syscalls_table(void)
 {
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		/* init Syscall_names[] */
-		if (Syscall_names[i].name)
-			Syscall_names[i].length = strlen(Syscall_names[i].name);
+		if (Syscall_array[i].handler_name == NULL && syscall_names[i]) {
+			Syscall_array[i].handler_name = syscall_names[i];
+			NOTICE("setting syscalls' table [%i] to '%s'",
+				i, syscall_names[i]);
+		}
 
-		/* init Syscall_array[] */
 		Syscall_array[i].attached = 0;
-		if (NULL != Syscall_array[i].handler_name) {
+		if (Syscall_array[i].handler_name != NULL) {
 			Syscall_array[i].name_length =
 				strlen(Syscall_array[i].handler_name);
 			Syscall_array[i].num = i;

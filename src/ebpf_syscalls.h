@@ -129,16 +129,10 @@ struct syscall_descriptor {
 	int attached;
 };
 
-struct syscall_name {
-	char *name;
-	size_t length;
-};
-
 /* size of table of syscalls */
 enum { SC_TBL_SIZE = 1024 };
 
 extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
-extern struct syscall_name Syscall_names[SC_TBL_SIZE];
 
 void init_syscalls_table(void);
 void free_syscalls_table(void);
