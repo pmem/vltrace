@@ -78,4 +78,7 @@ else ()
 	add_test(NAME "syscall-vfork"
 		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4)
 
+	# 8
+	add_test(NAME "syscall-sigaction"
+		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 7)
 endif ()

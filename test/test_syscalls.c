@@ -208,6 +208,43 @@ test_unsupported_syscalls(void)
 	/* vfork - moved to test_4 */
 }
 
+/* testing signals */
+int Signalled;
+
+/*
+ * sig_user_handler -- SIGALARM signal handler.
+ */
+void
+sig_user_handler(int sig, siginfo_t *si, void *unused)
+{
+	(void) sig;
+	(void) si;
+	(void) unused;
+
+	Signalled = 1;
+}
+
+/*
+ * test_signal -- test the syscall 'sigaction'
+ */
+static void
+test_signal(void)
+{
+	struct sigaction sa;
+
+	sigemptyset(&sa.sa_mask);
+	sa.sa_sigaction = sig_user_handler;
+	sa.sa_flags = SA_RESTART | SA_RESETHAND;
+	(void) sigaction(SIGUSR1, &sa, NULL);
+
+	Signalled = 0;
+
+	raise(SIGUSR1);
+
+	while (Signalled == 0)
+		sleep(1);
+}
+
 /*
  * test_0 -- test basic syscalls
  */
@@ -296,6 +333,16 @@ static void test_6(void)
 }
 
 /*
+ * test_7 -- test the syscall 'signal'
+ */
+static void test_7(void)
+{
+	MARK_START();
+	test_signal();
+	MARK_END();
+}
+
+/*
  * run_test -- array of tests
  */
 static void (*run_test[])(void) = {
@@ -305,7 +352,8 @@ static void (*run_test[])(void) = {
 	test_3,
 	test_4,
 	test_5,
-	test_6
+	test_6,
+	test_7
 };
 
 int
