@@ -85,7 +85,8 @@ get_sc_num(const char *sc_name)
 	Syscall_array[i].masks = 0;
 	Syscall_array[i].attached = 1;
 
-	INFO("Notice: syscall was added to the table: %s", sc_name);
+	NOTICE("syscall was added to the table [%i]: %s",
+		i, Syscall_array[i].handler_name);
 
 	return i;
 }
@@ -476,7 +477,7 @@ generate_ebpf()
 	free(head);
 
 	if (NULL == Args.expr) {
-		INFO("Notice: defaulting to 'trace=common'");
+		NOTICE("defaulting to 'trace=common'");
 		ret = generate_ebpf_common(ts);
 	} else if (!strcasecmp(Args.expr, "trace=common")) {
 		ret = generate_ebpf_common(ts);
@@ -532,7 +533,7 @@ apply_process_attach_code(char **const pbpf_str)
 	} else {
 		/* my own pid */
 		pid = getpid();
-		INFO("Notice: will not trace my own PID %i (0x%X)", pid, pid);
+		NOTICE("will not trace my own PID %i (0x%X)", pid, pid);
 
 		snp_res = snprintf(strpid, sizeof(strpid), "%d", pid);
 		assert(snp_res > 0);

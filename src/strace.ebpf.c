@@ -283,7 +283,7 @@ main(const int argc, char *const argv[])
 		}
 
 		if (AbortTracing) {
-			INFO("Notice: terminated by signal. Exiting...");
+			NOTICE("terminated by signal. Exiting...");
 			break;
 		}
 
@@ -296,13 +296,13 @@ main(const int argc, char *const argv[])
 				/* trace until all children exit */
 				if ((waitpid(-1, NULL, WNOHANG) == -1) &&
 				    (errno == ECHILD)) {
-					INFO("Notice: all children exited");
+					NOTICE("all children exited");
 					stop_tracing = 1;
 				}
 			} else {
 				/* trace until the child exits */
 				if (waitpid(-1, NULL, WNOHANG) == Args.pid) {
-					INFO("Notice: the child exited");
+					NOTICE("the child exited");
 					stop_tracing = 1;
 				}
 			}
