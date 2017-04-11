@@ -802,6 +802,9 @@ enum {
 #ifndef __NR_umount
 	__NR_umount,
 #endif
+#ifndef __NR_umount2
+	__NR_umount2,
+#endif
 #ifndef __NR_oldumount
 	__NR_oldumount,
 #endif
@@ -1162,16 +1165,9 @@ enum {
 #ifndef __NR_imageblit
 	__NR_imageblit,
 #endif
-
-/*
- * Syscalls with duplicated numbers -
- * - overwriten by the new version of syscall
- */
-	DUP__NR_uname,
-	DUP__NR_stat,
-	DUP__NR_lstat,
-	DUP__NR_fstat,
-	DUP__NR_sendfile,
+#ifndef __NR_perf_event_open
+	__NR_perf_event_open,
+#endif
 
 	/* it has to be the last one in this enum */
 	__NR_LAST_UNKNOWN,

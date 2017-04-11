@@ -288,6 +288,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_settimeofday, SyS_settimeofday, 2),
 	EBPF_SYSCALL_FLAGS(__NR_mount, SyS_mount, EM_fs_path_1_2, 5),
 	EBPF_SYSCALL_FILE(__NR_umount, SyS_umount, 2),
+	EBPF_SYSCALL_FILE(__NR_umount2, SyS_umount2, 2),
 	EBPF_SYSCALL_FILE(__NR_swapon, SyS_swapon, 2),
 	EBPF_SYSCALL_FILE(__NR_swapoff, SyS_swapoff, 1),
 	EBPF_SYSCALL(__NR_reboot, SyS_reboot, 4),
@@ -409,6 +410,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_DESC(__NR_preadv, SyS_preadv, 5),
 	EBPF_SYSCALL_DESC(__NR_pwritev, SyS_pwritev, 5),
 	EBPF_SYSCALL(__NR_rt_tgsigqueueinfo, SyS_rt_tgsigqueueinfo, 4),
+	EBPF_SYSCALL(__NR_perf_event_open, SyS_perf_event_open, 5),
 	EBPF_SYSCALL_DESC(__NR_recvmmsg, SyS_recvmmsg, 5),
 	EBPF_SYSCALL(__NR_fanotify_init, SyS_fanotify_init, 2),
 	EBPF_SYSCALL_DESC(__NR_fanotify_mark, SyS_fanotify_mark, 5),
@@ -492,16 +494,6 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_fillrect, SyS_fillrect, 6),
 	EBPF_SYSCALL(__NR_copyarea, SyS_copyarea, 6),
 	EBPF_SYSCALL(__NR_imageblit, SyS_imageblit, 6),
-
-	/*
-	 * Syscalls with duplicated numbers -
-	 * - overwriten by the new version of syscall
-	 */
-	EBPF_SYSCALL(DUP__NR_uname, SyS_uname, 1),
-	EBPF_SYSCALL_FILE(DUP__NR_stat, SyS_stat, 2),
-	EBPF_SYSCALL_FILE(DUP__NR_lstat, SyS_lstat, 2),
-	EBPF_SYSCALL_DESC(DUP__NR_fstat, SyS_fstat, 2),
-	EBPF_SYSCALL_DESC(DUP__NR_sendfile, SyS_sendfile, 4),
 };
 
 /*
