@@ -65,6 +65,9 @@
 #include "print_event_cb.h"
 #include "ebpf/ebpf_file_set.h"
 
+/* name of file with dumped syscalls table in binary mode */
+#define FILE_SYSCALLS_TABLE	"syscalls_table.dat"
+
 struct cl_options Args;		/* command-line arguments */
 FILE *Out_lf;			/* output file */
 enum out_lf_fmt Out_lf_fmt;	/* format of output */
@@ -214,6 +217,18 @@ main(const int argc, char *const argv[])
 	}
 
 	bpf->debug  = Args.debug;
+
+	/* if printing in binary format, dump syscalls table */
+	if (Out_lf_fmt == EOF_BIN) {
+		if (dump_syscalls_table(FILE_SYSCALLS_TABLE)) {
+			ERROR("error during saving syscalls table "
+				"to the file: '%s'", FILE_SYSCALLS_TABLE);
+			goto error_free_bpf;
+		} else {
+			INFO("Saved syscalls table to the file: '%s'",
+				FILE_SYSCALLS_TABLE);
+		}
+	}
 
 	INFO("Attaching probes...");
 	if (!attach_probes(bpf)) {

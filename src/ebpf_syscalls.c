@@ -577,3 +577,25 @@ print_syscalls_table(FILE *f)
 
 	return 1;
 }
+
+/*
+ * dump_syscalls_table -- dump the table of syscalls
+ */
+int
+dump_syscalls_table(const char *path)
+{
+	FILE *file = fopen(path, "w");
+	if (!file) {
+		perror("fopen");
+		return -1;
+	}
+
+	if (fwrite(Syscall_array, sizeof(Syscall_array), 1, file) != 1) {
+		perror("fwrite");
+		return -1;
+	}
+
+	fclose(file);
+
+	return 0;
+}

@@ -144,5 +144,6 @@ extern struct syscall_name Syscall_names[SC_TBL_SIZE];
 void init_syscalls_table(void);
 void free_syscalls_table(void);
 int print_syscalls_table(FILE *f);
+int dump_syscalls_table(const char *path);
 
 #endif /* EBPF_SYSCALLS_H */
