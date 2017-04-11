@@ -44,7 +44,7 @@
 #include "utils.h"
 #include "ebpf_syscalls.h"
 #include "generate_ebpf.h"
-#include "syscalls_unknown.h"
+#include "syscalls_numbers.h"
 
 /*
  * get_sc_num -- this function returns syscall number by name
@@ -55,6 +55,8 @@ get_sc_num(const char *sc_name)
 {
 	static int last_free = __NR_LAST_UNKNOWN;
 	unsigned i;
+
+	assert(__NR_LAST_UNKNOWN <= SC_TBL_SIZE);
 
 	for (i = 0; i < __NR_LAST_UNKNOWN; i++) {
 		if (NULL == Syscall_array[i].handler_name)

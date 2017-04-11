@@ -493,8 +493,8 @@ print_event_hex_tp(FILE *f, void *data, int size)
 {
 	s64 res, err;
 	struct tp_s *const event = data;
-	const char *str_sys_exit = "sys_exit ";
-	const size_t len_sys_exit = 9; /* length of the string above */
+	static const char *str_sys_exit = "sys_exit ";
+	static const size_t len_sys_exit = 9; /* length of the string above */
 
 	/* XXX Check size arg */
 	(void) size;

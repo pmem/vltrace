@@ -37,8 +37,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "syscalls_numbers.h"
 #include "ebpf_syscalls.h"
-#include "syscalls_unknown.h"
 
 #ifdef __SYSCALL_X32
 #undef __SYSCALL_X32

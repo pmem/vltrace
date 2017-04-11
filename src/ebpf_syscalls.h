@@ -38,7 +38,6 @@
 #define EBPF_SYSCALLS_H
 
 #include <stdio.h>
-#include <sys/syscall.h>
 
 enum sc_arg_type {
 	/* Syscall does not have this argument */
