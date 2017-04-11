@@ -32,6 +32,14 @@
 cmake_minimum_required(VERSION 2.8.7)
 project(strace.ebpf)
 
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE "Release")
+endif (NOT CMAKE_BUILD_TYPE)
+
+if(NOT CMAKE_INSTALL_PREFIX)
+	set(CMAKE_INSTALL_PREFIX "/usr/local")
+endif (NOT CMAKE_INSTALL_PREFIX)
+
 # read required kernel version from README.md
 set(README_FILE "README.md")
 execute_process(COMMAND utils/get-required-kernel.sh ${README_FILE}
