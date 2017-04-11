@@ -141,6 +141,7 @@ load_file(const char *const fn)
 				Args.ebpf_src_dir, fn);
 
 		assert(res > 0);
+		(void) res;
 
 		f = load_file_from_disk(path);
 
@@ -318,6 +319,7 @@ get_sc_list(FILE *f, template_t template)
 		fw_res = fwrite(line, (size_t)read, 1, f);
 
 		assert(fw_res > 0);
+		(void) fw_res;
 	}
 
 	free(line);

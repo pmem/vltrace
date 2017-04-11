@@ -55,6 +55,7 @@ print_kprobe_name(char *str, size_t size, const char *name)
 	res = snprintf(str, size, "kprobe__%s", name);
 
 	assert(res > 0);
+	(void) res;
 }
 
 static void
@@ -65,6 +66,7 @@ print_kretprobe_name(char *str, size_t size, const char *name)
 	res = snprintf(str, size, "kretprobe__%s", name);
 
 	assert(res > 0);
+	(void) res;
 }
 
 static int
@@ -412,15 +414,13 @@ attach_probes(struct bpf_ctx *b)
 		return attach_kp_desc(b);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
 		return attach_kp_fileio(b);
+	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
+		return attach_tp_all(b);
 	} else {
 		fprintf(stderr, "ERROR: %s: unknown option: '%s'\n",
 				__func__, Args.expr);
 		return false;
 	}
-	/*
-	 * else if (!strcasecmp(Args.expr, "trace=tp-all")) {
-	 *	return attach_tp_all(b);
-	 */
 
 default_option:
 	return attach_common(b);

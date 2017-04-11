@@ -258,6 +258,7 @@ out:
 	res = snprintf(buf, sizeof(buf), "sys_%ld", sc_num);
 
 	assert(res > 0);
+	(void) res;
 
 	return buf;
 }
@@ -359,6 +360,7 @@ fwrite_out_lf_fld_sep(FILE *f)
 	res = fwrite(&Args.out_lf_fld_sep_ch, sizeof(Args.out_lf_fld_sep_ch),
 			1, f);
 	assert(1 == res);
+	(void) res;
 }
 
 static char *Str_entry; /* will be initialized by init_printing_events() */

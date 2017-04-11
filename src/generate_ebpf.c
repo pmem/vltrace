@@ -489,14 +489,12 @@ generate_ebpf()
 		ret = generate_ebpf_kp_desc(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
 		ret = generate_ebpf_kp_fileio(ts);
+	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
+		ret = generate_ebpf_tp_all(ts);
 	} else {
 		ERROR("unknown option: '%s'", Args.expr);
 		ret = -1;
 	}
-	/*
-	 * else if (!strcasecmp(Args.expr, "trace=tp-all")) {
-	 *	generate_ebpf_tp_all(ts);
-	 */
 
 	fclose(ts);
 	if (ret) {
@@ -537,6 +535,7 @@ apply_process_attach_code(char **const pbpf_str)
 
 		snp_res = snprintf(strpid, sizeof(strpid), "%d", pid);
 		assert(snp_res > 0);
+		(void) snp_res;
 
 		pid_check_hook = load_file_no_cr(ebpf_pid_check_own_hook_file);
 		assert(NULL != pid_check_hook);
