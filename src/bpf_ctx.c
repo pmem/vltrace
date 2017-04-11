@@ -350,7 +350,6 @@ load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 	if (!pr_arr_check_quota(sbcp, 1)) {
 		ERROR("%s: number of perf readers would exceed"
 			" global quota: %d", __func__, Args.pr_arr_max);
-
 		return -1;
 	}
 
@@ -360,18 +359,15 @@ load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 	}
 
 	char *ev_name = event2ev_name('r', event);
-
-	if (NULL == ev_name)
+	if (ev_name == NULL)
 		return -1;
 
 	pr = bpf_attach_kprobe(fn_fd, BPF_PROBE_RETURN, ev_name, event,
-				pid, (int)cpu, group_fd,
-				NULL, NULL);
-
-	if (NULL == pr) {
+				pid, (int)cpu, group_fd, NULL, NULL);
+	if (pr == NULL) {
 		ERROR("%s: failed to attach eBPF function '%s'"
 			" to kprobe '%s': %m", __func__, fn_name, event);
-
+		free(ev_name);
 		return -1;
 	}
 
