@@ -108,24 +108,39 @@ enum masks_t {
 	EM_ALL = -1,
 };
 
-/* maximum length of the syscall's number - 4 digits + '\0' */
-enum { SC_NUM_LEN = 5 };
+enum {
+	/* maximum length of the syscall's number - 4 digits + '\0' */
+	SC_NUM_LEN = 5,
 
-/* Properties of syscall with number 'num' */
+	/* maximum length of the syscall's name */
+	SC_NAME_LEN = 31
+};
+
+/* properties of syscall with number 'num' */
 struct syscall_descriptor {
-	/* Syscall number */
+
+	/* syscall number */
 	unsigned num;
-	/* Syscall number as string */
+
+	/* syscall number as string */
 	char num_str[SC_NUM_LEN];
-	/* The name of in-kernel syscall's handler */
+
+	/* name of in-kernel syscall's handler */
 	char *handler_name;
-	/* length of the name of in-kernel syscall's handler */
+
+	/* syscall name buffer */
+	char syscall_name[SC_NAME_LEN + 1];
+
+	/* length of the syscall's name */
 	size_t name_length;
-	/* Number of args for this syscall */
+
+	/* number of syscall's arguments */
 	unsigned args_qty;
-	/* Flags */
+
+	/* flags */
 	unsigned masks;
-	/* Helper field used to speed up attaching */
+
+	/* helper field used to speed up attaching */
 	int attached;
 };
 

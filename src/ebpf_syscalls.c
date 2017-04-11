@@ -34,6 +34,7 @@
  * ebpf_syscalls.c -- a table of known syscalls
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -512,6 +513,12 @@ init_syscalls_table(void)
 		if (Syscall_array[i].handler_name != NULL) {
 			Syscall_array[i].name_length =
 				strlen(Syscall_array[i].handler_name);
+
+			assert(Syscall_array[i].name_length <= SC_NAME_LEN);
+			strncpy(Syscall_array[i].syscall_name,
+				Syscall_array[i].handler_name, SC_NAME_LEN);
+			Syscall_array[i].syscall_name[SC_NAME_LEN] = '\0';
+
 			Syscall_array[i].num = i;
 			sprintf(Syscall_array[i].num_str, "%u",
 				Syscall_array[i].num);
