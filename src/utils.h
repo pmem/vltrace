@@ -47,6 +47,13 @@
 #define NOTICE(str, ...) fprintf(stderr, "Notice: " str "\n", ##__VA_ARGS__);
 #define INFO(str, ...) fprintf(stderr, str "\n", ##__VA_ARGS__);
 
+#ifdef DEBUG
+#define DEBUG_NOTICE(str, ...) \
+	fprintf(stderr, "DEBUG Notice: " str "\n", ##__VA_ARGS__);
+#else
+#define DEBUG_NOTICE(str, ...)
+#endif /* DEBUG */
+
 char *load_file(const char *fn);
 char *load_file_no_cr(const char *const fn);
 char *load_pid_check_hook(enum ff_mode ff_mode);

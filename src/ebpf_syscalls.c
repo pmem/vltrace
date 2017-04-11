@@ -505,8 +505,8 @@ init_syscalls_table(void)
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		if (Syscall_array[i].handler_name == NULL && syscall_names[i]) {
 			Syscall_array[i].handler_name = syscall_names[i];
-			NOTICE("setting syscalls' table [%i] to '%s'",
-				i, syscall_names[i]);
+			DEBUG_NOTICE("setting syscalls' table [%i] to '%s'",
+					i, syscall_names[i]);
 		}
 
 		Syscall_array[i].attached = 0;
