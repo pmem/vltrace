@@ -54,8 +54,8 @@
 #include "generate_ebpf.h"
 
 /*
- * load_file_from_disk -- This function loads text file from disk and return
- * malloc-ed, null-terminated string
+ * load_file_from_disk -- load text file from disk and return
+ *                        malloc-ed, null-terminated string
  */
 char *
 load_file_from_disk(const char *const fn)
@@ -94,7 +94,7 @@ out:
 }
 
 /*
- * save_trace_h -- Export embedded trace.h to file
+ * save_trace_h -- export embedded trace.h to file
  */
 void
 save_trace_h(void)
@@ -127,7 +127,7 @@ save_trace_h(void)
 }
 
 /*
- * load_file -- This function loads 'virtual' file.
+ * load_file -- load 'virtual' file
  */
 char *
 load_file(const char *const fn)
@@ -154,7 +154,7 @@ load_file(const char *const fn)
 }
 
 /*
- * load_file_no_cr -- This function loads 'virtual' file and strip copyright.
+ * load_file_no_cr -- load 'virtual' file and strip copyright
  */
 char *
 load_file_no_cr(const char *const fn)
@@ -183,7 +183,7 @@ load_file_no_cr(const char *const fn)
 }
 
 /*
- * load_pid_check_hook -- This function loads 'pid_check_hook'
+ * load_pid_check_hook -- load 'pid_check_hook'
  */
 char *
 load_pid_check_hook(enum ff_mode ff_mode)
@@ -201,7 +201,7 @@ load_pid_check_hook(enum ff_mode ff_mode)
 }
 
 /*
- * load_bpf_jit_status -- This function reads status of eBPF JIT compiler.
+ * load_bpf_jit_status -- read status of eBPF JIT compiler
  */
 static int
 load_bpf_jit_status(void)
@@ -229,8 +229,8 @@ load_bpf_jit_status(void)
 }
 
 /*
- * check_bpf_jit_status -- This function checks status of eBPF JIT compiler
- * and prints appropriate message.
+ * check_bpf_jit_status -- check status of eBPF JIT compiler
+ *                         and print appropriate message
  */
 void
 check_bpf_jit_status(FILE *file)
@@ -268,7 +268,7 @@ check_bpf_jit_status(FILE *file)
 
 
 /*
- * is_a_sc -- This function recognises syscalls among in-kernel functions.
+ * is_a_sc -- recognise syscalls among in-kernel functions
  */
 bool
 is_a_sc(const char *const line, const ssize_t size)
@@ -292,7 +292,7 @@ const char Debug_tracing[] = DEBUG_TRACING;
 const char Debug_tracing_aff[] = DEBUG_TRACING DT_AFF;
 
 /*
- * get_sc_list -- This function fetch syscall's list from running kernel
+ * get_sc_list -- fetch syscall's list from running kernel
  */
 void
 get_sc_list(FILE *f, template_t template)
@@ -328,7 +328,7 @@ get_sc_list(FILE *f, template_t template)
 }
 
 /*
- * str_replace_all -- Replace all occurrences of 'templt' in 'text' with 'str'
+ * str_replace_all -- replace all occurrences of 'templt' in 'text' with 'str'
  */
 void
 str_replace_all(char **const text, const char *templt, const char *str)
