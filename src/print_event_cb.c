@@ -70,17 +70,17 @@ static inline char b2hex(char b);
 
 unsigned Arg_is_path[6] = {
 	/* syscall has fs path as a first arg */
-	EM_fs_path_1,
+	EM_path_1,
 	/* syscall has fs path as second arg */
-	EM_fs_path_2,
+	EM_path_2,
 	/* syscall has fs path as third arg */
-	EM_fs_path_3,
+	EM_path_3,
 	/* syscall has fs path as fourth arg */
-	EM_fs_path_4,
+	EM_path_4,
 	/* syscall has fs path as fifth arg - for future syscalls */
-	EM_fs_path_5,
+	EM_path_5,
 	/* syscall has fs path as sixth arg - for future syscalls */
-	EM_fs_path_6
+	EM_path_6
 };
 
 /*
