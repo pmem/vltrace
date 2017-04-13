@@ -277,7 +277,7 @@ fwrite_sc_name(FILE *f, const s64 sc_id)
 }
 
 /*
- * get_type_of_arg -- return argument's type code for syscall number
+ * is_path -- checks if the argument is a path
  */
 static int
 is_path(int argn, unsigned sc_num)
@@ -546,7 +546,7 @@ print_event_hex_tp(FILE *f, void *data, int size)
 static void
 print_event_hex(FILE *f, void *data, int size)
 {
-	s64 *type = data;
+	u64 *type = data;
 	const char *str = "ERROR: Unknown type of event\n";
 
 	switch (*type) {
@@ -608,10 +608,10 @@ print_event_hex_sl(void *cb_cookie, void *data, int size)
 static int
 print_header_bin(int argc, char *const argv[])
 {
-#define MAX_LEN_STR 1024
+#define MAX_LEN_STR 4096
 
 	struct header_s {
-		s64 argc;
+		int argc;
 		char argv[MAX_LEN_STR];
 	} header;
 

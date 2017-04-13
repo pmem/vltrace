@@ -583,9 +583,16 @@ print_syscalls_table(FILE *f)
 int
 dump_syscalls_table(const char *path)
 {
+	int size = sizeof(struct syscall_descriptor);
+
 	FILE *file = fopen(path, "w");
 	if (!file) {
 		perror("fopen");
+		return -1;
+	}
+
+	if (fwrite(&size, sizeof(int), 1, file) != 1) {
+		perror("fwrite");
 		return -1;
 	}
 

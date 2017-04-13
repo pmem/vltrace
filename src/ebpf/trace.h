@@ -45,7 +45,7 @@ enum {
 };
 
 struct data_entry_t {
-	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
+	u64 type; /* E_SC_ENTRY or E_SC_EXIT */
 
 	/*
 	 * This field describes a series of packets for every syscall.
@@ -104,7 +104,7 @@ struct data_entry_t {
 };
 
 struct data_exit_t {
-	s64 type; /* E_SC_ENTRY or E_SC_EXIT */
+	u64 type; /* E_SC_ENTRY or E_SC_EXIT */
 
 	/*
 	 * This field describes a series of packets for every syscall.
@@ -144,7 +144,7 @@ struct data_exit_t {
 };
 
 struct tp_s {
-	s64 type;
+	u64 type;
 	u64 pid_tid;
 	u64 finish_ts_nsec;
 	s64 id;

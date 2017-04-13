@@ -132,7 +132,7 @@ struct syscall_descriptor {
 	char syscall_name[SC_NAME_LEN + 1];
 
 	/* length of the syscall's name */
-	size_t name_length;
+	unsigned name_length;
 
 	/* number of syscall's arguments */
 	unsigned args_qty;
