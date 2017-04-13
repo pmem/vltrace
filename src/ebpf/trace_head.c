@@ -40,6 +40,8 @@
 
 #include "trace.h"
 
+#define MAX_PATH 400
+
 /* The set of our children_pid */
 BPF_HASH(children_map, u64, u64);
 

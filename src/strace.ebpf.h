@@ -41,6 +41,8 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#define MAX_PATH 400
+
 enum out_lf_fmt {
 	/* Write syscall's data packets "as is" */
 	EOF_HEX_RAW = 0,

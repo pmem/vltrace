@@ -91,7 +91,7 @@ struct data_entry_t {
 			 *    meaning of argument is defined by
 			 *    syscall's number in the sc_id field.
 			 */
-			char aux_str[1];	/* NAME_MAX */
+			char aux_str[1];	/* MAX_PATH */
 		};
 
 		/*
@@ -99,7 +99,7 @@ struct data_entry_t {
 		 *    is defined by syscall's number (in the first packet) in
 		 *    the sc_id field.
 		 */
-		char str[1];	/* NAME_MAX */
+		char str[1];	/* MAX_PATH */
 	};
 };
 
