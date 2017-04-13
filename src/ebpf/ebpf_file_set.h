@@ -62,7 +62,7 @@ extern const char *ebpf_vfork_file;
 extern const char *ebpf_clone_file;
 extern const char *ebpf_exit_file;
 
-extern const char *ebpf_basic_file;
+extern const char *ebpf_no_path_file;
 extern const char *ebpf_tracepoints_file;
 
 extern const char *ebpf_pid_check_own_hook_file;

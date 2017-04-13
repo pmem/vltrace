@@ -208,7 +208,7 @@ get_template(unsigned i)
 	} else if (EM_fileat == (EM_fileat & Syscall_array[i].masks)) {
 		text = load_ebpf_fileat_tmpl();
 	} else {
-		text = load_file_no_cr(ebpf_basic_file);
+		text = load_file_no_cr(ebpf_no_path_file);
 	}
 
 	if (NULL == text)
@@ -375,7 +375,7 @@ generate_ebpf_kp_desc(FILE *ts)
 		if (EM_desc != (EM_desc & Syscall_array[i].masks))
 			continue;
 
-		text = load_file_no_cr(ebpf_basic_file);
+		text = load_file_no_cr(ebpf_no_path_file);
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);

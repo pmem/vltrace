@@ -70,7 +70,7 @@ const char *ebpf_vfork_file = "template_vfork.c";
 const char *ebpf_clone_file = "template_clone.c";
 const char *ebpf_exit_file = "template_exit.c";
 
-const char *ebpf_basic_file = "template_no_path.c";
+const char *ebpf_no_path_file = "template_no_path.c";
 const char *ebpf_tracepoints_file = "template_tracepoints.c";
 
 const char *ebpf_pid_check_own_hook_file =
@@ -93,7 +93,7 @@ ebpf_load_file(const char *const fn)
 	/* fallback to embedded ones */
 	if (0 == strcmp(ebpf_head_file, fn)) {
 		return BINARY_FILE_CONTENT(trace_head_c);
-	} else if (0 == strcmp(ebpf_basic_file, fn)) {
+	} else if (0 == strcmp(ebpf_no_path_file, fn)) {
 		return BINARY_FILE_CONTENT(template_no_path_c);
 	} else if (0 == strcmp(ebpf_path_1_ml_file, fn)) {
 		return BINARY_FILE_CONTENT(template_path_1_ml_c);
