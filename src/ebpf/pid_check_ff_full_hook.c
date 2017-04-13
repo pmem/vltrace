@@ -44,5 +44,12 @@
 		if (*val != 1) {
 			return 0;
 		}
+#ifdef TRACE_IN_SYS_EXIT
+		/*
+		 * Valid only for exit() and exit_group():
+		 * delete the PID from map, because the child exits
+		 */
+		children_map.delete(&pid);
+#endif
 	}
 }

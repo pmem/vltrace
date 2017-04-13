@@ -44,18 +44,11 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
-	u64 pid = (pid_tid >> 32);
-	if (pid != TRACED_PID) {
-		u64 *val = children_map.lookup(&pid);
-		if (NULL == val) {
-			return 0;
-		}
-		if (*val != 1) {
-			return 0;
-		}
-		/* remove because the child exits */
-		children_map.delete(&pid);
-	}
+#define TRACE_IN_SYS_EXIT 1
+
+	PID_CHECK_HOOK
+
+#undef  TRACE_IN_SYS_EXIT
 
 	ev.type = E_SC_ENTRY;
 	ev.start_ts_nsec = bpf_ktime_get_ns();

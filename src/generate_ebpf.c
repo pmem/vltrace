@@ -147,17 +147,17 @@ get_template(unsigned i)
 		switch (i) {
 		case __NR_clone:
 			text = load_file_no_cr(ebpf_clone_file);
-			break;
+			goto replace;
 		case __NR_vfork:
 			text = load_file_no_cr(ebpf_vfork_file);
-			break;
+			goto replace;
 		case __NR_fork:
 			text = load_file_no_cr(ebpf_fork_file);
-			break;
+			goto replace;
 		case __NR_exit:
 		case __NR_exit_group:
 			text = load_file_no_cr(ebpf_exit_file);
-			break;
+			goto replace;
 		}
 	}
 
@@ -214,6 +214,7 @@ get_template(unsigned i)
 	if (NULL == text)
 		return NULL;
 
+replace:
 	str_replace_all(&text, "SYSCALL_NR",
 			Syscall_array[i].num_str);
 
