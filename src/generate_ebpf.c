@@ -92,7 +92,7 @@ get_sc_num(const char *sc_name)
 }
 
 static char *
-load_ebpf_fileat_tmpl(void)
+load_ebpf_path_2_tmpl(void)
 {
 	char *text = NULL;
 
@@ -114,7 +114,7 @@ load_ebpf_fileat_tmpl(void)
 }
 
 static char *
-load_ebpf_file_tmpl(void)
+load_ebpf_path_1_tmpl(void)
 {
 	char *text = NULL;
 
@@ -158,7 +158,7 @@ get_template(unsigned i)
 		case __NR_exit_group:
 			text = load_file_no_cr(ebpf_exit_file);
 			break;
-		};
+		}
 	}
 
 	if (EM_path_1_2 == (EM_path_1_2 & Syscall_array[i].masks)) {
@@ -203,10 +203,10 @@ get_template(unsigned i)
 			assert(false);
 			break;
 		}
-	} else if (EM_file == (EM_file & Syscall_array[i].masks)) {
-		text = load_ebpf_file_tmpl();
-	} else if (EM_fileat == (EM_fileat & Syscall_array[i].masks)) {
-		text = load_ebpf_fileat_tmpl();
+	} else if (EM_path_1 == (EM_path_1 & Syscall_array[i].masks)) {
+		text = load_ebpf_path_1_tmpl();
+	} else if (EM_path_2 == (EM_path_2 & Syscall_array[i].masks)) {
+		text = load_ebpf_path_2_tmpl();
 	} else {
 		text = load_file_no_cr(ebpf_no_path_file);
 	}
@@ -301,7 +301,7 @@ generate_ebpf_kp_file(FILE *ts)
 		if (EM_file != (EM_file & Syscall_array[i].masks))
 			continue;
 
-		text = load_ebpf_file_tmpl();
+		text = load_ebpf_path_1_tmpl();
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);
@@ -338,7 +338,7 @@ generate_ebpf_kp_fileat(FILE *ts)
 		if (EM_fileat != (EM_fileat & Syscall_array[i].masks))
 			continue;
 
-		text = load_ebpf_fileat_tmpl();
+		text = load_ebpf_path_2_tmpl();
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);
