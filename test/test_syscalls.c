@@ -165,7 +165,7 @@ test_unsupported_syscalls(void)
 
 	syscall(SYS_poll, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
 
-	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, NON_EXIST_PATH_1,
+	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3",
 		0x101, (void *)0x102);
 
 	umount(NON_EXIST_PATH_1);
