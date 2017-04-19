@@ -104,6 +104,8 @@ enum masks_t {
 	EM_path_1_3 = EM_path_1 | EM_path_3,
 	/* syscall has fs paths as second and forth Args. renameat() */
 	EM_path_2_4 = EM_path_2 | EM_path_4,
+	/* syscall has strings as 1st, 2nd and 3rd args. mount() */
+	EM_path_1_2_3 = EM_path_1 | EM_path_2 | EM_path_3,
 
 	EM_ALL = -1,
 };
