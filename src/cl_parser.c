@@ -53,7 +53,6 @@
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
 
-
 /*
  * cl_parser -- Tool's command-line options parser
  */
@@ -75,6 +74,7 @@ cl_parser(struct cl_options *const clo,
 			{"builtin-list",	no_argument,	   0, 'B'},
 			{"pid",			required_argument, 0, 'p'},
 			{"format",		required_argument, 0, 'l'},
+			{"string-args",		required_argument, 0, 's'},
 			{"expr",		required_argument, 0, 'e'},
 			{"output",		required_argument, 0, 'o'},
 			{"ebpf-src-dir", 	required_argument, 0, 'N'},
@@ -83,7 +83,7 @@ cl_parser(struct cl_options *const clo,
 			{0, 0, 0, 0}
 		};
 
-		c = getopt_long(argc, argv, "+tXhdLRBp:l:e:o:N:K:f::",
+		c = getopt_long(argc, argv, "+tXhdLRBp:l:s:e:o:N:K:f::",
 				long_options, &option_index);
 
 		if (c == -1)
@@ -168,6 +168,10 @@ cl_parser(struct cl_options *const clo,
 			}
 			clo->out_fmt_str = optarg;
 			Out_lf_fmt = out_fmt_str2enum(clo->out_fmt_str);
+			break;
+
+		case 's':
+			clo->fnr_mode = choose_fnr_mode(optarg);
 			break;
 
 		case 'L':

@@ -62,7 +62,7 @@ enum ff_mode {
 /* filenames reading modes */
 enum fnr_mode {
 	E_FNR_FAST = 0,
-	E_FNR_NAME_MAX,
+	E_FNR_STR_MAX,
 	E_FNR_FULL,
 };
 
@@ -113,6 +113,7 @@ struct cl_options {
 	 * like strace does.
 	 */
 	bool ff_separate_logs;
+
 	/* filenames reading mode */
 	enum fnr_mode fnr_mode;
 

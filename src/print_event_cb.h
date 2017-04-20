@@ -51,5 +51,6 @@ extern print_header_t Print_header[EOF_QTY + 1];
 extern perf_reader_raw_cb Print_event_cb[EOF_QTY + 1];
 
 enum out_lf_fmt out_fmt_str2enum(const char *str);
+enum fnr_mode choose_fnr_mode(const char *filename_length);
 
 #endif /* PRINT_EVENT_CB_H */

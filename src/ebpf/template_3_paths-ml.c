@@ -70,12 +70,12 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	/* 2nd arg */
-	u.ev.packet_type = (2) + (2 << 3);
+	u.ev.packet_type = (1) + (2 << 3);
 	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[1]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	/* from 3rd arg to the end (7) */
-	u.ev.packet_type = (3) + (7 << 3);
+	u.ev.packet_type = (2) + (7 << 3);
 	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[2]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 

@@ -55,7 +55,6 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	u.ev.type = E_SC_ENTRY;
 	u.ev.start_ts_nsec = bpf_ktime_get_ns();
 
-	u.ev.packet_type = 0; /* No additional packets */
 	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
 	u.ev.pid_tid = pid_tid;
 
@@ -66,6 +65,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
+	u.ev.packet_type = 0; /* No additional packets */
 	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[0]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 

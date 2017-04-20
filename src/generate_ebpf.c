@@ -98,13 +98,12 @@ load_ebpf_path_2_tmpl(void)
 
 	switch (Args.fnr_mode) {
 	case E_FNR_FAST:
+	case E_FNR_STR_MAX:
 		text = load_file_no_cr(ebpf_path_2_sl_file);
 		break;
-	case E_FNR_NAME_MAX:
+	case E_FNR_FULL:
 		text = load_file_no_cr(ebpf_path_2_ml_file);
 		break;
-	case E_FNR_FULL:
-		/* XXX */
 	default:
 		assert(false);
 		break;
@@ -120,13 +119,12 @@ load_ebpf_path_1_tmpl(void)
 
 	switch (Args.fnr_mode) {
 	case E_FNR_FAST:
+	case E_FNR_STR_MAX:
 		text = load_file_no_cr(ebpf_path_1_sl_file);
 		break;
-	case E_FNR_NAME_MAX:
+	case E_FNR_FULL:
 		text = load_file_no_cr(ebpf_path_1_ml_file);
 		break;
-	case E_FNR_FULL:
-		/* XXX */
 	default:
 		assert(false);
 		break;
@@ -166,11 +164,12 @@ get_template(unsigned i)
 		case E_FNR_FAST:
 			text = load_file_no_cr(ebpf_3_paths_sl_file);
 			break;
-		case E_FNR_NAME_MAX:
+		case E_FNR_STR_MAX:
 			text = load_file_no_cr(ebpf_3_paths_ml_file);
 			break;
 		case E_FNR_FULL:
-			/* XXX */
+			text = load_file_no_cr(ebpf_3_paths_ml_file);
+			break;
 		default:
 			assert(false);
 			break;
@@ -180,11 +179,12 @@ get_template(unsigned i)
 		case E_FNR_FAST:
 			text = load_file_no_cr(ebpf_path_1_2_sl_file);
 			break;
-		case E_FNR_NAME_MAX:
+		case E_FNR_STR_MAX:
 			text = load_file_no_cr(ebpf_path_1_2_ml_file);
 			break;
 		case E_FNR_FULL:
-			/* XXX */
+			text = load_file_no_cr(ebpf_path_1_2_ml_file);
+			break;
 		default:
 			assert(false);
 			break;
@@ -194,11 +194,12 @@ get_template(unsigned i)
 		case E_FNR_FAST:
 			text = load_file_no_cr(ebpf_path_1_3_sl_file);
 			break;
-		case E_FNR_NAME_MAX:
+		case E_FNR_STR_MAX:
 			text = load_file_no_cr(ebpf_path_1_3_ml_file);
 			break;
 		case E_FNR_FULL:
-			/* XXX */
+			text = load_file_no_cr(ebpf_path_1_3_ml_file);
+			break;
 		default:
 			assert(false);
 			break;
@@ -208,11 +209,12 @@ get_template(unsigned i)
 		case E_FNR_FAST:
 			text = load_file_no_cr(ebpf_path_2_4_sl_file);
 			break;
-		case E_FNR_NAME_MAX:
+		case E_FNR_STR_MAX:
 			text = load_file_no_cr(ebpf_path_2_4_ml_file);
 			break;
 		case E_FNR_FULL:
-			/* XXX */
+			text = load_file_no_cr(ebpf_path_2_4_ml_file);
+			break;
 		default:
 			assert(false);
 			break;

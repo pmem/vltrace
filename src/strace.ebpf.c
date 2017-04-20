@@ -121,8 +121,10 @@ main(const int argc, char *const argv[])
 	int tracing = TRACING_ALL; /* what are we tracing ? */
 	int st_optind;
 
+	/* default values */
 	Args.pid = -1;
 	Args.out_lf_fld_sep_ch = ' ';
+	Args.fnr_mode = E_FNR_FAST;
 
 	/* XXX set using command-line options */
 	Args.pr_arr_max = 1000;

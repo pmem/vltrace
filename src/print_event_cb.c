@@ -36,6 +36,7 @@
 
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
@@ -46,21 +47,20 @@
 #include "strace.ebpf.h"
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
+#include "utils.h"
 
-/*
- * XXX A bit of black magic to have some US <-> KS portability.
- *
- * PLEASE do not add any other includes after this comment.
- */
+/* US <-> KS portability */
 typedef __s32 s32;
 typedef __u32 u32;
 typedef __s64 s64;
 typedef __u64 u64;
+#include "ebpf/trace.h"
+
+static const char *Warning = "[WARNING: string truncated]:";
+static size_t Len_Warning;
 
 enum { TASK_COMM_LEN = 16 };
 enum { LEN_SYS = 4 }; /* = strlen("SyS_") */
-
-#include "ebpf/trace.h"
 
 static unsigned long long start_ts_nsec = 0;
 
@@ -299,6 +299,8 @@ get_n_strings(unsigned sc_num)
 static int
 is_path(int argn, unsigned sc_num)
 {
+	assert(sc_num < SC_TBL_SIZE);
+
 	if ((Syscall_array[sc_num].masks & Arg_is_path[argn]) ==
 							Arg_is_path[argn])
 		return 1;
@@ -313,50 +315,71 @@ static void
 fprint_path(int path, int npaths, FILE *f, struct data_entry_t *const event,
 		int size)
 {
-	char *str;
-	size_t len;
+	size_t STR_MAX_2 = STR_MAX / 2;
+	size_t STR_MAX_3 = STR_MAX / 3;
+	char *str = NULL;
+	size_t len = 0;
+	size_t max_len = 0;
 
 	(void) size;
 
-	switch (path) {
-	case 0: /* print the first string */
-		if (event->packet_type == 0) {
-			fwrite(event->aux_str,
-				strnlen(event->aux_str, STR_MAX), 1, f);
-		} else {
-			/* this packet contains only single string */
-			fwrite(event->str, strnlen(event->str, STR_MAX), 1, f);
+	if (event->packet_type != 0) {
+		max_len = STR_MAX;
+		str = event->aux_str;
+		npaths = 0; /* skip next switch */
+	}
+
+	switch (npaths) {
+	case 0:
+		break;
+	case 1:
+		max_len = STR_MAX;
+		str = event->aux_str;
+		break;
+	case 2:
+		switch (path) {
+		case 1:
+			max_len = STR_MAX_2;
+			str = event->aux_str;
+			break;
+		case 2:
+			max_len = STR_MAX - STR_MAX_2;
+			str = event->aux_str + STR_MAX_2;
+			break;
+		default:
+			assert(path <= 2);
+			break;
 		}
 		break;
-	case 1: /* print the second string */
-		if (event->packet_type == 0) {
-			switch (npaths) {
-			case 2:
-				str = event->aux_str + (STR_MAX / 2);
-				len = strnlen(str, STR_MAX - (STR_MAX / 2));
-				fwrite(str, len, 1, f);
-				break;
-			case 3:
-				str = event->aux_str + (STR_MAX / 3);
-				len = strnlen(str, STR_MAX - (STR_MAX / 3));
-				fwrite(str, len, 1, f);
-				break;
-			}
-		} else {
-			assert(event->packet_type == 0);
+	case 3:
+		switch (path) {
+		case 1:
+			max_len = STR_MAX_3;
+			str = event->aux_str;
+			break;
+		case 2:
+			max_len = STR_MAX_3;
+			str = event->aux_str + STR_MAX_3;
+			break;
+		case 3:
+			max_len = STR_MAX - 2 * STR_MAX_3;
+			str = event->aux_str + 2 * STR_MAX_3;
+			break;
+		default:
+			assert(path <= 3);
+			break;
 		}
 		break;
-	case 2: /* print the third string */
-		if (event->packet_type == 0) {
-			char *str = event->aux_str + 2 * (STR_MAX / 3);
-			size_t len = strnlen(str, STR_MAX - 2 * (STR_MAX / 3));
-			fwrite(str, len, 1, f);
-		} else {
-			assert(event->packet_type == 0);
-		}
+	default:
+		assert(npaths <= 3);
 		break;
 	}
 
+	len = strnlen(str, max_len);
+	if (len == max_len) {
+		fwrite(Warning, Len_Warning, 1, f);
+	}
+	fwrite(str, len, 1, f);
 }
 
 /*
@@ -366,25 +389,11 @@ static void
 fprint_arg_hex(int argn, FILE *f, struct data_entry_t *const event, int size,
 		int *path, int npaths)
 {
-	switch (event->sc_id) {
-	case -2:
+	if (is_path(argn, (unsigned)event->sc_id)) {
+		(*path)++;
+		fprint_path(*path, npaths, f, event, size);
+	} else {
 		fprint_i64(f, (uint64_t)event->args[argn]);
-		break;
-
-	case -1:
-		/*
-		 * XXX Something unexpected happened. Maybe we should issue a
-		 *    warning or do something better
-		 */
-		break;
-
-	default:
-		if (is_path(argn, (unsigned)event->sc_id)) {
-			fprint_path((*path)++, npaths, f, event, size);
-		} else {
-			fprint_i64(f, (uint64_t)event->args[argn]);
-		}
-		break;
 	}
 }
 
@@ -419,6 +428,8 @@ init_printing_events(void)
 
 	Str_entry = str;
 	Len_str_entry = strlen(str);
+
+	Len_Warning = strlen(Warning);
 }
 
 /*
@@ -429,49 +440,80 @@ print_event_hex_entry(FILE *f, void *data, int size)
 {
 	struct data_entry_t *const event = data;
 	int path = 0;
-	int nargs;
 
 	/* XXX Check size arg */
 	(void) size;
 
-	if (event->sc_id >= 0 && event->sc_id < SC_TBL_SIZE) {
-		nargs = Syscall_array[event->sc_id].args_qty;
-	} else {
-		nargs = 6;
-	}
-
 	if (start_ts_nsec == 0)
 		start_ts_nsec = event->start_ts_nsec;
 
-	if (Args.timestamp) {
-		unsigned long long delta_nsec =
-			event->start_ts_nsec - start_ts_nsec;
+	int arg_begin = 0;
+	int arg_end = 7;
 
-		fprint_i64(f, delta_nsec);
-		fwrite_out_lf_fld_sep(f);
+	/* multi-packet: read arg_begin and arg_end */
+	if (event->packet_type) {
+		unsigned type = event->packet_type;
+		arg_begin = type & 0x7; /* bits 0-2 */
+		type >>= 3;
+		arg_end = type & 0x7;  /* bits 3-5 */
 	}
 
-	/* PID & TID */
-	fprint_i64(f, event->pid_tid);
+	/* continuation of a string */
+	if (arg_begin == arg_end) {
+		fwrite(event->aux_str,
+			strnlen(event->aux_str, STR_MAX), 1, f);
+		return;
+	}
 
-	/* "_----------------_----------------_" */
-	fwrite(Str_entry, Len_str_entry, 1, f);
+	/* print timestamp, PID_TID and syscall's name */
+	if (arg_begin == 0) {
+		if (Args.timestamp) {
+			unsigned long long delta_nsec =
+				event->start_ts_nsec - start_ts_nsec;
 
-	/* syscall's name */
-	fwrite_sc_name(f, event->sc_id);
+			fprint_i64(f, delta_nsec);
+			fwrite_out_lf_fld_sep(f);
+		}
 
+		/* PID & TID */
+		fprint_i64(f, event->pid_tid);
+
+		/* "_----------------_----------------_" */
+		fwrite(Str_entry, Len_str_entry, 1, f);
+
+		/* syscall's name */
+		fwrite_sc_name(f, event->sc_id);
+	}
+
+	/* 'arg_begin' argument was printed in the previous packet */
+	arg_begin++;
+
+	/* should we print EOL ? */
+	int print_eol;
+	if (arg_end == 7) {
+		print_eol = 1;
+		/* set the numnber of the last argumnet */
+		if (event->sc_id >= 0 && event->sc_id < SC_TBL_SIZE) {
+			arg_end = Syscall_array[event->sc_id].args_qty;
+		} else {
+			arg_end = 6;
+		}
+	} else {
+		print_eol = 0;
+	}
+
+	/* count number of string arguments */
 	int npaths = get_n_strings(event->sc_id);
 
-	/* syscall's arguments */
-	for (int i = 0; i < nargs; i++) {
+	/* print syscall's arguments */
+	for (int i = (arg_begin - 1); i <= (arg_end - 1); i++) {
 		fwrite_out_lf_fld_sep(f);
 		fprint_arg_hex(i, f, event, size, &path, npaths);
 	}
 
-	/* "AUX_DATA". For COMM and like. XXX */
-	/* fwrite(event->comm, strlen(event->comm), 1, f); */
-
-	fwrite("\n", 1, 1, f);
+	/* should we print EOL ? */
+	if (print_eol)
+		fwrite("\n", 1, 1, f);
 }
 
 /*
@@ -717,6 +759,25 @@ out_fmt_str2enum(const char *str)
 		return EOF_HEX_SL;
 
 	return EOF_HEX_RAW;
+}
+
+enum fnr_mode
+choose_fnr_mode(const char *filename_length)
+{
+	unsigned len = atoi(filename_length);
+
+	if (len <= (STR_MAX / 3) - 1) {
+		DEBUG_NOTICE("FAST filename read mode (max = %i)",
+				(STR_MAX / 3) - 1);
+		return E_FNR_FAST;
+	} else if (len <= STR_MAX - 1) {
+		DEBUG_NOTICE("STR_MAX filename read mode (max = %i)",
+				STR_MAX - 1);
+		return E_FNR_STR_MAX;
+	} else {
+		DEBUG_NOTICE("FULL filename read mode");
+		return E_FNR_FULL;
+	}
 }
 
 perf_reader_raw_cb Print_event_cb[EOF_QTY + 1] = {
