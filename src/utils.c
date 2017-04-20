@@ -333,30 +333,47 @@ get_sc_list(FILE *f, template_t template)
 void
 str_replace_all(char **const text, const char *templt, const char *str)
 {
-	char *occ;
-
 	const size_t templt_len = strlen(templt);
 	const size_t str_len = strlen(str);
+	char *occ;
 
-	while (NULL != (occ = strstr(*text, templt))) {
-		char *p;
-		size_t text_len;
-
-		p = *text;
-		text_len = strlen(p);
-
-		*text = calloc(1, text_len - templt_len + str_len + 1);
-
-		if (NULL == *text) {
-			free(p);
+	if (str_len <= templt_len) {
+		char *new_str = malloc(templt_len);
+		if (new_str == NULL)
 			return;
+
+		memcpy(new_str, str, str_len);
+
+		/* fill the rest with spaces */
+		if (templt_len - str_len > 1) {
+			memset(new_str + str_len, ' ', templt_len - str_len);
+		} else {
+			new_str[str_len] = ' ';
 		}
 
-		strncpy(*text, p, ((uintptr_t)occ) - ((uintptr_t)p));
-		strcat(*text, str);
-		strcat(*text, occ + templt_len);
+		/* replace all */
+		while (NULL != (occ = strstr(*text, templt))) {
+			memcpy(occ, new_str, templt_len);
+		}
 
-		free(p);
+		free(new_str);
+
+	} else {
+		while (NULL != (occ = strstr(*text, templt))) {
+			char *p = *text;
+			size_t text_len = strlen(p);
+
+			*text = calloc(1, text_len - templt_len + str_len + 1);
+			if (NULL == *text) {
+				free(p);
+				return;
+			}
+
+			strncpy(*text, p, ((uintptr_t)occ) - ((uintptr_t)p));
+			strcat(*text, str);
+			strcat(*text, occ + templt_len);
+			free(p);
+		}
 	}
 }
 

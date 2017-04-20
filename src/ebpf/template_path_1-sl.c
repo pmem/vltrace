@@ -37,10 +37,10 @@
  */
 
 /*
- * kprobe__SYSCALL_NAME -- SYSCALL_NAME() entry handler
+ * kprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() entry handler
  */
 int
-kprobe__SYSCALL_NAME(struct pt_regs *ctx)
+kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 {
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
@@ -73,10 +73,10 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 };
 
 /*
- * kretprobe__SYSCALL_NAME -- SYSCALL_NAME() exit handler
+ * kretprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() exit handler
  */
 int
-kretprobe__SYSCALL_NAME(struct pt_regs *ctx)
+kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 {
 	struct data_exit_t ev;
 

@@ -288,7 +288,7 @@ generate_ebpf_kp_kern_all(FILE *ts)
 		text = get_template(sc_num);
 
 		assert(text != NULL);
-		str_replace_all(&text, "SYSCALL_NAME", line);
+		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace", line);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
 		if (fw_res < 1) {
@@ -327,7 +327,7 @@ generate_ebpf_kp_file(FILE *ts)
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);
-		str_replace_all(&text, "SYSCALL_NAME",
+		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
 				Syscall_array[i].handler_name);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
@@ -364,7 +364,7 @@ generate_ebpf_kp_fileat(FILE *ts)
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);
-		str_replace_all(&text, "SYSCALL_NAME",
+		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
 				Syscall_array[i].handler_name);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
@@ -401,7 +401,7 @@ generate_ebpf_kp_desc(FILE *ts)
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);
-		str_replace_all(&text, "SYSCALL_NAME",
+		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
 				Syscall_array[i].handler_name);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
