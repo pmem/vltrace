@@ -189,9 +189,6 @@ main(const int argc, char *const argv[])
 
 	apply_process_attach_code(&bpf_str);
 
-	/* simulate preprocessor, because it's safer */
-	apply_trace_h_header(&bpf_str);
-
 	/* print resulting code in debug mode */
 	if (Args.debug)
 		fprint_ebpf_code_with_debug_marks(stderr, bpf_str);

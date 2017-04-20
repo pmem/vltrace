@@ -545,19 +545,6 @@ apply_process_attach_code(char **const pbpf_str)
 }
 
 /*
- * This function apply trace.h because this way is the safest.
- */
-void
-apply_trace_h_header(char **const pbpf_str)
-{
-	char *trace_h = load_file_no_cr(ebpf_trace_h_file);
-
-	str_replace_all(pbpf_str, "#include \"trace.h\"\n", trace_h);
-
-	free(trace_h);
-}
-
-/*
  * Print ebpf code with marks for debug reason
  */
 int
