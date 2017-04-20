@@ -50,12 +50,14 @@ extern const char *ebpf_path_2_ml_file;
 extern const char *ebpf_path_1_2_ml_file;
 extern const char *ebpf_path_1_3_ml_file;
 extern const char *ebpf_path_2_4_ml_file;
+extern const char *ebpf_3_paths_ml_file;
 
 extern const char *ebpf_path_1_sl_file;
 extern const char *ebpf_path_2_sl_file;
 extern const char *ebpf_path_1_2_sl_file;
 extern const char *ebpf_path_1_3_sl_file;
 extern const char *ebpf_path_2_4_sl_file;
+extern const char *ebpf_3_paths_sl_file;
 
 extern const char *ebpf_fork_file;
 extern const char *ebpf_vfork_file;
@@ -104,6 +106,12 @@ extern const char _binary_template_path_1_3_ml_c_start[];
 
 extern const char _binary_template_path_2_4_ml_c_end[];
 extern const char _binary_template_path_2_4_ml_c_start[];
+
+extern const char _binary_template_3_paths_sl_c_end[];
+extern const char _binary_template_3_paths_sl_c_start[];
+
+extern const char _binary_template_3_paths_ml_c_end[];
+extern const char _binary_template_3_paths_ml_c_start[];
 
 extern const char _binary_template_fork_c_end[];
 extern const char _binary_template_fork_c_start[];

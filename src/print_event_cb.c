@@ -77,9 +77,9 @@ unsigned Arg_is_path[6] = {
 	EM_path_3,
 	/* syscall has fs path as fourth arg */
 	EM_path_4,
-	/* syscall has fs path as fifth arg - for future syscalls */
+	/* syscall has fs path as fifth arg */
 	EM_path_5,
-	/* syscall has fs path as sixth arg - for future syscalls */
+	/* syscall has fs path as sixth arg */
 	EM_path_6
 };
 
@@ -277,6 +277,23 @@ fwrite_sc_name(FILE *f, const s64 sc_id)
 }
 
 /*
+ * get_n_strings -- get number of string arguments
+ */
+static int
+get_n_strings(unsigned sc_num)
+{
+	unsigned mask = Syscall_array[sc_num].masks & EM_paths;
+	int n_strings = 0;
+
+	while (mask) {
+		n_strings += mask & 0x1;
+		mask >>= 1;
+	}
+
+	return n_strings;
+}
+
+/*
  * is_path -- checks if the argument is a path
  */
 static int
@@ -293,8 +310,12 @@ is_path(int argn, unsigned sc_num)
  * fprint_path -- return argument's type code for syscall number
  */
 static void
-fprint_path(int path, FILE *f, struct data_entry_t *const event, int size)
+fprint_path(int path, int npaths, FILE *f, struct data_entry_t *const event,
+		int size)
 {
+	char *str;
+	size_t len;
+
 	(void) size;
 
 	switch (path) {
@@ -309,8 +330,26 @@ fprint_path(int path, FILE *f, struct data_entry_t *const event, int size)
 		break;
 	case 1: /* print the second string */
 		if (event->packet_type == 0) {
-			char *str = event->aux_str + (STR_MAX / 2);
-			size_t len = strnlen(str, STR_MAX - (STR_MAX / 2));
+			switch (npaths) {
+			case 2:
+				str = event->aux_str + (STR_MAX / 2);
+				len = strnlen(str, STR_MAX - (STR_MAX / 2));
+				fwrite(str, len, 1, f);
+				break;
+			case 3:
+				str = event->aux_str + (STR_MAX / 3);
+				len = strnlen(str, STR_MAX - (STR_MAX / 3));
+				fwrite(str, len, 1, f);
+				break;
+			}
+		} else {
+			assert(event->packet_type == 0);
+		}
+		break;
+	case 2: /* print the third string */
+		if (event->packet_type == 0) {
+			char *str = event->aux_str + 2 * (STR_MAX / 3);
+			size_t len = strnlen(str, STR_MAX - 2 * (STR_MAX / 3));
 			fwrite(str, len, 1, f);
 		} else {
 			assert(event->packet_type == 0);
@@ -325,7 +364,7 @@ fprint_path(int path, FILE *f, struct data_entry_t *const event, int size)
  */
 static void
 fprint_arg_hex(int argn, FILE *f, struct data_entry_t *const event, int size,
-		int *path)
+		int *path, int npaths)
 {
 	switch (event->sc_id) {
 	case -2:
@@ -341,7 +380,7 @@ fprint_arg_hex(int argn, FILE *f, struct data_entry_t *const event, int size,
 
 	default:
 		if (is_path(argn, (unsigned)event->sc_id)) {
-			fprint_path((*path)++, f, event, size);
+			fprint_path((*path)++, npaths, f, event, size);
 		} else {
 			fprint_i64(f, (uint64_t)event->args[argn]);
 		}
@@ -389,7 +428,7 @@ static void
 print_event_hex_entry(FILE *f, void *data, int size)
 {
 	struct data_entry_t *const event = data;
-	int paths = 0;
+	int path = 0;
 	int nargs;
 
 	/* XXX Check size arg */
@@ -421,10 +460,12 @@ print_event_hex_entry(FILE *f, void *data, int size)
 	/* syscall's name */
 	fwrite_sc_name(f, event->sc_id);
 
+	int npaths = get_n_strings(event->sc_id);
+
 	/* syscall's arguments */
 	for (int i = 0; i < nargs; i++) {
 		fwrite_out_lf_fld_sep(f);
-		fprint_arg_hex(i, f, event, size, &paths);
+		fprint_arg_hex(i, f, event, size, &path, npaths);
 	}
 
 	/* "AUX_DATA". For COMM and like. XXX */

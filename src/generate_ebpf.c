@@ -161,7 +161,21 @@ get_template(unsigned i)
 		}
 	}
 
-	if (EM_path_1_2 == (EM_path_1_2 & Syscall_array[i].masks)) {
+	if (EM_path_1_2_3 == (EM_path_1_2_3 & Syscall_array[i].masks)) {
+		switch (Args.fnr_mode) {
+		case E_FNR_FAST:
+			text = load_file_no_cr(ebpf_3_paths_sl_file);
+			break;
+		case E_FNR_NAME_MAX:
+			text = load_file_no_cr(ebpf_3_paths_ml_file);
+			break;
+		case E_FNR_FULL:
+			/* XXX */
+		default:
+			assert(false);
+			break;
+		}
+	} else if (EM_path_1_2 == (EM_path_1_2 & Syscall_array[i].masks)) {
 		switch (Args.fnr_mode) {
 		case E_FNR_FAST:
 			text = load_file_no_cr(ebpf_path_1_2_sl_file);

@@ -48,6 +48,8 @@ set (BIN_SRCS
 	template_path_1_2-ml.c
 	template_path_1_3-ml.c
 	template_path_2_4-ml.c
+	template_3_paths-sl.c
+	template_3_paths-ml.c
 	template_clone.c
 	template_fork.c
 	template_vfork.c

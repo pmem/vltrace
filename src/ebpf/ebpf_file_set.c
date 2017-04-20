@@ -53,6 +53,8 @@ const char *ebpf_path_1_3_sl_file =
 		"template_path_1_3-sl.c";
 const char *ebpf_path_2_4_sl_file =
 		"template_path_2_4-sl.c";
+const char *ebpf_3_paths_sl_file =
+		"template_3_paths-sl.c";
 
 const char *ebpf_path_1_ml_file =
 		"template_path_1-ml.c";
@@ -64,6 +66,8 @@ const char *ebpf_path_1_3_ml_file =
 		"template_path_1_3-ml.c";
 const char *ebpf_path_2_4_ml_file =
 		"template_path_2_4-ml.c";
+const char *ebpf_3_paths_ml_file =
+		"template_3_paths-ml.c";
 
 const char *ebpf_fork_file = "template_fork.c";
 const char *ebpf_vfork_file = "template_vfork.c";
@@ -117,6 +121,10 @@ ebpf_load_file(const char *const fn)
 		return BINARY_FILE_CONTENT(template_path_1_3_sl_c);
 	} else if (0 == strcmp(ebpf_path_2_4_sl_file, fn)) {
 		return BINARY_FILE_CONTENT(template_path_2_4_sl_c);
+	} else if (0 == strcmp(ebpf_3_paths_sl_file, fn)) {
+		return BINARY_FILE_CONTENT(template_3_paths_sl_c);
+	} else if (0 == strcmp(ebpf_3_paths_ml_file, fn)) {
+		return BINARY_FILE_CONTENT(template_3_paths_ml_c);
 	} else if (0 == strcmp(ebpf_fork_file, fn)) {
 		return BINARY_FILE_CONTENT(template_fork_c);
 	} else if (0 == strcmp(ebpf_vfork_file, fn)) {

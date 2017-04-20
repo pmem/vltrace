@@ -52,7 +52,6 @@ enum sc_arg_type {
 	EAT_int,
 };
 
-/* XXX Subject to re-develop */
 enum masks_t {
 	/* syscall has fs path as a first arg */
 	EM_path_1 = 1 << 0,
@@ -66,6 +65,9 @@ enum masks_t {
 	EM_path_5 = 1 << 4,
 	/* syscall has fs path as sixth arg. For future syscalls. */
 	EM_path_6 = 1 << 5,
+	/* all paths */
+	EM_paths = EM_path_1 | EM_path_2 | EM_path_3 |
+			EM_path_4 | EM_path_5 | EM_path_6,
 
 	/* syscall fd path as a first arg */
 	EM_fd_1 = 1 << 6,
