@@ -301,16 +301,16 @@ fprint_path(int path, FILE *f, struct data_entry_t *const event, int size)
 	case 0: /* print the first string */
 		if (event->packet_type == 0) {
 			fwrite(event->aux_str,
-				strnlen(event->aux_str, MAX_PATH), 1, f);
+				strnlen(event->aux_str, STR_MAX), 1, f);
 		} else {
 			/* this packet contains only single string */
-			fwrite(event->str, strnlen(event->str, MAX_PATH), 1, f);
+			fwrite(event->str, strnlen(event->str, STR_MAX), 1, f);
 		}
 		break;
 	case 1: /* print the second string */
 		if (event->packet_type == 0) {
-			char *str = event->aux_str + (MAX_PATH / 2);
-			size_t len = strnlen(str, MAX_PATH - (MAX_PATH / 2));
+			char *str = event->aux_str + (STR_MAX / 2);
+			size_t len = strnlen(str, STR_MAX - (STR_MAX / 2));
 			fwrite(str, len, 1, f);
 		} else {
 			assert(event->packet_type == 0);

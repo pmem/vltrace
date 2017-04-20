@@ -46,7 +46,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 
 	PID_CHECK_HOOK
 
-	enum { _pad_size = offsetof(struct data_entry_t, aux_str) + MAX_PATH };
+	enum { _pad_size = offsetof(struct data_entry_t, aux_str) + STR_MAX };
 	union {
 		struct data_entry_t ev;
 		char _pad[_pad_size];
@@ -66,7 +66,7 @@ kprobe__SYSCALL_NAME(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
-	bpf_probe_read(&u.ev.aux_str, MAX_PATH, (void *)u.ev.args[0]);
+	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[0]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	return 0;

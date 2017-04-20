@@ -62,7 +62,7 @@ Cons
  - Depends on modern kernel features.
  - Underlying eBPF technology is still in active development. Hangs and crashes
    may occur more often as for regular strace, especially on low-res systems.
- - Truncating of very long filenames (longer then ~NAME_MAX bytes) to ~NAME_MAX.
+ - Truncating of very long filenames (longer then ~STR_MAX bytes) to ~STR_MAX.
    Details:
     + https://github.com/iovisor/bcc/issues/900
 

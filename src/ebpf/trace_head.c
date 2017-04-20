@@ -31,7 +31,7 @@
  */
 
 /*
- * trace_head.c -- The head for generated eBPF code. Uses BCC, eBPF.
+ * trace_head.c -- the head for generated eBPF code
  */
 
 #include <uapi/linux/ptrace.h>
@@ -39,8 +39,6 @@
 #include <linux/sched.h>
 
 #include "trace.h"
-
-#define MAX_PATH 400
 
 /* The set of our children_pid */
 BPF_HASH(children_map, u64, u64);

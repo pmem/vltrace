@@ -38,6 +38,8 @@
 #ifndef TRACE_H
 #define TRACE_H
 
+#define STR_MAX 401 /* including terminating '\0' */
+
 enum {
 	E_SC_ENTRY	= 0,
 	E_SC_EXIT	= 1,
@@ -45,7 +47,7 @@ enum {
 };
 
 struct data_entry_t {
-	u64 type; /* E_SC_ENTRY or E_SC_EXIT */
+	u64 type; /* E_SC_ENTRY or E_SC_EXIT or E_SC_TP */
 
 	/*
 	 * This field describes a series of packets for every syscall.
@@ -91,7 +93,7 @@ struct data_entry_t {
 			 *    meaning of argument is defined by
 			 *    syscall's number in the sc_id field.
 			 */
-			char aux_str[1];	/* MAX_PATH */
+			char aux_str[1];	/* STR_MAX */
 		};
 
 		/*
@@ -99,12 +101,12 @@ struct data_entry_t {
 		 *    is defined by syscall's number (in the first packet) in
 		 *    the sc_id field.
 		 */
-		char str[1];	/* MAX_PATH */
+		char str[1];	/* STR_MAX */
 	};
 };
 
 struct data_exit_t {
-	u64 type; /* E_SC_ENTRY or E_SC_EXIT */
+	u64 type; /* E_SC_ENTRY or E_SC_EXIT or E_SC_TP */
 
 	/*
 	 * This field describes a series of packets for every syscall.

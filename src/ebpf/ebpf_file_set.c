@@ -91,7 +91,9 @@ ebpf_load_file(const char *const fn)
 		return NULL;
 
 	/* fallback to embedded ones */
-	if (0 == strcmp(ebpf_head_file, fn)) {
+	if (0 == strcmp(ebpf_trace_h_file, fn)) {
+		return BINARY_FILE_CONTENT(trace_h);
+	} else if (0 == strcmp(ebpf_head_file, fn)) {
 		return BINARY_FILE_CONTENT(trace_head_c);
 	} else if (0 == strcmp(ebpf_no_path_file, fn)) {
 		return BINARY_FILE_CONTENT(template_no_path_c);
@@ -103,10 +105,6 @@ ebpf_load_file(const char *const fn)
 		return BINARY_FILE_CONTENT(template_path_2_ml_c);
 	} else if (0 == strcmp(ebpf_path_2_sl_file, fn)) {
 		return BINARY_FILE_CONTENT(template_path_2_sl_c);
-	} else if (0 == strcmp(ebpf_tracepoints_file, fn)) {
-		return BINARY_FILE_CONTENT(template_tracepoints_c);
-	} else if (0 == strcmp(ebpf_trace_h_file, fn)) {
-		return BINARY_FILE_CONTENT(trace_h);
 	} else if (0 == strcmp(ebpf_path_1_2_ml_file, fn)) {
 		return BINARY_FILE_CONTENT(template_path_1_2_ml_c);
 	} else if (0 == strcmp(ebpf_path_1_3_ml_file, fn)) {
@@ -127,6 +125,8 @@ ebpf_load_file(const char *const fn)
 		return BINARY_FILE_CONTENT(template_clone_c);
 	} else if (0 == strcmp(ebpf_exit_file, fn)) {
 		return BINARY_FILE_CONTENT(template_exit_c);
+	} else if (0 == strcmp(ebpf_tracepoints_file, fn)) {
+		return BINARY_FILE_CONTENT(template_tracepoints_c);
 	} else if (0 == strcmp(ebpf_pid_check_own_hook_file, fn)) {
 		return BINARY_FILE_CONTENT(pid_check_own_hook_c);
 	} else if (0 == strcmp(ebpf_pid_check_ff_disabled_hook_file, fn)) {

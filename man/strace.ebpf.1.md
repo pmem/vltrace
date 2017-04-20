@@ -90,7 +90,7 @@ WARNING: System-wide tracing can fill out your disk really fast.
  - Underlaing eBPF technology still is in active development. So we should
    expect hangs and crashes more often as for regular strace, especially on
    low-res systems.
- - Truncating of very long filenames (longer then ~NAME_MAX bytes) to ~NAME_MAX.
+ - Truncating of very long filenames (longer then ~STR_MAX bytes) to ~STR_MAX.
    Details:
     - https://github.com/iovisor/bcc/issues/900
 
@@ -191,10 +191,10 @@ there are no ways to calculate a len of strings. For this reason we introduced
 four modes of fetching file-names:
  - 'fast' - everything what we could not fit into single packet will be
    truncated.
- - 'name_max' - fetch-up NAME_MAX bytes of name. Every name will be sent
+ - 'name_max' - fetch-up STR_MAX bytes of name. Every name will be sent
    via separate packet. Processing of that packets is controlled by output
    log format.
- - 'number' - fetch-up 'number * NAME_MAX' bytes of name. Every part of name
+ - 'number' - fetch-up 'number * STR_MAX' bytes of name. Every part of name
    will be sent via separate packet. Processing of that packets is controlled
    by output log format. Minimal accepted value: 1.
    Implementation is not finished and is postponned.
