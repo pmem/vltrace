@@ -165,9 +165,7 @@ test_unsupported_syscalls(void)
 
 	syscall(SYS_poll, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
 
-	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3",
-		0x101, (void *)0x102);
-
+	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3", 0x101, (void *)0x102);
 	umount(NON_EXIST_PATH_1);
 	umount2(NON_EXIST_PATH_2, 0x123);
 
@@ -208,13 +206,57 @@ test_unsupported_syscalls(void)
 	/* vfork - moved to test_4 */
 }
 
+/*
+ * test_strings -- test syscalls with string arguments
+ */
+static void
+test_strings(void)
+{
+	/* string args: 1 (open) */
+	syscall(SYS_open, NON_EXIST_PATH_1, 0x102, 0x103, 0x104, 0x105, 0x106);
+
+	/* string args: 2 (openat) */
+	syscall(SYS_openat, 0x101, NON_EXIST_PATH_2, 0x103,
+		0x104, 0x105, 0x106);
+
+	/* string args: 1 2 (rename) */
+	rename(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
+
+	/* string args: 1 2 (llistxattr) */
+	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x103);
+
+	/* string args: 1 3 (symlinkat) */
+	syscall(SYS_symlinkat, NON_EXIST_PATH_1, 0x102, NON_EXIST_PATH_2);
+
+	/* string args: 2 4 (renameat) */
+	syscall(SYS_renameat, 0x101, NON_EXIST_PATH_1, 0x103, NON_EXIST_PATH_2);
+
+	/* string args: 1 2 3 (mount) */
+	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3", 0x101, (void *)0x102);
+
+	/* string args: 1 2 3 (request_key) */
+	syscall(SYS_request_key, "string1_type", "string2_description",
+		"string3_callout_info", 0x104);
+
+	/* string args: 3 (init_module) */
+	syscall(SYS_init_module, 0x101, 0x102, NON_EXIST_PATH_1);
+
+	/* string args: 4 (kexec_file_load) */
+	syscall(SYS_kexec_file_load, 0x101, 0x102, 0x103, NON_EXIST_PATH_2,
+		0x105);
+
+	/* string args: 5 (fanotify_mark) */
+	syscall(SYS_fanotify_mark, 0x101, 0x102, 0x103, 0x104,
+		NON_EXIST_PATH_1);
+}
+
 /* testing signals */
-int Signalled;
+static int Signalled;
 
 /*
  * sig_user_handler -- SIGALARM signal handler.
  */
-void
+static void
 sig_user_handler(int sig, siginfo_t *si, void *unused)
 {
 	(void) sig;
@@ -343,6 +385,16 @@ static void test_7(void)
 }
 
 /*
+ * test_8 -- test syscalls with string arguments
+ */
+static void test_8(void)
+{
+	MARK_START();
+	test_strings();
+	MARK_END();
+}
+
+/*
  * run_test -- array of tests
  */
 static void (*run_test[])(void) = {
@@ -353,7 +405,8 @@ static void (*run_test[])(void) = {
 	test_4,
 	test_5,
 	test_6,
-	test_7
+	test_7,
+	test_8
 };
 
 int

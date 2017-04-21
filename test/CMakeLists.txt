@@ -81,4 +81,8 @@ else ()
 	# 8
 	add_test(NAME "syscall-sigaction"
 		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 7)
+
+	# 9
+	add_test(NAME "syscalls-string-arguments"
+		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 8)
 endif ()
