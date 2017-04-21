@@ -588,14 +588,9 @@ print_syscalls_table(FILE *f)
 					"or duplicated number:\n");
 
 		if (NULL != Syscall_array[i].handler_name) {
-			if (i < __NR_FIRST_UNKNOWN) {
-				res = fprintf(f, "%03d:\t%s\n",
+			res = fprintf(f, "%03d:\t%s\n",
 					Syscall_array[i].num,
 					Syscall_array[i].handler_name);
-			} else {
-				res = fprintf(f, "\t%s\n",
-					Syscall_array[i].handler_name);
-			}
 			if (res <= 0)
 				return res;
 		}
