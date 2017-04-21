@@ -551,7 +551,7 @@ apply_process_attach_code(char **const pbpf_str)
 		assert(snp_res > 0);
 		(void) snp_res;
 
-		pid_check_hook = load_file_no_cr(ebpf_pid_check_own_hook_file);
+		pid_check_hook = load_file_no_cr(ebpf_pid_own_file);
 		assert(NULL != pid_check_hook);
 
 		str_replace_all(&pid_check_hook, "MY_OWN_PID", strpid);

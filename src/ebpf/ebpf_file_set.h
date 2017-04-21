@@ -42,15 +42,7 @@
 /* names */
 
 extern const char *ebpf_trace_h_file;
-
 extern const char *ebpf_head_file;
-
-extern const char *ebpf_path_1_ml_file;
-extern const char *ebpf_path_2_ml_file;
-extern const char *ebpf_path_1_2_ml_file;
-extern const char *ebpf_path_1_3_ml_file;
-extern const char *ebpf_path_2_4_ml_file;
-extern const char *ebpf_3_paths_ml_file;
 
 extern const char *ebpf_path_1_sl_file;
 extern const char *ebpf_path_2_sl_file;
@@ -58,6 +50,13 @@ extern const char *ebpf_path_1_2_sl_file;
 extern const char *ebpf_path_1_3_sl_file;
 extern const char *ebpf_path_2_4_sl_file;
 extern const char *ebpf_3_paths_sl_file;
+
+extern const char *ebpf_path_1_ml_file;
+extern const char *ebpf_path_2_ml_file;
+extern const char *ebpf_path_1_2_ml_file;
+extern const char *ebpf_path_1_3_ml_file;
+extern const char *ebpf_path_2_4_ml_file;
+extern const char *ebpf_3_paths_ml_file;
 
 extern const char *ebpf_fork_file;
 extern const char *ebpf_vfork_file;
@@ -67,9 +66,9 @@ extern const char *ebpf_exit_file;
 extern const char *ebpf_no_path_file;
 extern const char *ebpf_tracepoints_file;
 
-extern const char *ebpf_pid_check_own_hook_file;
-extern const char *ebpf_pid_check_ff_disabled_hook_file;
-extern const char *ebpf_pid_check_ff_full_hook_file;
+extern const char *ebpf_pid_own_file;
+extern const char *ebpf_pid_ff_disabled_file;
+extern const char *ebpf_pid_ff_full_file;
 
 /* functions */
 

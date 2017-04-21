@@ -190,10 +190,10 @@ load_pid_check_hook(enum ff_mode ff_mode)
 {
 	switch (ff_mode) {
 	case E_FF_DISABLED:
-		return load_file_no_cr(ebpf_pid_check_ff_disabled_hook_file);
+		return load_file_no_cr(ebpf_pid_ff_disabled_file);
 
 	case E_FF_FULL:
-		return load_file_no_cr(ebpf_pid_check_ff_full_hook_file);
+		return load_file_no_cr(ebpf_pid_ff_full_file);
 
 	default:
 		return NULL;
