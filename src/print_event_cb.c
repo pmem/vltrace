@@ -70,17 +70,17 @@ static inline char b2hex(char b);
 
 static unsigned Arg_is_str[6] = {
 	/* syscall has string as a first arg */
-	EM_path_1,
+	EM_str_1,
 	/* syscall has string as second arg */
-	EM_path_2,
+	EM_str_2,
 	/* syscall has string as third arg */
-	EM_path_3,
+	EM_str_3,
 	/* syscall has string as fourth arg */
-	EM_path_4,
+	EM_str_4,
 	/* syscall has string as fifth arg */
-	EM_path_5,
+	EM_str_5,
 	/* syscall has string as sixth arg */
-	EM_path_6
+	EM_str_6
 };
 
 /*

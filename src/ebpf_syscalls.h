@@ -54,20 +54,20 @@ enum sc_arg_type {
 
 enum masks_t {
 	/* syscall has string as a first arg */
-	EM_path_1 = 1 << 0,
+	EM_str_1 = 1 << 0,
 	/* syscall has string as second arg */
-	EM_path_2 = 1 << 1,
+	EM_str_2 = 1 << 1,
 	/* syscall has string as third arg */
-	EM_path_3 = 1 << 2,
+	EM_str_3 = 1 << 2,
 	/* syscall has string as fourth arg */
-	EM_path_4 = 1 << 3,
+	EM_str_4 = 1 << 3,
 	/* syscall has string as fifth arg */
-	EM_path_5 = 1 << 4,
+	EM_str_5 = 1 << 4,
 	/* syscall has string as sixth arg */
-	EM_path_6 = 1 << 5,
+	EM_str_6 = 1 << 5,
 	/* all strings */
-	EM_strings = EM_path_1 | EM_path_2 | EM_path_3 |
-			EM_path_4 | EM_path_5 | EM_path_6,
+	EM_strings = EM_str_1 | EM_str_2 | EM_str_3 |
+			EM_str_4 | EM_str_5 | EM_str_6,
 
 	/* syscall has fd as a first arg */
 	EM_fd_1 = 1 << 6,
@@ -97,17 +97,17 @@ enum masks_t {
 	/* syscall accepts fd as a first arg */
 	EM_desc = EM_fd_1,
 	/* syscall accepts fs path as a first arg */
-	EM_file = EM_path_1,
+	EM_file = EM_str_1,
 	/* syscall accepts dir fd as a first arg and path as a second */
-	EM_fileat = EM_fd_1 | EM_path_2,
+	EM_fileat = EM_fd_1 | EM_str_2,
 	/* syscall has fs paths as first and second Args. rename() */
-	EM_path_1_2 = EM_path_1 | EM_path_2,
+	EM_str_1_2 = EM_str_1 | EM_str_2,
 	/* syscall has fs paths as first and third Args. linkat() */
-	EM_path_1_3 = EM_path_1 | EM_path_3,
+	EM_str_1_3 = EM_str_1 | EM_str_3,
 	/* syscall has fs paths as second and forth Args. renameat() */
-	EM_path_2_4 = EM_path_2 | EM_path_4,
+	EM_str_2_4 = EM_str_2 | EM_str_4,
 	/* syscall has strings as 1st, 2nd and 3rd args. mount() */
-	EM_path_1_2_3 = EM_path_1 | EM_path_2 | EM_path_3,
+	EM_str_1_2_3 = EM_str_1 | EM_str_2 | EM_str_3,
 
 	EM_ALL = -1,
 };
