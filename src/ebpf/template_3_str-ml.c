@@ -42,7 +42,7 @@
 int
 kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 {
-	u64 pid_tid = bpf_get_current_pid_tgid();
+	uint64_t pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
 
@@ -92,8 +92,8 @@ kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 {
 	struct data_exit_t ev;
 
-	u64 cur_nsec = bpf_ktime_get_ns();
-	u64 pid_tid = bpf_get_current_pid_tgid();
+	uint64_t cur_nsec = bpf_ktime_get_ns();
+	uint64_t pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
 

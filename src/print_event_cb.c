@@ -34,26 +34,16 @@
  * print_event_cb.c -- print_event_cb() function
  */
 
-#include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <sys/syscall.h>   /* For SYS_xxx definitions */
-
-#include <linux/ptrace.h>
-#include <linux/limits.h>
 
 #include "strace.ebpf.h"
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
 #include "utils.h"
 
-/* US <-> KS portability */
-typedef __s32 s32;
-typedef __u32 u32;
-typedef __s64 s64;
-typedef __u64 u64;
 #include "ebpf/trace.h"
 
 static const char *Warning = "[WARNING: string truncated]:";
@@ -117,7 +107,7 @@ print_header_strace(int argc, char *const argv[])
 static void
 print_event_strace(void *cb_cookie, void *data, int size)
 {
-	s64 res = 0, err = 0;
+	int64_t res = 0, err = 0;
 	struct data_entry_t *const event = data;
 
 	/* XXX Check size arg */
@@ -267,7 +257,7 @@ out:
  * fwrite_sc_name -- write syscall's name to stream
  */
 static inline void
-fwrite_sc_name(FILE *f, const s64 sc_id)
+fwrite_sc_name(FILE *f, const int64_t sc_id)
 {
 	fwrite(Syscall_array[sc_id].handler_name + LEN_SYS,
 		Syscall_array[sc_id].name_length - LEN_SYS, 1, f);
@@ -496,7 +486,7 @@ print_event_hex_entry(FILE *f, void *data, int size)
 static void
 print_event_hex_exit(FILE *f, void *data, int size)
 {
-	s64 res, err;
+	int64_t res, err;
 	struct data_exit_t *const event = data;
 
 	/* XXX Check size arg */
@@ -545,7 +535,7 @@ print_event_hex_exit(FILE *f, void *data, int size)
 static void
 print_event_hex_tp(FILE *f, void *data, int size)
 {
-	s64 res, err;
+	int64_t res, err;
 	struct tp_s *const event = data;
 	static const char *str_sys_exit = "sys_exit ";
 	static const size_t len_sys_exit = 9; /* length of the string above */
@@ -598,7 +588,7 @@ print_event_hex_tp(FILE *f, void *data, int size)
 static void
 print_event_hex(FILE *f, void *data, int size)
 {
-	u64 *type = data;
+	uint64_t *type = data;
 	const char *str = "ERROR: Unknown type of event\n";
 
 	switch (*type) {

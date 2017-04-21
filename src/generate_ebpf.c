@@ -35,9 +35,11 @@
  */
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "ebpf/trace.h"
 #include "ebpf/ebpf_file_set.h"
 
 #include "strace.ebpf.h"
@@ -45,8 +47,6 @@
 #include "ebpf_syscalls.h"
 #include "generate_ebpf.h"
 #include "syscalls_numbers.h"
-
-#define MAX_STR_ARG 3 /* max supported number of string arguments */
 
 /*
  * get_sc_num -- this function returns syscall number by name

@@ -41,6 +41,6 @@
 #include "trace.h"
 
 /* The set of our children_pid */
-BPF_HASH(children_map, u64, u64);
+BPF_HASH(children_map, uint64_t, uint64_t);
 
 BPF_PERF_OUTPUT(events);

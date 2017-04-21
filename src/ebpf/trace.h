@@ -48,7 +48,7 @@ enum {
 };
 
 struct data_entry_t {
-	u64 type; /* E_SC_ENTRY or E_SC_EXIT or E_SC_TP */
+	uint64_t type; /* E_SC_ENTRY or E_SC_EXIT or E_SC_TP */
 
 	/*
 	 * This field describes a series of packets for every syscall.
@@ -66,7 +66,7 @@ struct data_entry_t {
 	 * Content of additional packets is defined by syscall number in
 	 *    first packet.
 	 */
-	s64 packet_type;
+	int64_t packet_type;
 
 	/*
 	 * Syscall's signature. All packets with the same signature belong to one
@@ -75,19 +75,19 @@ struct data_entry_t {
 	 *    syscall called from main context has returned.
 	 */
 	struct {
-		u64 pid_tid;
+		uint64_t pid_tid;
 
 		/* timestamp */
-		u64 start_ts_nsec;
+		uint64_t start_ts_nsec;
 
 		/* value -1 means "header" */
-		s64 sc_id;
+		int64_t sc_id;
 	};
 
 	union {
 		/* Body of first packet */
 		struct {
-			s64 args[6];
+			int64_t args[6];
 
 			/*
 			 * Body of string argument. The content and
@@ -107,7 +107,7 @@ struct data_entry_t {
 };
 
 struct data_exit_t {
-	u64 type; /* E_SC_ENTRY or E_SC_EXIT or E_SC_TP */
+	uint64_t type; /* E_SC_ENTRY or E_SC_EXIT or E_SC_TP */
 
 	/*
 	 * This field describes a series of packets for every syscall.
@@ -125,7 +125,7 @@ struct data_exit_t {
 	 * Content of additional packets is defined by syscall number in
 	 *    first packet.
 	 */
-	s64 packet_type;
+	int64_t packet_type;
 
 	/*
 	 * Syscall's signature. All packets with the same signature belong to one
@@ -134,24 +134,24 @@ struct data_exit_t {
 	 *    syscall called from main context has returned.
 	 */
 	struct {
-		u64 pid_tid;
+		uint64_t pid_tid;
 
 		/* timestamp */
-		u64 finish_ts_nsec;
+		uint64_t finish_ts_nsec;
 
 		/* value -1 means "header" */
-		s64 sc_id;
+		int64_t sc_id;
 	};
 
-	s64 ret;
+	int64_t ret;
 };
 
 struct tp_s {
-	u64 type;
-	u64 pid_tid;
-	u64 finish_ts_nsec;
-	s64 id;
-	s64 ret;
+	uint64_t type;
+	uint64_t pid_tid;
+	uint64_t finish_ts_nsec;
+	int64_t id;
+	int64_t ret;
 };
 
 #endif /* TRACE_H */

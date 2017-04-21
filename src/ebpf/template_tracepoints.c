@@ -50,7 +50,7 @@ int
 tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 {
 	struct tp_s tp;
-	u64 pid_tid = bpf_get_current_pid_tgid();
+	uint64_t pid_tid = bpf_get_current_pid_tgid();
 
 	tp.finish_ts_nsec = bpf_ktime_get_ns();
 	tp.id = args->id;
@@ -62,7 +62,7 @@ tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 	    tp.id == __NR_fork  ||
 	    tp.id == __NR_vfork) {
 		if (tp.ret > 0) {
-			u64 one = 1;
+			uint64_t one = 1;
 			children_map.update(&tp.ret, &one);
 		}
 	}
