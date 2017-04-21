@@ -52,7 +52,7 @@
  * get_sc_num -- this function returns syscall number by name
  *               according to the table of syscalls
  */
-static unsigned
+static int
 get_sc_num(const char *sc_name)
 {
 	static int last_free = __NR_LAST_UNKNOWN;
@@ -88,8 +88,8 @@ get_sc_num(const char *sc_name)
 	Syscall_array[i].attached = 1;
 	Syscall_array[i].nstrings = 0;
 
-	DEBUG_NOTICE("syscall was added to the table [%i]: %s",
-			i, Syscall_array[i].handler_name);
+	NOTICE("added syscall to the table [%i]: %s",
+		i, Syscall_array[i].handler_name);
 
 	return i;
 }
