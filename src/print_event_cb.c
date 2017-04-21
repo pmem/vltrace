@@ -279,7 +279,7 @@ fwrite_sc_name(FILE *f, const s64 sc_id)
 static int
 is_path(int argn, unsigned sc_num)
 {
-	if ((Syscall_array[sc_num].masks & Arg_is_str[argn]) ==
+	if ((Syscall_array[sc_num].mask & Arg_is_str[argn]) ==
 							Arg_is_str[argn])
 		return 1;
 	else

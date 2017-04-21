@@ -84,7 +84,7 @@ get_sc_num(const char *sc_name)
 
 	Syscall_array[i].name_length = strlen(Syscall_array[i].handler_name);
 	Syscall_array[i].args_qty = 6;
-	Syscall_array[i].masks = 0;
+	Syscall_array[i].mask = 0;
 	Syscall_array[i].attached = 1;
 	Syscall_array[i].nstrings = 0;
 
@@ -270,7 +270,7 @@ generate_ebpf_kp_file(FILE *ts)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_file != (EM_file & Syscall_array[i].masks))
+		if (EM_file != (EM_file & Syscall_array[i].mask))
 			continue;
 
 		text = load_ebpf_path_1_tmpl();
@@ -307,7 +307,7 @@ generate_ebpf_kp_fileat(FILE *ts)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_fileat != (EM_fileat & Syscall_array[i].masks))
+		if (EM_fileat != (EM_fileat & Syscall_array[i].mask))
 			continue;
 
 		text = load_ebpf_2_str_tmpl();
@@ -344,7 +344,7 @@ generate_ebpf_kp_desc(FILE *ts)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_desc != (EM_desc & Syscall_array[i].masks))
+		if (EM_desc != (EM_desc & Syscall_array[i].mask))
 			continue;
 
 		text = load_file_no_cr(ebpf_0_str_file);

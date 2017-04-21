@@ -73,37 +73,37 @@ char *syscall_names[SC_TBL_SIZE] = {
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.masks = 0 }
+	.mask = 0 }
 
 #define EBPF_SYSCALL_FLAGS(nr, sym, flags, aq)    [nr] = {\
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.masks = flags }
+	.mask = flags }
 
 #define EBPF_SYSCALL_FILE(nr, sym, aq)    [nr] = {\
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.masks = EM_file }
+	.mask = EM_file }
 
 #define EBPF_SYSCALL_FILEAT(nr, sym, aq)    [nr] = {\
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.masks = EM_fileat }
+	.mask = EM_fileat }
 
 #define EBPF_SYSCALL_DESC(nr, sym, aq)    [nr] = {\
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.masks = EM_desc }
+	.mask = EM_desc }
 
 #define EBPF_SYSCALL_RPID(nr, sym, aq)    [nr] = {\
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.masks = EM_rpid }
+	.mask = EM_rpid }
 
 #define SC_EMPTY {\
 	.num = SC_TBL_SIZE, \
@@ -505,7 +505,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 static void
 init_string_args_data(unsigned sc_num)
 {
-	unsigned mask = Syscall_array[sc_num].masks & EM_strings;
+	unsigned mask = Syscall_array[sc_num].mask & EM_strings;
 	char position = '0';
 	unsigned nstr = 0;
 

@@ -221,7 +221,7 @@ attach_kp_desc(struct bpf_ctx *b)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_desc != (EM_desc & Syscall_array[i].masks))
+		if (EM_desc != (EM_desc & Syscall_array[i].mask))
 			continue;
 
 		res = attach_single_sc(b, Syscall_array[i].handler_name);
@@ -250,7 +250,7 @@ attach_kp_file(struct bpf_ctx *b)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_file != (EM_file & Syscall_array[i].masks))
+		if (EM_file != (EM_file & Syscall_array[i].mask))
 			continue;
 
 		res = attach_single_sc(b, Syscall_array[i].handler_name);
@@ -279,7 +279,7 @@ attach_kp_fileat(struct bpf_ctx *b)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_fileat != (EM_fileat & Syscall_array[i].masks))
+		if (EM_fileat != (EM_fileat & Syscall_array[i].mask))
 			continue;
 
 		res = attach_single_sc(b, Syscall_array[i].handler_name);

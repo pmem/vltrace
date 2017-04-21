@@ -148,7 +148,7 @@ struct syscall_descriptor {
 	unsigned args_qty;
 
 	/* mask of flags */
-	unsigned masks;
+	unsigned mask;
 
 	/* helper field used to speed up attaching */
 	int attached;
