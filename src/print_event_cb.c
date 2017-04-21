@@ -277,23 +277,6 @@ fwrite_sc_name(FILE *f, const s64 sc_id)
 }
 
 /*
- * get_n_strings -- get number of string arguments
- */
-static int
-get_n_strings(unsigned sc_num)
-{
-	unsigned mask = Syscall_array[sc_num].masks & EM_paths;
-	int n_strings = 0;
-
-	while (mask) {
-		n_strings += mask & 0x1;
-		mask >>= 1;
-	}
-
-	return n_strings;
-}
-
-/*
  * is_path -- checks if the argument is a path
  */
 static int

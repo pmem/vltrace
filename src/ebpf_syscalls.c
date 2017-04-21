@@ -608,3 +608,20 @@ dump_syscalls_table(const char *path)
 
 	return 0;
 }
+
+/*
+ * get_n_strings -- get number of string arguments
+ */
+int
+get_n_strings(unsigned sc_num)
+{
+	unsigned mask = Syscall_array[sc_num].masks & EM_paths;
+	int n_strings = 0;
+
+	while (mask) {
+		n_strings += mask & 0x1;
+		mask >>= 1;
+	}
+
+	return n_strings;
+}

@@ -157,5 +157,6 @@ void init_syscalls_table(void);
 void free_syscalls_table(void);
 int print_syscalls_table(FILE *f);
 int dump_syscalls_table(const char *path);
+int get_n_strings(unsigned sc_num);
 
 #endif /* EBPF_SYSCALLS_H */

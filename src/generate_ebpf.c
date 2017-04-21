@@ -224,6 +224,11 @@ get_template(unsigned i)
 	} else if (EM_path_2 == (EM_path_2 & Syscall_array[i].masks)) {
 		text = load_ebpf_path_2_tmpl();
 	} else {
+		if (get_n_strings(i)) {
+			WARNING("no template found for syscall '%s'\n"
+				"\t(string arguments will not be printed)\n",
+				Syscall_array[i].handler_name);
+		}
 		text = load_file_no_cr(ebpf_no_path_file);
 	}
 
