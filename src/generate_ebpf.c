@@ -46,6 +46,8 @@
 #include "generate_ebpf.h"
 #include "syscalls_numbers.h"
 
+#define MAX_STR_ARG 3 /* max supported number of string arguments */
+
 /*
  * get_sc_num -- this function returns syscall number by name
  *               according to the table of syscalls
@@ -84,6 +86,7 @@ get_sc_num(const char *sc_name)
 	Syscall_array[i].args_qty = 6;
 	Syscall_array[i].masks = 0;
 	Syscall_array[i].attached = 1;
+	Syscall_array[i].nstrings = 0;
 
 	DEBUG_NOTICE("syscall was added to the table [%i]: %s",
 			i, Syscall_array[i].handler_name);
@@ -92,17 +95,17 @@ get_sc_num(const char *sc_name)
 }
 
 static char *
-load_ebpf_path_2_tmpl(void)
+load_ebpf_2_str_tmpl(void)
 {
 	char *text = NULL;
 
 	switch (Args.fnr_mode) {
 	case E_FNR_FAST:
 	case E_FNR_STR_MAX:
-		text = load_file_no_cr(ebpf_path_2_sl_file);
+		text = load_file_no_cr(ebpf_2_str_sl_file);
 		break;
 	case E_FNR_FULL:
-		text = load_file_no_cr(ebpf_path_2_ml_file);
+		text = load_file_no_cr(ebpf_2_str_ml_file);
 		break;
 	default:
 		assert(false);
@@ -120,10 +123,10 @@ load_ebpf_path_1_tmpl(void)
 	switch (Args.fnr_mode) {
 	case E_FNR_FAST:
 	case E_FNR_STR_MAX:
-		text = load_file_no_cr(ebpf_path_1_sl_file);
+		text = load_file_no_cr(ebpf_1_str_sl_file);
 		break;
 	case E_FNR_FULL:
-		text = load_file_no_cr(ebpf_path_1_ml_file);
+		text = load_file_no_cr(ebpf_1_str_ml_file);
 		break;
 	default:
 		assert(false);
@@ -134,15 +137,16 @@ load_ebpf_path_1_tmpl(void)
 }
 
 static char *
-get_template(unsigned i)
+get_template(unsigned sc_num)
 {
+	static const char *tmpl_str[MAX_STR_ARG] = {"STR1", "STR2", "STR3"};
 	char *text = NULL;
 
-	if (NULL == Syscall_array[i].handler_name)
+	if (Syscall_array[sc_num].handler_name == NULL)
 		return NULL;
 
 	if (Args.ff_mode == E_FF_FULL) {
-		switch (i) {
+		switch (sc_num) {
 		case __NR_clone:
 			text = load_file_no_cr(ebpf_clone_file);
 			goto replace;
@@ -159,77 +163,23 @@ get_template(unsigned i)
 		}
 	}
 
-	if (EM_path_1_2_3 == (EM_path_1_2_3 & Syscall_array[i].masks)) {
-		switch (Args.fnr_mode) {
-		case E_FNR_FAST:
-			text = load_file_no_cr(ebpf_3_paths_sl_file);
-			break;
-		case E_FNR_STR_MAX:
-			text = load_file_no_cr(ebpf_3_paths_ml_file);
-			break;
-		case E_FNR_FULL:
-			text = load_file_no_cr(ebpf_3_paths_ml_file);
-			break;
-		default:
-			assert(false);
-			break;
-		}
-	} else if (EM_path_1_2 == (EM_path_1_2 & Syscall_array[i].masks)) {
-		switch (Args.fnr_mode) {
-		case E_FNR_FAST:
-			text = load_file_no_cr(ebpf_path_1_2_sl_file);
-			break;
-		case E_FNR_STR_MAX:
-			text = load_file_no_cr(ebpf_path_1_2_ml_file);
-			break;
-		case E_FNR_FULL:
-			text = load_file_no_cr(ebpf_path_1_2_ml_file);
-			break;
-		default:
-			assert(false);
-			break;
-		}
-	} else if (EM_path_1_3 == (EM_path_1_3 & Syscall_array[i].masks)) {
-		switch (Args.fnr_mode) {
-		case E_FNR_FAST:
-			text = load_file_no_cr(ebpf_path_1_3_sl_file);
-			break;
-		case E_FNR_STR_MAX:
-			text = load_file_no_cr(ebpf_path_1_3_ml_file);
-			break;
-		case E_FNR_FULL:
-			text = load_file_no_cr(ebpf_path_1_3_ml_file);
-			break;
-		default:
-			assert(false);
-			break;
-		}
-	} else if (EM_path_2_4 == (EM_path_2_4 & Syscall_array[i].masks)) {
-		switch (Args.fnr_mode) {
-		case E_FNR_FAST:
-			text = load_file_no_cr(ebpf_path_2_4_sl_file);
-			break;
-		case E_FNR_STR_MAX:
-			text = load_file_no_cr(ebpf_path_2_4_ml_file);
-			break;
-		case E_FNR_FULL:
-			text = load_file_no_cr(ebpf_path_2_4_ml_file);
-			break;
-		default:
-			assert(false);
-			break;
-		}
-	} else if (EM_path_1 == (EM_path_1 & Syscall_array[i].masks)) {
-		text = load_ebpf_path_1_tmpl();
-	} else if (EM_path_2 == (EM_path_2 & Syscall_array[i].masks)) {
-		text = load_ebpf_path_2_tmpl();
-	} else {
-		if (get_n_strings(i)) {
-			WARNING("no template found for syscall '%s'\n"
-				"\t(string arguments will not be printed)\n",
-				Syscall_array[i].handler_name);
-		}
-		text = load_file_no_cr(ebpf_no_path_file);
+	int nstr = Syscall_array[sc_num].nstrings;
+
+	if (nstr > MAX_STR_ARG) {
+		WARNING("syscall '%s' has more than %i string arguments,\n"
+			"\tonly first %i of them will be printed\n",
+			Syscall_array[sc_num].handler_name,
+			MAX_STR_ARG, MAX_STR_ARG);
+
+		nstr = MAX_STR_ARG;
+	}
+
+	text = load_file_no_cr(ebpf_file_table[nstr][Args.fnr_mode]);
+
+	/* replace STRX */
+	for (int i = 0; i < nstr; i++) {
+		str_replace_with_char(text, tmpl_str[i],
+					Syscall_array[sc_num].positions[i]);
 	}
 
 	if (NULL == text)
@@ -237,7 +187,7 @@ get_template(unsigned i)
 
 replace:
 	str_replace_all(&text, "SYSCALL_NR",
-			Syscall_array[i].num_str);
+			Syscall_array[sc_num].num_str);
 
 	return text;
 }
@@ -360,7 +310,7 @@ generate_ebpf_kp_fileat(FILE *ts)
 		if (EM_fileat != (EM_fileat & Syscall_array[i].masks))
 			continue;
 
-		text = load_ebpf_path_2_tmpl();
+		text = load_ebpf_2_str_tmpl();
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);
@@ -397,7 +347,7 @@ generate_ebpf_kp_desc(FILE *ts)
 		if (EM_desc != (EM_desc & Syscall_array[i].masks))
 			continue;
 
-		text = load_file_no_cr(ebpf_no_path_file);
+		text = load_file_no_cr(ebpf_0_str_file);
 
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);

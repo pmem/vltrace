@@ -31,14 +31,15 @@
  */
 
 /*
- * trace.h -- Data exchange packet between packet filter and reader callback
+ * trace.h -- data exchange packet between packet filter and reader callback
  */
 
 
 #ifndef TRACE_H
 #define TRACE_H
 
-#define STR_MAX 401 /* including terminating '\0' */
+#define STR_MAX	401 /* max length of string including terminating '\0' */
+#define MAX_STR_ARG 3 /* max supported number of string arguments */
 
 enum {
 	E_SC_ENTRY	= 0,

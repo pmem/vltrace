@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,13 +31,13 @@
  */
 
 /*
- * template_path_1_3-ml.c -- templates for syscalls with filename
- *                           as the 1st and the 3rd argument,
- *                           multi-packet version.
+ * template_1_str-sl.c -- templates for syscalls with one string argument,
+ *                        single-packet version
  */
 
 /*
- * kprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() entry handler
+ * kprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace()
+ *                                            entry handler
  */
 int
 kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
@@ -65,21 +65,16 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
-	/* from the beginning (0) to 1st arg */
-	u.ev.packet_type = (0) + (1 << 3);
-	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[0]);
-	events.perf_submit(ctx, &u.ev, _pad_size);
-
-	/* from 2nd arg to the end (7) */
-	u.ev.packet_type = (1) + (7 << 3);
-	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[2]);
+	u.ev.packet_type = 0; /* No additional packets */
+	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[STR1]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	return 0;
 };
 
 /*
- * kretprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() exit handler
+ * kretprobe__SYSCALL_NAME_filled_for_replace --
+ *                               SYSCALL_NAME_filled_for_replace() exit handler
  */
 int
 kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)

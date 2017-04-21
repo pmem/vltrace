@@ -53,33 +53,33 @@ enum sc_arg_type {
 };
 
 enum masks_t {
-	/* syscall has fs path as a first arg */
+	/* syscall has string as a first arg */
 	EM_path_1 = 1 << 0,
-	/* syscall has fs path as second arg */
+	/* syscall has string as second arg */
 	EM_path_2 = 1 << 1,
-	/* syscall has fs path as third arg */
+	/* syscall has string as third arg */
 	EM_path_3 = 1 << 2,
-	/* syscall has fs path as fourth arg */
+	/* syscall has string as fourth arg */
 	EM_path_4 = 1 << 3,
-	/* syscall has fs path as fifth arg. For future syscalls. */
+	/* syscall has string as fifth arg */
 	EM_path_5 = 1 << 4,
-	/* syscall has fs path as sixth arg. For future syscalls. */
+	/* syscall has string as sixth arg */
 	EM_path_6 = 1 << 5,
-	/* all paths */
-	EM_paths = EM_path_1 | EM_path_2 | EM_path_3 |
+	/* all strings */
+	EM_strings = EM_path_1 | EM_path_2 | EM_path_3 |
 			EM_path_4 | EM_path_5 | EM_path_6,
 
-	/* syscall fd path as a first arg */
+	/* syscall has fd as a first arg */
 	EM_fd_1 = 1 << 6,
-	/* syscall fd path as second arg */
+	/* syscall has fd as second arg */
 	EM_fd_2 = 1 << 7,
-	/* syscall fd path as third arg */
+	/* syscall has fd as third arg */
 	EM_fd_3 = 1 << 8,
-	/* syscall fd path as fourth arg */
+	/* syscall has fd as fourth arg */
 	EM_fd_4 = 1 << 9,
-	/* syscall fd path as fifth arg. For future syscalls. */
+	/* syscall has fd as fifth arg */
 	EM_fd_5 = 1 << 10,
-	/* syscall fd path as sixth arg. For future syscalls. */
+	/* syscall has fd as sixth arg */
 	EM_fd_6 = 1 << 11,
 
 	/* syscall returns a fd */
@@ -113,10 +113,16 @@ enum masks_t {
 };
 
 enum {
-	/* maximum length of the syscall's number - 4 digits + '\0' */
-	SC_NUM_LEN = 5,
+	/* size of table of syscalls */
+	SC_TBL_SIZE = 1000,
 
-	/* maximum length of the syscall's name */
+	/* maximum number of syscall's arguments */
+	SC_ARGS_MAX = 6,
+
+	/* maximum length of a syscall's number: 3 digits + '\0' */
+	SC_NUM_LEN = 3,
+
+	/* maximum length of a syscall's name */
 	SC_NAME_LEN = 31
 };
 
@@ -127,7 +133,7 @@ struct syscall_descriptor {
 	unsigned num;
 
 	/* syscall number as string */
-	char num_str[SC_NUM_LEN];
+	char num_str[SC_NUM_LEN + 1];
 
 	/* name of in-kernel syscall's handler */
 	char *handler_name;
@@ -141,15 +147,18 @@ struct syscall_descriptor {
 	/* number of syscall's arguments */
 	unsigned args_qty;
 
-	/* flags */
+	/* mask of flags */
 	unsigned masks;
 
 	/* helper field used to speed up attaching */
 	int attached;
-};
 
-/* size of table of syscalls */
-enum { SC_TBL_SIZE = 1024 };
+	/* number of string arguments */
+	unsigned nstrings;
+
+	/* positions of string arguments */
+	char positions[SC_ARGS_MAX];
+};
 
 extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
 
@@ -157,6 +166,5 @@ void init_syscalls_table(void);
 void free_syscalls_table(void);
 int print_syscalls_table(FILE *f);
 int dump_syscalls_table(const char *path);
-int get_n_strings(unsigned sc_num);
 
 #endif /* EBPF_SYSCALLS_H */

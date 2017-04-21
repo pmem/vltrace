@@ -500,24 +500,49 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 };
 
 /*
+ * init_string_args_data -- init string arguments data in syscalls table
+ */
+static void
+init_string_args_data(unsigned sc_num)
+{
+	unsigned mask = Syscall_array[sc_num].masks & EM_strings;
+	char position = '0';
+	unsigned nstr = 0;
+
+	while (mask) {
+		if (mask & 0x1) {
+			Syscall_array[sc_num].positions[nstr] = position;
+			nstr++;
+		}
+		mask >>= 1;
+		position++;
+	}
+
+	Syscall_array[sc_num].nstrings = nstr;
+}
+
+/*
  * init_syscalls_table -- init the table of syscalls
  */
 void
 init_syscalls_table(void)
 {
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		if (Syscall_array[i].handler_name == NULL && syscall_names[i]) {
+		if (Syscall_array[i].handler_name == NULL &&
+		    syscall_names[i] != NULL) {
 			Syscall_array[i].handler_name = syscall_names[i];
 			DEBUG_NOTICE("setting syscalls' table [%i] to '%s'",
 					i, syscall_names[i]);
 		}
 
 		Syscall_array[i].attached = 0;
+
 		if (Syscall_array[i].handler_name != NULL) {
 			Syscall_array[i].name_length =
 				strlen(Syscall_array[i].handler_name);
 
 			assert(Syscall_array[i].name_length <= SC_NAME_LEN);
+
 			strncpy(Syscall_array[i].syscall_name,
 				Syscall_array[i].handler_name, SC_NAME_LEN);
 			Syscall_array[i].syscall_name[SC_NAME_LEN] = '\0';
@@ -525,6 +550,8 @@ init_syscalls_table(void)
 			Syscall_array[i].num = i;
 			sprintf(Syscall_array[i].num_str, "%u",
 				Syscall_array[i].num);
+
+			init_string_args_data(i);
 		}
 	}
 }
@@ -537,9 +564,8 @@ void
 free_syscalls_table(void)
 {
 	for (unsigned i = __NR_LAST_UNKNOWN; i < SC_TBL_SIZE; i++) {
-		if (!Syscall_array[i].attached)
-			continue;
-		if (Syscall_array[i].handler_name) {
+		if (Syscall_array[i].attached &&
+		    Syscall_array[i].handler_name) {
 			free(Syscall_array[i].handler_name);
 			Syscall_array[i].handler_name = NULL;
 		}
@@ -607,21 +633,4 @@ dump_syscalls_table(const char *path)
 	fclose(file);
 
 	return 0;
-}
-
-/*
- * get_n_strings -- get number of string arguments
- */
-int
-get_n_strings(unsigned sc_num)
-{
-	unsigned mask = Syscall_array[sc_num].masks & EM_paths;
-	int n_strings = 0;
-
-	while (mask) {
-		n_strings += mask & 0x1;
-		mask >>= 1;
-	}
-
-	return n_strings;
 }

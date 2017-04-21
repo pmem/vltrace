@@ -31,12 +31,13 @@
  */
 
 /*
- * template_3_paths-sl.c -- templates for syscalls with 3 paths
- *                          single-packet version
+ * template_3_str-ml.c -- templates for syscalls with 3 string arguments,
+ *                        multi-packet version
  */
 
 /*
- * kprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() entry handler
+ * kprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace()
+ *                                            entry handler
  */
 int
 kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
@@ -46,7 +47,6 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	PID_CHECK_HOOK
 
 	enum { _pad_size = offsetof(struct data_entry_t, aux_str) + STR_MAX };
-
 	union {
 		struct data_entry_t ev;
 		char _pad[_pad_size];
@@ -65,20 +65,27 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
-	u.ev.packet_type = 0; /* No additional packets */
-	bpf_probe_read(&u.ev.aux_str, STR_MAX / 3, (void *)u.ev.args[0]);
-	bpf_probe_read(&u.ev.aux_str + (STR_MAX / 3), STR_MAX / 3,
-			(void *)u.ev.args[1]);
-	bpf_probe_read(&u.ev.aux_str + 2 * (STR_MAX / 3),
-			STR_MAX - 2 * (STR_MAX / 3),
-			(void *)u.ev.args[2]);
+	/* from the beginning (0) to 1st string - contains 1st string */
+	u.ev.packet_type = (0) + ((STR1 + 1) << 3);
+	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[STR1]);
+	events.perf_submit(ctx, &u.ev, _pad_size);
+
+	/* from 1st to 2nd string argument - contains 2nd string */
+	u.ev.packet_type = (STR1 + 1) + ((STR2 + 1) << 3);
+	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[STR2]);
+	events.perf_submit(ctx, &u.ev, _pad_size);
+
+	/* from 2nd string argument to the end (7) - contains 3rd string */
+	u.ev.packet_type = (STR2 + 1) + (7 << 3);
+	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[STR3]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	return 0;
 };
 
 /*
- * kretprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() exit handler
+ * kretprobe__SYSCALL_NAME_filled_for_replace --
+ *                                SYSCALL_NAME_filled_for_replace() exit handler
  */
 int
 kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)

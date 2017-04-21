@@ -68,18 +68,18 @@ static inline const char *sc_num2str(const int64_t sc_num);
 static inline void fprint_i64(FILE *f, uint64_t x);
 static inline char b2hex(char b);
 
-unsigned Arg_is_path[6] = {
-	/* syscall has fs path as a first arg */
+static unsigned Arg_is_str[6] = {
+	/* syscall has string as a first arg */
 	EM_path_1,
-	/* syscall has fs path as second arg */
+	/* syscall has string as second arg */
 	EM_path_2,
-	/* syscall has fs path as third arg */
+	/* syscall has string as third arg */
 	EM_path_3,
-	/* syscall has fs path as fourth arg */
+	/* syscall has string as fourth arg */
 	EM_path_4,
-	/* syscall has fs path as fifth arg */
+	/* syscall has string as fifth arg */
 	EM_path_5,
-	/* syscall has fs path as sixth arg */
+	/* syscall has string as sixth arg */
 	EM_path_6
 };
 
@@ -266,12 +266,9 @@ out:
 /*
  * fwrite_sc_name -- write syscall's name to stream
  */
-static void
+static inline void
 fwrite_sc_name(FILE *f, const s64 sc_id)
 {
-	assert(sc_id >= 0 && sc_id < SC_TBL_SIZE &&
-		Syscall_array[sc_id].handler_name != NULL);
-
 	fwrite(Syscall_array[sc_id].handler_name + LEN_SYS,
 		Syscall_array[sc_id].name_length - LEN_SYS, 1, f);
 }
@@ -282,10 +279,8 @@ fwrite_sc_name(FILE *f, const s64 sc_id)
 static int
 is_path(int argn, unsigned sc_num)
 {
-	assert(sc_num < SC_TBL_SIZE);
-
-	if ((Syscall_array[sc_num].masks & Arg_is_path[argn]) ==
-							Arg_is_path[argn])
+	if ((Syscall_array[sc_num].masks & Arg_is_str[argn]) ==
+							Arg_is_str[argn])
 		return 1;
 	else
 		return 0;
@@ -295,8 +290,7 @@ is_path(int argn, unsigned sc_num)
  * fprint_path -- return argument's type code for syscall number
  */
 static void
-fprint_path(int path, int npaths, FILE *f, struct data_entry_t *const event,
-		int size)
+fprint_path(int path, FILE *f, struct data_entry_t *const event, int size)
 {
 	size_t STR_MAX_2 = STR_MAX / 2;
 	size_t STR_MAX_3 = STR_MAX / 3;
@@ -306,13 +300,15 @@ fprint_path(int path, int npaths, FILE *f, struct data_entry_t *const event,
 
 	(void) size;
 
+	unsigned nstrings = Syscall_array[event->sc_id].nstrings;
+
 	if (event->packet_type != 0) {
 		max_len = STR_MAX;
 		str = event->aux_str;
-		npaths = 0; /* skip next switch */
+		nstrings = 0; /* skip next switch */
 	}
 
-	switch (npaths) {
+	switch (nstrings) {
 	case 0:
 		break;
 	case 1:
@@ -354,7 +350,7 @@ fprint_path(int path, int npaths, FILE *f, struct data_entry_t *const event,
 		}
 		break;
 	default:
-		assert(npaths <= 3);
+		assert(nstrings <= 3);
 		break;
 	}
 
@@ -370,11 +366,11 @@ fprint_path(int path, int npaths, FILE *f, struct data_entry_t *const event,
  */
 static void
 fprint_arg_hex(int argn, FILE *f, struct data_entry_t *const event, int size,
-		int *path, int npaths)
+		int *path)
 {
 	if (is_path(argn, (unsigned)event->sc_id)) {
 		(*path)++;
-		fprint_path(*path, npaths, f, event, size);
+		fprint_path(*path, f, event, size);
 	} else {
 		fprint_i64(f, (uint64_t)event->args[argn]);
 	}
@@ -434,17 +430,15 @@ print_event_hex_entry(FILE *f, void *data, int size)
 	int arg_end = 7;
 
 	/* multi-packet: read arg_begin and arg_end */
-	if (event->packet_type) {
-		unsigned type = event->packet_type;
-		arg_begin = type & 0x7; /* bits 0-2 */
-		type >>= 3;
-		arg_end = type & 0x7;  /* bits 3-5 */
+	unsigned packets = event->packet_type;
+	if (packets) {
+		arg_begin = packets & 0x7; /* bits 0-2 */
+		arg_end = (packets >> 3) & 0x7;  /* bits 3-5 */
 	}
 
-	/* continuation of a string */
+	/* is it a continuation of a string ? */
 	if (arg_begin == arg_end) {
-		fwrite(event->aux_str,
-			strnlen(event->aux_str, STR_MAX), 1, f);
+		fwrite(event->aux_str, strnlen(event->aux_str, STR_MAX), 1, f);
 		return;
 	}
 
@@ -453,7 +447,6 @@ print_event_hex_entry(FILE *f, void *data, int size)
 		if (Args.timestamp) {
 			unsigned long long delta_nsec =
 				event->start_ts_nsec - start_ts_nsec;
-
 			fprint_i64(f, delta_nsec);
 			fwrite_out_lf_fld_sep(f);
 		}
@@ -468,30 +461,23 @@ print_event_hex_entry(FILE *f, void *data, int size)
 		fwrite_sc_name(f, event->sc_id);
 	}
 
-	/* 'arg_begin' argument was printed in the previous packet */
+	/* 'arg_begin' argument was already printed in the previous packet */
 	arg_begin++;
 
 	/* should we print EOL ? */
 	int print_eol;
 	if (arg_end == 7) {
 		print_eol = 1;
-		/* set the numnber of the last argumnet */
-		if (event->sc_id >= 0 && event->sc_id < SC_TBL_SIZE) {
-			arg_end = Syscall_array[event->sc_id].args_qty;
-		} else {
-			arg_end = 6;
-		}
+		/* and set the true value of the last argument */
+		arg_end = Syscall_array[event->sc_id].args_qty;
 	} else {
 		print_eol = 0;
 	}
 
-	/* count number of string arguments */
-	int npaths = get_n_strings(event->sc_id);
-
 	/* print syscall's arguments */
 	for (int i = (arg_begin - 1); i <= (arg_end - 1); i++) {
 		fwrite_out_lf_fld_sep(f);
-		fprint_arg_hex(i, f, event, size, &path, npaths);
+		fprint_arg_hex(i, f, event, size, &path);
 	}
 
 	/* should we print EOL ? */

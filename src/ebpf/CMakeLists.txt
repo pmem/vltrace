@@ -37,19 +37,13 @@ project(libebpf C)
 set (BIN_SRCS
 	trace.h
 	trace_head.c
-	template_no_path.c
-	template_path_1-sl.c
-	template_path_2-sl.c
-	template_path_1_2-sl.c
-	template_path_1_3-sl.c
-	template_path_2_4-sl.c
-	template_path_1-ml.c
-	template_path_2-ml.c
-	template_path_1_2-ml.c
-	template_path_1_3-ml.c
-	template_path_2_4-ml.c
-	template_3_paths-sl.c
-	template_3_paths-ml.c
+	template_0_str.c
+	template_1_str-sl.c
+	template_1_str-ml.c
+	template_2_str-sl.c
+	template_2_str-ml.c
+	template_3_str-sl.c
+	template_3_str-ml.c
 	template_clone.c
 	template_fork.c
 	template_vfork.c

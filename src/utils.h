@@ -66,7 +66,8 @@ typedef bool (*template_t)(const char *line, ssize_t size);
 bool is_a_sc(const char *const line, const ssize_t size);
 void get_sc_list(FILE *f, template_t template);
 
-void str_replace_all(char **text, const char *templt, const char *str);
+int str_replace_all(char **text, const char *templt, const char *str);
+int str_replace_with_char(char *const text, const char *templt, const char c);
 
 pid_t start_command(char *const argv[]);
 pid_t start_command_with_signals(int argc, char *const argv[]);

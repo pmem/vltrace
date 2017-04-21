@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Intel Corporation
+ * Copyright 2016-2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,55 +31,43 @@
  */
 
 /*
- * template_path_1_2-ml.c -- templates for syscalls with filename
- *                           as the 1st and the 2nd argument,
- *                           multi-packet version.
+ * template_0_str.c -- templates for syscalls with no string arguments
  */
 
 /*
- * kprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() entry handler
+ * kprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace()
+ *                                            entry handler
  */
 int
 kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 {
+	struct data_entry_t ev;
 	u64 pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
 
-	enum { _pad_size = offsetof(struct data_entry_t, aux_str) + STR_MAX };
-	union {
-		struct data_entry_t ev;
-		char _pad[_pad_size];
-	} u;
+	ev.type = E_SC_ENTRY;
+	ev.start_ts_nsec = bpf_ktime_get_ns();
 
-	u.ev.type = E_SC_ENTRY;
-	u.ev.start_ts_nsec = bpf_ktime_get_ns();
+	ev.packet_type = 0; /* No additional packets */
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.pid_tid = pid_tid;
 
-	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
-	u.ev.pid_tid = pid_tid;
+	ev.args[0] = PT_REGS_PARM1(ctx);
+	ev.args[1] = PT_REGS_PARM2(ctx);
+	ev.args[2] = PT_REGS_PARM3(ctx);
+	ev.args[3] = PT_REGS_PARM4(ctx);
+	ev.args[4] = PT_REGS_PARM5(ctx);
+	ev.args[5] = PT_REGS_PARM6(ctx);
 
-	u.ev.args[0] = PT_REGS_PARM1(ctx);
-	u.ev.args[1] = PT_REGS_PARM2(ctx);
-	u.ev.args[2] = PT_REGS_PARM3(ctx);
-	u.ev.args[3] = PT_REGS_PARM4(ctx);
-	u.ev.args[4] = PT_REGS_PARM5(ctx);
-	u.ev.args[5] = PT_REGS_PARM6(ctx);
-
-	/* from the beginning (0) to 1st arg */
-	u.ev.packet_type = (0) + (1 << 3);
-	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[0]);
-	events.perf_submit(ctx, &u.ev, _pad_size);
-
-	/* from 2nd arg to the end (7) */
-	u.ev.packet_type = (1) + (7 << 3);
-	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[1]);
-	events.perf_submit(ctx, &u.ev, _pad_size);
+	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, aux_str));
 
 	return 0;
 };
 
 /*
- * kretprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() exit handler
+ * kretprobe__SYSCALL_NAME_filled_for_replace --
+ *                               SYSCALL_NAME_filled_for_replace() exit handler
  */
 int
 kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)

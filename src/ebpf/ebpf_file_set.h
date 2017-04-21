@@ -44,31 +44,27 @@
 extern const char *ebpf_trace_h_file;
 extern const char *ebpf_head_file;
 
-extern const char *ebpf_path_1_sl_file;
-extern const char *ebpf_path_2_sl_file;
-extern const char *ebpf_path_1_2_sl_file;
-extern const char *ebpf_path_1_3_sl_file;
-extern const char *ebpf_path_2_4_sl_file;
-extern const char *ebpf_3_paths_sl_file;
+extern const char *ebpf_1_str_sl_file;
+extern const char *ebpf_2_str_sl_file;
+extern const char *ebpf_3_str_sl_file;
 
-extern const char *ebpf_path_1_ml_file;
-extern const char *ebpf_path_2_ml_file;
-extern const char *ebpf_path_1_2_ml_file;
-extern const char *ebpf_path_1_3_ml_file;
-extern const char *ebpf_path_2_4_ml_file;
-extern const char *ebpf_3_paths_ml_file;
+extern const char *ebpf_1_str_ml_file;
+extern const char *ebpf_2_str_ml_file;
+extern const char *ebpf_3_str_ml_file;
 
 extern const char *ebpf_fork_file;
 extern const char *ebpf_vfork_file;
 extern const char *ebpf_clone_file;
 extern const char *ebpf_exit_file;
 
-extern const char *ebpf_no_path_file;
+extern const char *ebpf_0_str_file;
 extern const char *ebpf_tracepoints_file;
 
 extern const char *ebpf_pid_own_file;
 extern const char *ebpf_pid_ff_disabled_file;
 extern const char *ebpf_pid_ff_full_file;
+
+extern const char *ebpf_file_table[4][3];
 
 /* functions */
 
@@ -76,41 +72,23 @@ char *ebpf_load_file(const char *fn);
 
 /* bodies */
 
-extern const char _binary_template_path_1_sl_c_end[];
-extern const char _binary_template_path_1_sl_c_start[];
+extern const char _binary_template_1_str_sl_c_end[];
+extern const char _binary_template_1_str_sl_c_start[];
 
-extern const char _binary_template_path_2_sl_c_end[];
-extern const char _binary_template_path_2_sl_c_start[];
+extern const char _binary_template_2_str_sl_c_end[];
+extern const char _binary_template_2_str_sl_c_start[];
 
-extern const char _binary_template_path_1_2_sl_c_end[];
-extern const char _binary_template_path_1_2_sl_c_start[];
+extern const char _binary_template_1_str_ml_c_end[];
+extern const char _binary_template_1_str_ml_c_start[];
 
-extern const char _binary_template_path_1_3_sl_c_end[];
-extern const char _binary_template_path_1_3_sl_c_start[];
+extern const char _binary_template_2_str_ml_c_end[];
+extern const char _binary_template_2_str_ml_c_start[];
 
-extern const char _binary_template_path_2_4_sl_c_end[];
-extern const char _binary_template_path_2_4_sl_c_start[];
+extern const char _binary_template_3_str_sl_c_end[];
+extern const char _binary_template_3_str_sl_c_start[];
 
-extern const char _binary_template_path_1_ml_c_end[];
-extern const char _binary_template_path_1_ml_c_start[];
-
-extern const char _binary_template_path_2_ml_c_end[];
-extern const char _binary_template_path_2_ml_c_start[];
-
-extern const char _binary_template_path_1_2_ml_c_end[];
-extern const char _binary_template_path_1_2_ml_c_start[];
-
-extern const char _binary_template_path_1_3_ml_c_end[];
-extern const char _binary_template_path_1_3_ml_c_start[];
-
-extern const char _binary_template_path_2_4_ml_c_end[];
-extern const char _binary_template_path_2_4_ml_c_start[];
-
-extern const char _binary_template_3_paths_sl_c_end[];
-extern const char _binary_template_3_paths_sl_c_start[];
-
-extern const char _binary_template_3_paths_ml_c_end[];
-extern const char _binary_template_3_paths_ml_c_start[];
+extern const char _binary_template_3_str_ml_c_end[];
+extern const char _binary_template_3_str_ml_c_start[];
 
 extern const char _binary_template_fork_c_end[];
 extern const char _binary_template_fork_c_start[];
@@ -130,8 +108,8 @@ extern const char _binary_trace_head_c_start[];
 extern const char _binary_trace_h_end[];
 extern const char _binary_trace_h_start[];
 
-extern const char _binary_template_no_path_c_end[];
-extern const char _binary_template_no_path_c_start[];
+extern const char _binary_template_0_str_c_end[];
+extern const char _binary_template_0_str_c_start[];
 
 extern const char _binary_template_tracepoints_c_end[];
 extern const char _binary_template_tracepoints_c_start[];
