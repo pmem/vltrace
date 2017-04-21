@@ -48,7 +48,7 @@ const char *ebpf_1_str_sl_file =	"template_1_str-sl.c";
 const char *ebpf_2_str_sl_file =	"template_2_str-sl.c";
 const char *ebpf_3_str_sl_file =	"template_3_str-sl.c";
 
-const char *ebpf_1_str_ml_file =	"template_1_str-ml.c";
+const char *ebpf_1_str_full_file =	"template_1_str-full.c";
 const char *ebpf_2_str_ml_file =	"template_2_str-ml.c";
 const char *ebpf_3_str_ml_file =	"template_3_str-ml.c";
 
@@ -73,7 +73,7 @@ const char *ebpf_file_table[4][3] = {
 	{
 		"template_1_str-sl.c",
 		"template_1_str-sl.c",
-		"template_1_str-ml.c",
+		"template_1_str-full.c",
 	},
 	{
 		"template_2_str-sl.c",
@@ -108,8 +108,8 @@ ebpf_load_file(const char *const fn)
 
 	} else if (0 == strcmp(ebpf_1_str_sl_file, fn)) {
 		return BINARY_FILE_CONTENT(template_1_str_sl_c);
-	} else if (0 == strcmp(ebpf_1_str_ml_file, fn)) {
-		return BINARY_FILE_CONTENT(template_1_str_ml_c);
+	} else if (0 == strcmp(ebpf_1_str_full_file, fn)) {
+		return BINARY_FILE_CONTENT(template_1_str_full_c);
 
 	} else if (0 == strcmp(ebpf_2_str_sl_file, fn)) {
 		return BINARY_FILE_CONTENT(template_2_str_sl_c);

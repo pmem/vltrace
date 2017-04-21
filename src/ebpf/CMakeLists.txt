@@ -39,7 +39,7 @@ set (BIN_SRCS
 	trace_head.c
 	template_0_str.c
 	template_1_str-sl.c
-	template_1_str-ml.c
+	template_1_str-full.c
 	template_2_str-sl.c
 	template_2_str-ml.c
 	template_3_str-sl.c

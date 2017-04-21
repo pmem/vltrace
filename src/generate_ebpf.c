@@ -126,7 +126,7 @@ load_ebpf_path_1_tmpl(void)
 		text = load_file_no_cr(ebpf_1_str_sl_file);
 		break;
 	case E_FNR_FULL:
-		text = load_file_no_cr(ebpf_1_str_ml_file);
+		text = load_file_no_cr(ebpf_1_str_full_file);
 		break;
 	default:
 		assert(false);

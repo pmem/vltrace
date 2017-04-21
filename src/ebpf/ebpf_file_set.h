@@ -48,7 +48,7 @@ extern const char *ebpf_1_str_sl_file;
 extern const char *ebpf_2_str_sl_file;
 extern const char *ebpf_3_str_sl_file;
 
-extern const char *ebpf_1_str_ml_file;
+extern const char *ebpf_1_str_full_file;
 extern const char *ebpf_2_str_ml_file;
 extern const char *ebpf_3_str_ml_file;
 
@@ -78,8 +78,8 @@ extern const char _binary_template_1_str_sl_c_start[];
 extern const char _binary_template_2_str_sl_c_end[];
 extern const char _binary_template_2_str_sl_c_start[];
 
-extern const char _binary_template_1_str_ml_c_end[];
-extern const char _binary_template_1_str_ml_c_start[];
+extern const char _binary_template_1_str_full_c_end[];
+extern const char _binary_template_1_str_full_c_start[];
 
 extern const char _binary_template_2_str_ml_c_end[];
 extern const char _binary_template_2_str_ml_c_start[];

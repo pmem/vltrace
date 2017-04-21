@@ -31,8 +31,8 @@
  */
 
 /*
- * template_1_str-ml.c -- templates for syscalls with one string argument,
- *                        multi-packet version
+ * template_1_str-full.c -- templates for syscalls with one string argument,
+ *                          full string version
  */
 
 /*
