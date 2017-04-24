@@ -49,9 +49,9 @@ set (BIN_SRCS
 	template_vfork.c
 	template_exit.c
 	template_tracepoints.c
-	pid_check_own_hook.c
-	pid_check_ff_disabled_hook.c
-	pid_check_ff_full_hook.c
+	macro_pid_own.c
+	macro_pid_ff_disabled.c
+	macro_pid_ff_full.c
 )
 
 

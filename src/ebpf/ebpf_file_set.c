@@ -59,9 +59,9 @@ const char *ebpf_exit_file =		"template_exit.c";
 
 const char *ebpf_tracepoints_file =	"template_tracepoints.c";
 
-const char *ebpf_pid_own_file =		"pid_check_own_hook.c";
-const char *ebpf_pid_ff_disabled_file = "pid_check_ff_disabled_hook.c";
-const char *ebpf_pid_ff_full_file =	"pid_check_ff_full_hook.c";
+const char *ebpf_pid_own_file =		"macro_pid_own.c";
+const char *ebpf_pid_ff_disabled_file = "macro_pid_ff_disabled.c";
+const char *ebpf_pid_ff_full_file =	"macro_pid_ff_full.c";
 
 
 const char *ebpf_file_table[4][3] = {
@@ -134,11 +134,11 @@ ebpf_load_file(const char *const fn)
 		return BINARY_FILE_CONTENT(template_tracepoints_c);
 
 	} else if (0 == strcmp(ebpf_pid_own_file, fn)) {
-		return BINARY_FILE_CONTENT(pid_check_own_hook_c);
+		return BINARY_FILE_CONTENT(macro_pid_own_c);
 	} else if (0 == strcmp(ebpf_pid_ff_disabled_file, fn)) {
-		return BINARY_FILE_CONTENT(pid_check_ff_disabled_hook_c);
+		return BINARY_FILE_CONTENT(macro_pid_ff_disabled_c);
 	} else if (0 == strcmp(ebpf_pid_ff_full_file, fn)) {
-		return BINARY_FILE_CONTENT(pid_check_ff_full_hook_c);
+		return BINARY_FILE_CONTENT(macro_pid_ff_full_c);
 	}
 
 	return NULL;

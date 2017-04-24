@@ -114,14 +114,14 @@ extern const char _binary_template_0_str_c_start[];
 extern const char _binary_template_tracepoints_c_end[];
 extern const char _binary_template_tracepoints_c_start[];
 
-extern const char _binary_pid_check_own_hook_c_end[];
-extern const char _binary_pid_check_own_hook_c_start[];
+extern const char _binary_macro_pid_own_c_end[];
+extern const char _binary_macro_pid_own_c_start[];
 
-extern const char _binary_pid_check_ff_disabled_hook_c_end[];
-extern const char _binary_pid_check_ff_disabled_hook_c_start[];
+extern const char _binary_macro_pid_ff_disabled_c_end[];
+extern const char _binary_macro_pid_ff_disabled_c_start[];
 
-extern const char _binary_pid_check_ff_full_hook_c_end[];
-extern const char _binary_pid_check_ff_full_hook_c_start[];
+extern const char _binary_macro_pid_ff_full_c_end[];
+extern const char _binary_macro_pid_ff_full_c_start[];
 
 #define BINARY_FILE_SIZE(name) (size_t)((uintptr_t)_binary_##name##_end -\
 		(uintptr_t)_binary_##name##_start)

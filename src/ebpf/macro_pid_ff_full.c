@@ -31,11 +31,25 @@
  */
 
 /*
- * pid_check_ff_disabled_hook.c -- Pid check hook for no-follow-fork mode.
+ * macro_pid_ff_full.c -- macro for checking PID in full-follow-fork mode
  */
 
 {
-	if ((pid_tid >> 32) != TRACED_PID) {
-		return 0;
+	uint64_t pid = (pid_tid >> 32);
+	if (pid != TRACED_PID) {
+		uint64_t *val = children_map.lookup(&pid);
+		if (NULL == val) {
+			return 0;
+		}
+		if (*val != 1) {
+			return 0;
+		}
+#ifdef TRACE_IN_SYS_EXIT
+		/*
+		 * Valid only for exit() and exit_group():
+		 * delete the PID from map, because the child exits
+		 */
+		children_map.delete(&pid);
+#endif
 	}
 }

@@ -31,7 +31,7 @@
  */
 
 /*
- * pid_check_own_hook.c -- pid check hook for 'system-wide' tracing mode.
+ * macro_pid_own.c -- macro for checking PID in 'system-wide' tracing mode
  */
 
 {
