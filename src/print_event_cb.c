@@ -280,7 +280,7 @@ is_path(int argn, unsigned sc_num)
  * fprint_path -- return argument's type code for syscall number
  */
 static void
-fprint_path(int path, FILE *f, struct data_entry_t *const event, int size)
+fprint_path(unsigned path, FILE *f, struct data_entry_t *const event, int size)
 {
 	size_t STR_MAX_2 = STR_MAX / 2;
 	size_t STR_MAX_3 = STR_MAX / 3;
@@ -316,7 +316,7 @@ fprint_path(int path, FILE *f, struct data_entry_t *const event, int size)
 			str = event->aux_str + STR_MAX_2;
 			break;
 		default:
-			assert(path <= 2);
+			assert(path <= nstrings);
 			break;
 		}
 		break;
@@ -335,14 +335,17 @@ fprint_path(int path, FILE *f, struct data_entry_t *const event, int size)
 			str = event->aux_str + 2 * STR_MAX_3;
 			break;
 		default:
-			assert(path <= 3);
+			assert(path <= nstrings);
 			break;
 		}
 		break;
 	default:
-		assert(nstrings <= 3);
+		assert(nstrings <= MAX_STR_ARG);
 		break;
 	}
+
+	if (str == NULL)
+		return;
 
 	len = strnlen(str, max_len);
 	if (len == max_len) {
