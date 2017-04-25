@@ -492,6 +492,7 @@ apply_process_attach_code(char **const pbpf_str)
 
 		snp_res = snprintf(strpid, sizeof(strpid), "%d", pid);
 		assert(snp_res > 0);
+		(void) snp_res;
 
 		pid_check_hook = load_pid_check_hook(Args.ff_mode);
 		assert(NULL != pid_check_hook);

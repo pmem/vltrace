@@ -69,6 +69,7 @@ fprint_help(FILE *f)
 	fw_res = fwrite("\n", 1, 1, f);
 
 	assert(fw_res > 0);
+	(void) fw_res;
 
 	fw_res = fwrite(_binary_help_text_txt_start,
 			(size_t)_binary_help_text_txt_size,

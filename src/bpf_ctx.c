@@ -160,6 +160,7 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 				"%p:%d", sbcp, cpu);
 
 		assert(res > 0);
+		(void) res;
 
 		append_item_to_pr_arr(sbcp, reader_name, reader, false);
 	}
