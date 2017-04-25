@@ -155,17 +155,21 @@ function check() {
 		if [ "$LINE" == "" ]; then
 			local NC=$(tail -n3 $MATCH_OUT | head -n1 | cut -d'$' -f1 | wc -c)
 			local NAMES=$(tail -n3 $MATCH_OUT | head -n2 | cut -c${NC}- | cut -d" " -f5)
-			local RESLT=$(tail -n3 $MATCH_OUT | head -n1 | cut -c${NC}- | cut -d" " -f4)
-			if [ "$RESLT" == "----------------" ]; then
+			local RESLT=$(tail -n3 $MATCH_OUT | head -n2 | cut -c${NC}- | cut -d" " -f4)
+			SC_MATCH=$(echo $NAMES | cut -d" " -f1)
+			SC_ACTUA=$(echo $NAMES | cut -d" " -f2)
+			RS_MATCH=$(echo $RESLT | cut -d" " -f1)
+			RS_ACTUA=$(echo $RESLT | cut -d" " -f2)
+			if [ "$RS_MATCH" == "----------------" ]; then
 				NUM="1" && TYPE="ENTRY"
 			else
 				NUM="2" && TYPE="EXIT"
 			fi
-			SC_MATCH=$(echo $NAMES | cut -d" " -f1)
-			SC_IS=$(echo $NAMES | cut -d" " -f2)
-			[ "$SC_MATCH" != "$SC_IS" ] \
-				&& echo "Error $NUM: missed $TYPE probe of syscall $SC_MATCH" \
-				|| echo "Error 3: wrong arguments of syscall $SC_MATCH"
+			if [ "$SC_MATCH" == "$SC_ACTUA" -a "$RS_MATCH" == "$RS_ACTUA" ]; then
+				echo "Error 3: wrong arguments of syscall $SC_MATCH"
+			else
+				echo "Error $NUM: missed $TYPE probe of syscall $SC_MATCH"
+			fi
 		else
 			LN=$(echo $LINE | cut -d':' -f2 | cut -d' ' -f1)
 			[ $LN -eq 1 ] \
