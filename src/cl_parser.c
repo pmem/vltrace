@@ -82,6 +82,7 @@ cl_parser(struct cl_options *const clo,
 			{"list",		no_argument,	   0, 'L'},
 			{"ll-list",		no_argument,	   0, 'R'},
 			{"builtin-list",	no_argument,	   0, 'B'},
+			{"no-progress",		no_argument,	   0, 'r'},
 			{"pid",			required_argument, 0, 'p'},
 			{"format",		required_argument, 0, 'l'},
 			{"string-args",		required_argument, 0, 's'},
@@ -93,7 +94,7 @@ cl_parser(struct cl_options *const clo,
 			{0, 0, 0, 0}
 		};
 
-		c = getopt_long(argc, argv, "+tXhdLRBp:l:s:e:o:N:K:f::",
+		c = getopt_long(argc, argv, "+tXhdLRBrp:l:s:e:o:N:K:f::",
 				long_options, &option_index);
 
 		if (c == -1)
@@ -101,6 +102,10 @@ cl_parser(struct cl_options *const clo,
 
 		switch (c) {
 			int res;
+
+		case 'r':
+			clo->do_not_print_progress = 1;
+			break;
 
 		case 't':
 			clo->timestamp = true;

@@ -193,7 +193,10 @@ detach_all(struct bpf_ctx *b)
 
 		free(b->pr_arr[i]);
 
-		fprintf(stderr, "\r%i of %i done", i + 1, b->pr_arr_qty + 1);
+		if (Args.do_not_print_progress == 0)
+			fprintf(stderr, "\r%i%% (%i of %i done)",
+				(100 * (i + 1)) / b->pr_arr_qty,
+				i + 1, b->pr_arr_qty);
 	}
 
 	bpf_module_destroy(b->module);

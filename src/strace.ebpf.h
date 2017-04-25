@@ -127,6 +127,9 @@ struct cl_options {
 	 * The lowest possible value is 64.
 	 */
 	int strace_reader_page_cnt;
+
+	/* do not print progress of detaching probes */
+	int do_not_print_progress;
 };
 
 extern struct cl_options Args;
