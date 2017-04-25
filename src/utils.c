@@ -416,6 +416,37 @@ str_replace_all(char **const text, const char *templt, const char *str)
 }
 
 /*
+ * str_replace_many -- replace all occurrences of 'templt' in 'text'
+ *                     with 'n' times 'str'
+ */
+int
+str_replace_many(char **const text, const char *templt, const char *str, int n)
+{
+	const size_t templt_len = strlen(templt);
+	const size_t str_len = strlen(str);
+	char *occ;
+
+	while (NULL != (occ = strstr(*text, templt))) {
+		char *p = *text;
+		size_t text_len = strlen(p);
+
+		*text = calloc(1, text_len - templt_len + (n * str_len) + 1);
+		if (NULL == *text) {
+			free(p);
+			return -1;
+		}
+
+		strncpy(*text, p, ((uintptr_t)occ) - ((uintptr_t)p));
+		for (int i = 0; i < n; i++)
+			strcat(*text, str);
+		strcat(*text, occ + templt_len);
+		free(p);
+	}
+
+	return 0;
+}
+
+/*
  * str_replace_with_char -- replace all occurrences of 'templt' in 'text'
  *                          with char 'c'
  */

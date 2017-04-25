@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, Intel Corporation
+ * Copyright 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,27 +31,17 @@
  */
 
 /*
- * print_event_cb.h -- print_event_cb() function
+ * macro_full_string_mode.c -- macro for reading string arguments
+ *                             in 'full-string' mode
  */
 
-#ifndef PRINT_EVENT_CB_H
-#define PRINT_EVENT_CB_H
-
-#include <stdint.h>
-
-#include <bcc/libbpf.h>
-
-#include "strace.ebpf.h"
-
-typedef int (*print_header_t)(int argc, char *const argv[]);
-
-void init_printing_events(void);
-
-extern print_header_t Print_header[EOF_QTY + 1];
-extern perf_reader_raw_cb Print_event_cb[EOF_QTY + 1];
-
-enum out_lf_fmt out_fmt_str2enum(const char *str);
-void choose_fnr_mode(const char *filename_length,
-			enum fnr_mode *mode, unsigned *n_str_packets);
-
-#endif /* PRINT_EVENT_CB_H */
+/* BEGIN */
+	if (!error_bpf_read) {
+		src += length;
+		if (bpf_probe_read(dest, length, (void *)src) == 0) {
+			events.perf_submit(ctx, &u.ev, _pad_size);
+		} else {
+			error_bpf_read = 1;
+		}
+	}
+/* END */

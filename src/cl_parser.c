@@ -183,7 +183,8 @@ cl_parser(struct cl_options *const clo,
 
 		case 's':
 			check_optarg(optarg);
-			clo->fnr_mode = choose_fnr_mode(optarg);
+			choose_fnr_mode(optarg, &clo->fnr_mode,
+						&clo->n_str_packets);
 			break;
 
 		case 'L':

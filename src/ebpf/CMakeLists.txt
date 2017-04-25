@@ -39,16 +39,19 @@ set (BIN_SRCS
 	trace_head.c
 	template_0_str.c
 	template_1_str-sl.c
-	template_1_str-full.c
 	template_2_str-sl.c
-	template_2_str-ml.c
 	template_3_str-sl.c
+	template_2_str-ml.c
 	template_3_str-ml.c
+	template_1_str-full.c
+	template_2_str-full.c
+	template_3_str-full.c
 	template_clone.c
 	template_fork.c
 	template_vfork.c
 	template_exit.c
 	template_tracepoints.c
+	macro_full_string_mode.c
 	macro_pid_own.c
 	macro_pid_ff_disabled.c
 	macro_pid_ff_full.c

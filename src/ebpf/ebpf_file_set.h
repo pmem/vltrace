@@ -44,21 +44,27 @@
 extern const char *ebpf_trace_h_file;
 extern const char *ebpf_head_file;
 
+extern const char *ebpf_0_str_file;
+
 extern const char *ebpf_1_str_sl_file;
 extern const char *ebpf_2_str_sl_file;
 extern const char *ebpf_3_str_sl_file;
 
-extern const char *ebpf_1_str_full_file;
 extern const char *ebpf_2_str_ml_file;
 extern const char *ebpf_3_str_ml_file;
+
+extern const char *ebpf_1_str_full_file;
+extern const char *ebpf_2_str_full_file;
+extern const char *ebpf_3_str_full_file;
 
 extern const char *ebpf_fork_file;
 extern const char *ebpf_vfork_file;
 extern const char *ebpf_clone_file;
 extern const char *ebpf_exit_file;
 
-extern const char *ebpf_0_str_file;
 extern const char *ebpf_tracepoints_file;
+
+extern const char *ebpf_full_string_mode;
 
 extern const char *ebpf_pid_own_file;
 extern const char *ebpf_pid_ff_disabled_file;
@@ -78,17 +84,23 @@ extern const char _binary_template_1_str_sl_c_start[];
 extern const char _binary_template_2_str_sl_c_end[];
 extern const char _binary_template_2_str_sl_c_start[];
 
-extern const char _binary_template_1_str_full_c_end[];
-extern const char _binary_template_1_str_full_c_start[];
+extern const char _binary_template_3_str_sl_c_end[];
+extern const char _binary_template_3_str_sl_c_start[];
 
 extern const char _binary_template_2_str_ml_c_end[];
 extern const char _binary_template_2_str_ml_c_start[];
 
-extern const char _binary_template_3_str_sl_c_end[];
-extern const char _binary_template_3_str_sl_c_start[];
-
 extern const char _binary_template_3_str_ml_c_end[];
 extern const char _binary_template_3_str_ml_c_start[];
+
+extern const char _binary_template_1_str_full_c_end[];
+extern const char _binary_template_1_str_full_c_start[];
+
+extern const char _binary_template_2_str_full_c_end[];
+extern const char _binary_template_2_str_full_c_start[];
+
+extern const char _binary_template_3_str_full_c_end[];
+extern const char _binary_template_3_str_full_c_start[];
 
 extern const char _binary_template_fork_c_end[];
 extern const char _binary_template_fork_c_start[];
@@ -113,6 +125,9 @@ extern const char _binary_template_0_str_c_start[];
 
 extern const char _binary_template_tracepoints_c_end[];
 extern const char _binary_template_tracepoints_c_start[];
+
+extern const char _binary_macro_full_string_mode_c_end[];
+extern const char _binary_macro_full_string_mode_c_start[];
 
 extern const char _binary_macro_pid_own_c_end[];
 extern const char _binary_macro_pid_own_c_start[];

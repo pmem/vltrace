@@ -46,7 +46,10 @@
 
 #include "ebpf/trace.h"
 
-static const char *Warning = "[WARNING: string truncated]:";
+static char *Str_entry; /* will be initialized by init_printing_events() */
+static size_t Len_str_entry; /* will be initialized by init_printing_events() */
+
+static const char *Warning = "[WARNING: string truncated]";
 static size_t Len_Warning;
 
 enum { TASK_COMM_LEN = 16 };
@@ -280,10 +283,9 @@ is_path(int argn, unsigned sc_num)
  * fprint_path -- return argument's type code for syscall number
  */
 static void
-fprint_path(unsigned path, FILE *f, struct data_entry_t *const event, int size)
+fprint_path(unsigned path, int *str_fini, FILE *f,
+		struct data_entry_t *const event, int size)
 {
-	size_t STR_MAX_2 = STR_MAX / 2;
-	size_t STR_MAX_3 = STR_MAX / 3;
 	char *str = NULL;
 	size_t len = 0;
 	size_t max_len = 0;
@@ -293,7 +295,7 @@ fprint_path(unsigned path, FILE *f, struct data_entry_t *const event, int size)
 	unsigned nstrings = Syscall_array[event->sc_id].nstrings;
 
 	if (event->packet_type != 0) {
-		max_len = STR_MAX;
+		max_len = STR_MAX_1;
 		str = event->aux_str;
 		nstrings = 0; /* skip next switch */
 	}
@@ -302,18 +304,17 @@ fprint_path(unsigned path, FILE *f, struct data_entry_t *const event, int size)
 	case 0:
 		break;
 	case 1:
-		max_len = STR_MAX;
+		max_len = STR_MAX_1;
 		str = event->aux_str;
 		break;
 	case 2:
+		max_len = STR_MAX_2;
 		switch (path) {
 		case 1:
-			max_len = STR_MAX_2;
 			str = event->aux_str;
 			break;
 		case 2:
-			max_len = STR_MAX - STR_MAX_2;
-			str = event->aux_str + STR_MAX_2;
+			str = event->aux_str + (BUF_SIZE / 2);
 			break;
 		default:
 			assert(path <= nstrings);
@@ -321,18 +322,16 @@ fprint_path(unsigned path, FILE *f, struct data_entry_t *const event, int size)
 		}
 		break;
 	case 3:
+		max_len = STR_MAX_3;
 		switch (path) {
 		case 1:
-			max_len = STR_MAX_3;
 			str = event->aux_str;
 			break;
 		case 2:
-			max_len = STR_MAX_3;
-			str = event->aux_str + STR_MAX_3;
+			str = event->aux_str + (BUF_SIZE / 3);
 			break;
 		case 3:
-			max_len = STR_MAX - 2 * STR_MAX_3;
-			str = event->aux_str + 2 * STR_MAX_3;
+			str = event->aux_str + 2 * (BUF_SIZE / 3);
 			break;
 		default:
 			assert(path <= nstrings);
@@ -347,9 +346,21 @@ fprint_path(unsigned path, FILE *f, struct data_entry_t *const event, int size)
 	if (str == NULL)
 		return;
 
-	len = strnlen(str, max_len);
-	if (len == max_len) {
-		fwrite(Warning, Len_Warning, 1, f);
+	len = strnlen(str, (max_len + 1)); /* + 1 for terminating '\0' */
+	/* check if string is truncated */
+	if (len == (max_len + 1)) {
+		int str_will_be_continued = 0;
+		if (event->packet_type) {
+			/* bit 7 of packet_type = string will be continued */
+			str_will_be_continued = (event->packet_type >> 7) & 0x1;
+		}
+		if (!str_will_be_continued) {
+			/* print warning that string is truncated */
+			fwrite(Warning, Len_Warning, 1, f);
+		}
+		*str_fini = 0;
+	} else {
+		*str_fini = 1;
 	}
 	fwrite(str, len, 1, f);
 }
@@ -359,11 +370,11 @@ fprint_path(unsigned path, FILE *f, struct data_entry_t *const event, int size)
  */
 static void
 fprint_arg_hex(int argn, FILE *f, struct data_entry_t *const event, int size,
-		int *path)
+		int *n_str, int *str_fini)
 {
 	if (is_path(argn, (unsigned)event->sc_id)) {
-		(*path)++;
-		fprint_path(*path, f, event, size);
+		(*n_str)++;
+		fprint_path(*n_str, str_fini, f, event, size);
 	} else {
 		fprint_i64(f, (uint64_t)event->args[argn]);
 	}
@@ -382,9 +393,6 @@ fwrite_out_lf_fld_sep(FILE *f)
 	assert(1 == res);
 	(void) res;
 }
-
-static char *Str_entry; /* will be initialized by init_printing_events() */
-static size_t Len_str_entry; /* will be initialized by init_printing_events() */
 
 /*
  * init_printing_events -- initialize Str_entry and Len_str_entry
@@ -411,7 +419,8 @@ static void
 print_event_hex_entry(FILE *f, void *data, int size)
 {
 	struct data_entry_t *const event = data;
-	int path = 0;
+	static int str_fini = 1; /* printing last string was finished */
+	static int n_str = 0; /* counter of string arguments */
 
 	/* XXX Check size arg */
 	(void) size;
@@ -421,17 +430,26 @@ print_event_hex_entry(FILE *f, void *data, int size)
 
 	int arg_begin = 0;
 	int arg_end = 7;
+	int arg_cont = 0;
 
 	/* multi-packet: read arg_begin and arg_end */
 	unsigned packets = event->packet_type;
 	if (packets) {
-		arg_begin = packets & 0x7; /* bits 0-2 */
-		arg_end = (packets >> 3) & 0x7;  /* bits 3-5 */
+		arg_begin = packets & 0x7;	 /* bits 0-2 */
+		arg_end =  (packets >> 3) & 0x7; /* bits 3-5 */
+		arg_cont = (packets >> 6) & 0x1; /* bit 6 (is a continuation) */
 	}
 
 	/* is it a continuation of a string ? */
 	if (arg_begin == arg_end) {
-		fwrite(event->aux_str, strnlen(event->aux_str, STR_MAX), 1, f);
+		assert(arg_cont == 1);
+		if (str_fini == 0) {
+			unsigned max_len = BUF_SIZE - 1;
+			unsigned len = strnlen(event->aux_str, max_len);
+			fwrite(event->aux_str, len, 1, f);
+			if (len < max_len)
+				str_fini = 1;
+		}
 		return;
 	}
 
@@ -454,8 +472,19 @@ print_event_hex_entry(FILE *f, void *data, int size)
 		fwrite_sc_name(f, event->sc_id);
 	}
 
-	/* 'arg_begin' argument was already printed in the previous packet */
-	arg_begin++;
+	/* is it a continuation of last argument (full name mode)? */
+	if (arg_cont) {
+		/* it is a continuation of last argument */
+		if (str_fini) {
+			/* printing string was already finished, so skip it */
+			arg_begin++;
+			arg_cont = 0;
+			str_fini = 0;
+		}
+	} else {
+		/* arg_begin argument was printed in the previous packet */
+		arg_begin++;
+	}
 
 	/* should we print EOL ? */
 	int print_eol;
@@ -469,13 +498,17 @@ print_event_hex_entry(FILE *f, void *data, int size)
 
 	/* print syscall's arguments */
 	for (int i = (arg_begin - 1); i <= (arg_end - 1); i++) {
-		fwrite_out_lf_fld_sep(f);
-		fprint_arg_hex(i, f, event, size, &path);
+		if ((i > arg_begin - 1) || !arg_cont || str_fini)
+			fwrite_out_lf_fld_sep(f);
+		fprint_arg_hex(i, f, event, size, &n_str, &str_fini);
 	}
 
 	/* should we print EOL ? */
-	if (print_eol)
+	if (print_eol) {
+		n_str = 0; /* reset counter of string arguments */
+		str_fini = 1;
 		fwrite("\n", 1, 1, f);
+	}
 }
 
 /*
@@ -723,22 +756,35 @@ out_fmt_str2enum(const char *str)
 	return EOF_HEX_RAW;
 }
 
-enum fnr_mode
-choose_fnr_mode(const char *filename_length)
+void
+choose_fnr_mode(const char *filename_length,
+		enum fnr_mode *mode, unsigned *n_str_packets)
 {
 	unsigned len = atoi(filename_length);
 
-	if (len <= (STR_MAX / 3) - 1) {
-		DEBUG_NOTICE("FAST filename read mode (max = %i)",
-				(STR_MAX / 3) - 1);
-		return E_FNR_FAST;
-	} else if (len <= STR_MAX - 1) {
-		DEBUG_NOTICE("STR_MAX filename read mode (max = %i)",
-				STR_MAX - 1);
-		return E_FNR_STR_MAX;
+	if (len <= STR_MAX_3) {
+		*mode = E_FNR_FAST;
+		*n_str_packets = 1;
+		NOTICE("FAST filename read mode "
+			"(1 packet per syscall, "
+			"max string length = %i)", STR_MAX_3);
+
+	} else if (len <= STR_MAX_1) {
+		*mode = E_FNR_STR_MAX;
+		*n_str_packets = 1;
+		NOTICE("BUF_SIZE filename read mode "
+			"(1 packet per string argument, "
+			"max string length = %i)", STR_MAX_1);
+
 	} else {
-		DEBUG_NOTICE("FULL filename read mode");
-		return E_FNR_FULL;
+		*mode = E_FNR_FULL;
+		unsigned np = (len + 1) / (BUF_SIZE - 1);
+		if (np * (BUF_SIZE - 1) < (len + 1))
+			np++;
+		*n_str_packets = np;
+		NOTICE("FULL filename read mode "
+			"(%i packets per string argument, "
+			"max string length = %i)", np, np * (BUF_SIZE - 1) - 1);
 	}
 }
 

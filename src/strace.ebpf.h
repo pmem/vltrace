@@ -117,6 +117,9 @@ struct cl_options {
 	/* filenames reading mode */
 	enum fnr_mode fnr_mode;
 
+	/* number of packets per one string argument */
+	unsigned n_str_packets;
+
 	/* XXX Should be configurable through command line */
 	unsigned out_buf_size;
 

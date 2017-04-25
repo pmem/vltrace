@@ -175,15 +175,17 @@ get_template(unsigned sc_num)
 	}
 
 	text = load_file_no_cr(ebpf_file_table[nstr][Args.fnr_mode]);
+	if (NULL == text) {
+		ERROR("cannot load the file: %s",
+			ebpf_file_table[nstr][Args.fnr_mode]);
+		return NULL;
+	}
 
 	/* replace STRX */
 	for (int i = 0; i < nstr; i++) {
 		str_replace_with_char(text, tmpl_str[i],
 					Syscall_array[sc_num].positions[i]);
 	}
-
-	if (NULL == text)
-		return NULL;
 
 replace:
 	str_replace_all(&text, "SYSCALL_NR",
@@ -236,13 +238,18 @@ generate_ebpf_kp_kern_all(FILE *ts)
 
 		sc_num = get_sc_num(line);
 		text = get_template(sc_num);
+		if (text == NULL) {
+			ERROR("no template found for syscall: '%s'", line);
+			free(line);
+			return -1;
+		}
 
-		assert(text != NULL);
 		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace", line);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
 		if (fw_res < 1) {
 			perror("fwrite");
+			free(line);
 			free(text);
 			return -1;
 		}
@@ -483,7 +490,7 @@ apply_process_attach_code(char **const pbpf_str)
 {
 	char strpid[64];
 	int snp_res;
-	char *pid_check_hook;
+	char *loaded_file;
 	int pid;
 
 	if (0 < Args.pid) {
@@ -494,10 +501,10 @@ apply_process_attach_code(char **const pbpf_str)
 		assert(snp_res > 0);
 		(void) snp_res;
 
-		pid_check_hook = load_pid_check_hook(Args.ff_mode);
-		assert(NULL != pid_check_hook);
+		loaded_file = load_pid_check_hook(Args.ff_mode);
+		assert(NULL != loaded_file);
 
-		str_replace_all(&pid_check_hook, "TRACED_PID", strpid);
+		str_replace_all(&loaded_file, "TRACED_PID", strpid);
 	} else {
 		/* my own pid */
 		pid = getpid();
@@ -507,13 +514,21 @@ apply_process_attach_code(char **const pbpf_str)
 		assert(snp_res > 0);
 		(void) snp_res;
 
-		pid_check_hook = load_file_no_cr(ebpf_pid_own_file);
-		assert(NULL != pid_check_hook);
+		loaded_file = load_file_no_cr(ebpf_pid_own_file);
+		assert(NULL != loaded_file);
 
-		str_replace_all(&pid_check_hook, "MY_OWN_PID", strpid);
+		str_replace_all(&loaded_file, "MY_OWN_PID", strpid);
 	}
-	str_replace_all(pbpf_str, "PID_CHECK_HOOK", pid_check_hook);
-	free(pid_check_hook);
+	str_replace_all(pbpf_str, "PID_CHECK_HOOK", loaded_file);
+	free(loaded_file);
+
+	if (Args.fnr_mode == E_FNR_FULL && Args.n_str_packets > 2) {
+		loaded_file = load_file_no_cr(ebpf_full_string_mode);
+		assert(NULL != loaded_file);
+		str_replace_many(pbpf_str, "READ_AND_SUBMIT_N_MINUS_2_PACKETS",
+					loaded_file, Args.n_str_packets - 2);
+	}
+
 }
 
 /*

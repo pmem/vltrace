@@ -47,7 +47,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	PID_CHECK_HOOK
 
 	enum { _pad_size = offsetof(struct data_entry_t, aux_str) +
-							2 * (STR_MAX / 2) };
+							2 * (BUF_SIZE / 2) };
 	union {
 		struct data_entry_t ev;
 		char _pad[_pad_size];
@@ -66,7 +66,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
-	unsigned length = (STR_MAX / 2) - 1;
+	unsigned length = (BUF_SIZE / 2) - 1;
 	char *dest = (char *)&u.ev.aux_str;
 
 	bpf_probe_read(dest, length, (void *)u.ev.args[STR1]);

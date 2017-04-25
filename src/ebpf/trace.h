@@ -38,8 +38,15 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-#define STR_MAX	401 /* max length of string including terminating '\0' */
-#define MAX_STR_ARG 3 /* max supported number of string arguments */
+/* define it as empty for case when Args.n_str_packets <= 2 */
+#define READ_AND_SUBMIT_N_MINUS_2_PACKETS
+
+#define MAX_STR_ARG 	3 /* max supported number of string arguments */
+
+#define BUF_SIZE	382 /* size of buffer for string arguments */
+#define STR_MAX_1	(BUF_SIZE - 2)
+#define STR_MAX_2	((BUF_SIZE / 2) - 2)
+#define STR_MAX_3	((BUF_SIZE / 3) - 2)
 
 enum {
 	E_SC_ENTRY	= 0,
@@ -94,7 +101,7 @@ struct data_entry_t {
 			 *    meaning of argument is defined by
 			 *    syscall's number in the sc_id field.
 			 */
-			char aux_str[1];	/* STR_MAX */
+			char aux_str[1];	/* BUF_SIZE */
 		};
 
 		/*
@@ -102,7 +109,7 @@ struct data_entry_t {
 		 *    is defined by syscall's number (in the first packet) in
 		 *    the sc_id field.
 		 */
-		char str[1];	/* STR_MAX */
+		char str[1];	/* BUF_SIZE */
 	};
 };
 
