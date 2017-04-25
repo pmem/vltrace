@@ -133,10 +133,10 @@ print_event_strace(void *cb_cookie, void *data, int size)
 		 * XXX Check presence of aux_str by checking sc_id
 		 *    and size arg
 		 */
-		fprintf(Out_lf, "%-6llu %4lld %3lld %s\n",
+		fprintf(Out_lf, "%-6lu %4ld %3ld %s\n",
 				event->pid_tid, res, err, event->aux_str);
 	else
-		fprintf(Out_lf, "%-6llu %4lld %3lld %s\n",
+		fprintf(Out_lf, "%-6lu %4ld %3ld %s\n",
 				event->pid_tid, res, err, event->str);
 
 	(void) cb_cookie;
