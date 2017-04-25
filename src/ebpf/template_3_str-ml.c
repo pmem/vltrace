@@ -65,19 +65,23 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
+	unsigned length = STR_MAX - 1;
+	char *dest = (char *)&u.ev.aux_str;
+	dest[length] = 0; /* make it null-terminated */
+
 	/* from the beginning (0) to 1st string - contains 1st string */
 	u.ev.packet_type = (0) + ((STR1 + 1) << 3);
-	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[STR1]);
+	bpf_probe_read(dest, length, (void *)u.ev.args[STR1]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	/* from 1st to 2nd string argument - contains 2nd string */
 	u.ev.packet_type = (STR1 + 1) + ((STR2 + 1) << 3);
-	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[STR2]);
+	bpf_probe_read(dest, length, (void *)u.ev.args[STR2]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	/* from 2nd string argument to the end (7) - contains 3rd string */
 	u.ev.packet_type = (STR2 + 1) + (7 << 3);
-	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[STR3]);
+	bpf_probe_read(dest, length, (void *)u.ev.args[STR3]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	return 0;

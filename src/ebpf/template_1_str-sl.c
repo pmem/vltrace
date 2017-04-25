@@ -65,8 +65,13 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
+	unsigned length = STR_MAX - 1;
+	char *dest = (char *)&u.ev.aux_str;
+
+	bpf_probe_read(dest, length, (void *)u.ev.args[STR1]);
+	dest[length] = 0; /* make it null-terminated */
+
 	u.ev.packet_type = 0; /* No additional packets */
-	bpf_probe_read(&u.ev.aux_str, STR_MAX, (void *)u.ev.args[STR1]);
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	return 0;
