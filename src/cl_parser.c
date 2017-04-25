@@ -53,6 +53,16 @@
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
 
+static inline int
+check_optarg(const char * const optarg)
+{
+	if (optarg == NULL) {
+		ERROR("missing mandatory option's argument");
+		fprint_help(stderr);
+		exit(EXIT_FAILURE);
+	}
+}
+
 /*
  * cl_parser -- Tool's command-line options parser
  */
@@ -109,6 +119,7 @@ cl_parser(struct cl_options *const clo,
 			break;
 
 		case 'p':
+			check_optarg(optarg);
 			clo->pid = atoi(optarg);
 			if (clo->pid < 1) {
 				ERROR("wrong value for pid option is"
@@ -119,18 +130,22 @@ cl_parser(struct cl_options *const clo,
 			break;
 
 		case 'o':
+			check_optarg(optarg);
 			clo->out_fn = optarg;
 			break;
 
 		case 'K':
+			check_optarg(optarg);
 			clo->out_lf_fld_sep_ch = *optarg;
 			break;
 
 		case 'N':
+			check_optarg(optarg);
 			clo->ebpf_src_dir = optarg;
 			break;
 
 		case 'e':
+			check_optarg(optarg);
 			if (!strcasecmp(optarg, "list") ||
 			    !strcasecmp(optarg, "help")) {
 				INFO("List of supported expressions: "
@@ -148,6 +163,7 @@ cl_parser(struct cl_options *const clo,
 			break;
 
 		case 'l':
+			check_optarg(optarg);
 			if (!strcasecmp(optarg, "list") ||
 			    !strcasecmp(optarg, "help")) {
 				INFO("List of supported formats: "
@@ -161,6 +177,7 @@ cl_parser(struct cl_options *const clo,
 			break;
 
 		case 's':
+			check_optarg(optarg);
 			clo->fnr_mode = choose_fnr_mode(optarg);
 			break;
 
