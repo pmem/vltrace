@@ -229,39 +229,75 @@ load_bpf_jit_status(void)
 }
 
 /*
+ * turn_on_bpf_jit_compiler -- turn on eBPF JIT compiler
+ */
+static int
+turn_on_bpf_jit_compiler(void)
+{
+	int fd, err_no;
+	ssize_t res;
+	char buf = '1';
+
+	fd = open("/proc/sys/net/core/bpf_jit_enable", O_WRONLY);
+	if (fd == -1)
+		return -1;
+
+	errno = 0;
+	res = write(fd, &buf, 1);
+
+	err_no = errno;
+	close(fd);
+	errno = err_no;
+
+	if (res < (ssize_t)sizeof(buf))
+		return -1;
+
+	return 0;
+}
+
+/*
  * check_bpf_jit_status -- check status of eBPF JIT compiler
  *                         and print appropriate message
  */
 void
 check_bpf_jit_status(FILE *file)
 {
-	int status = load_bpf_jit_status();
+	int status;
+
+	status = load_bpf_jit_status();
+	if (status == 0) {
+		int ret = turn_on_bpf_jit_compiler();
+		if (ret == 0)
+			NOTICE("turned on eBPF JIT compiler");
+		status = load_bpf_jit_status();
+		if (status == 1)
+			return;
+	}
 
 	switch (status) {
 	case -1:
-		fprintf(file, "ERROR: cannot read status of "
-				"eBPF JIT compiler: '%m'\n");
+		ERROR("cannot read status of eBPF JIT compiler: '%m'");
 		return;
 
 	case  0:
-		fprintf(file, "WARNING: eBPF JIT compiler is DISABLED.\n"
-				"\tPlease refer to `man strace.ebpf`,"
-				" section 'Configuration'.\n"
-				"\tEnabling this will improve performance\n"
-				"\tsignificantly and fix some problems.\n");
+		WARNING("eBPF JIT compiler is DISABLED.\n"
+			"\tPlease refer to `man strace.ebpf`,"
+			" section 'Configuration'.\n"
+			"\tEnabling this will improve performance\n"
+			"\tsignificantly and fix some problems.");
 		return;
 
 	case  1:
-		fprintf(file, "Notice: eBPF JIT compiler is enabled.\n");
+		NOTICE("eBPF JIT compiler is enabled");
 		return;
 
 	case  2:
-		fprintf(file, "Notice: eBPF JIT compiler is in DEBUG mode.\n");
+		NOTICE("eBPF JIT compiler is in DEBUG mode");
 		return;
 
 	default:
-		fprintf(file, "WARNING: unknown status of eBPF JIT compiler. "
-				"Please notify the author.\n");
+		WARNING("unknown status of eBPF JIT compiler. "
+			"Please notify the author.");
 		return;
 	}
 }
