@@ -111,11 +111,9 @@ cl_parser(struct cl_options *const clo,
 		case 'p':
 			clo->pid = atoi(optarg);
 			if (clo->pid < 1) {
-				fprintf(stderr,
-					"ERROR: wrong value for pid option is"
-					" provided: '%s' => '%d'. Exit.\n",
+				ERROR("wrong value for pid option is"
+					" provided: '%s' => '%d'",
 					optarg, clo->pid);
-
 				exit(EXIT_FAILURE);
 			}
 			break;
@@ -134,23 +132,16 @@ cl_parser(struct cl_options *const clo,
 
 		case 'e':
 			if (!strcasecmp(optarg, "list") ||
-					!strcasecmp(optarg, "help")) {
-				fprintf(stderr,
-					"List of supported expressions:"
-					" 'help', 'list', 'trace=set'"
-					"\n");
-				fprintf(stderr,
-					"For list of supported sets you should"
-					"use 'trace=help' or 'trace=list'"
-					"\n");
+			    !strcasecmp(optarg, "help")) {
+				INFO("List of supported expressions: "
+					"'help', 'list', 'trace=set'");
+				INFO("For list of supported sets you should "
+					"use 'trace=help' or 'trace=list'");
 				exit(EXIT_SUCCESS);
 			} else if (!strcasecmp(optarg, "trace=help") ||
-					!strcasecmp(optarg,
-						"trace=list")) {
+					!strcasecmp(optarg, "trace=list")) {
 				fprint_trace_list(stderr);
-				fprintf(stderr,
-					"You can combine sets"
-					" by using comma.\n");
+				INFO("You can combine sets by using comma.");
 				exit(EXIT_SUCCESS);
 			}
 			clo->expr = optarg;
@@ -158,12 +149,11 @@ cl_parser(struct cl_options *const clo,
 
 		case 'l':
 			if (!strcasecmp(optarg, "list") ||
-					!strcasecmp(optarg, "help")) {
-				fprintf(stderr,
-					"List of supported formats:"
+			    !strcasecmp(optarg, "help")) {
+				INFO("List of supported formats: "
 					"'bin', 'binary', 'hex', 'hex_raw', "
 					"'hex_sl', 'strace', "
-					"'list' & 'help'\n");
+					"'list' & 'help'");
 				exit(EXIT_SUCCESS);
 			}
 			clo->out_fmt_str = optarg;
@@ -200,15 +190,12 @@ cl_parser(struct cl_options *const clo,
 			break;
 
 		case ':':
-			fprintf(stderr, "ERROR: "
-				"Missing mandatory option's "
-				"argument\n");
+			ERROR("missing mandatory option's argument");
 			fprint_help(stderr);
 			exit(EXIT_FAILURE);
 
 		default:
-			fprintf(stderr, "ERROR: "
-				"Unknown option: '-%c'\n", c);
+			ERROR("unknown option: '-%c'", c);
 		case '?':
 			fprint_help(stderr);
 			exit(EXIT_FAILURE);
