@@ -50,39 +50,41 @@ else ()
 	# TESTS
 	#
 
-	# 1
-	add_test(NAME "basic-syscalls"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 0)
+	foreach(STR_LEN 126 382)
+		# 1
+		add_test(NAME "${STR_LEN}-basic-syscalls"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 0 ${STR_LEN})
 
-	# 2
-	add_test(NAME "basic-syscalls-with-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 1)
+		# 2
+		add_test(NAME "${STR_LEN}-basic-syscalls-with-fork"
+			COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 1 ${STR_LEN})
 
-	# 3
-	add_test(NAME "basic-syscalls-with-double-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 5)
+		# 3
+		add_test(NAME "${STR_LEN}-basic-syscalls-with-double-fork"
+			COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 5 ${STR_LEN})
 
-	# 4
-	add_test(NAME "unsupported-syscalls"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 2)
+		# 4
+		add_test(NAME "${STR_LEN}-unsupported-syscalls"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 2 ${STR_LEN})
 
-	# 5
-	add_test(NAME "unsupported-syscalls-with-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 3)
+		# 5
+		add_test(NAME "${STR_LEN}-unsupported-syscalls-with-fork"
+			COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 3 ${STR_LEN})
 
-	# 6
-	add_test(NAME "unsupported-syscalls-with-double-fork"
-		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 6)
+		# 6
+		add_test(NAME "${STR_LEN}-unsupported-syscalls-with-double-fork"
+			COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 6 ${STR_LEN})
 
-	# 7
-	add_test(NAME "syscall-vfork"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4)
+		# 7
+		add_test(NAME "${STR_LEN}-syscall-vfork"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 4 ${STR_LEN})
 
-	# 8
-	add_test(NAME "syscall-sigaction"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 7)
+		# 8
+		add_test(NAME "${STR_LEN}-syscall-sigaction"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 7 ${STR_LEN})
 
-	# 9
-	add_test(NAME "syscalls-string-arguments"
-		COMMAND ${TEST_DIR}/test-match ${TEST_APP} 8)
+		# 9
+		add_test(NAME "${STR_LEN}-syscalls-string-arguments"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 8 ${STR_LEN})
+	endforeach(STR_LEN)
 endif ()
