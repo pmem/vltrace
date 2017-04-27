@@ -43,7 +43,7 @@
 
 #define MAX_STR_ARG 	3 /* max supported number of string arguments */
 
-#define BUF_SIZE	382 /* size of buffer for string arguments */
+#define BUF_SIZE	384 /* size of buffer for string arguments */
 #define STR_MAX_1	(BUF_SIZE - 2)
 #define STR_MAX_2	((BUF_SIZE / 2) - 2)
 #define STR_MAX_3	((BUF_SIZE / 3) - 2)
