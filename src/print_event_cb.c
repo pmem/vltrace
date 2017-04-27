@@ -79,7 +79,7 @@ static unsigned Arg_is_str[6] = {
 /*
  * Process event.
  *
- * Also it can be a good idea to use cb_cookie for Args, for Out_lf or for
+ * Also it can be a good idea to use cb_cookie for Args, for OutputFile or for
  *    static variable above.
  */
 
@@ -93,9 +93,9 @@ print_header_strace(int argc, char *const argv[])
 	(void) argv;
 
 	if (Args.timestamp)
-		fprintf(Out_lf, "%-14s", "TIME(s)");
+		fprintf(OutputFile, "%-14s", "TIME(s)");
 
-	fprintf(Out_lf, "%-7s %-6s %4s %3s %s\n",
+	fprintf(OutputFile, "%-7s %-6s %4s %3s %s\n",
 			"SYSCALL", "PID_TID", "ARG1", "ERR", "PATH");
 
 	return 0;
@@ -125,21 +125,21 @@ print_event_strace(void *cb_cookie, void *data, int size)
 	if (Args.timestamp) {
 		unsigned long long delta_nsec =
 			event->start_ts_nsec - start_ts_nsec;
-		fprintf(Out_lf, "%-14.9f",
+		fprintf(OutputFile, "%-14.9f",
 				(double)((double)delta_nsec / 1000000000.0));
 	}
 
-	fprintf(Out_lf, "%-7s ", sc_num2str(event->sc_id));
+	fprintf(OutputFile, "%-7s ", sc_num2str(event->sc_id));
 
 	if (0 == event->packet_type)
 		/*
 		 * XXX Check presence of aux_str by checking sc_id
 		 *    and size arg
 		 */
-		fprintf(Out_lf, "%-6lu %4ld %3ld %s\n",
+		fprintf(OutputFile, "%-6lu %4ld %3ld %s\n",
 				event->pid_tid, res, err, event->aux_str);
 	else
-		fprintf(Out_lf, "%-6lu %4ld %3ld %s\n",
+		fprintf(OutputFile, "%-6lu %4ld %3ld %s\n",
 				event->pid_tid, res, err, event->str);
 
 	(void) cb_cookie;
@@ -155,32 +155,32 @@ print_header_hex(int argc, char *const argv[])
 {
 	for (int i = 0; i < argc; i++) {
 		if (i + 1 != argc)
-			fprintf(Out_lf, "%s%c", argv[i],
-					Args.out_lf_fld_sep_ch);
+			fprintf(OutputFile, "%s%c", argv[i],
+					Args.separator);
 		else
-			fprintf(Out_lf, "%s\n", argv[i]);
+			fprintf(OutputFile, "%s\n", argv[i]);
 	}
 
-	fprintf(Out_lf, "%s%c", "PID_TID", Args.out_lf_fld_sep_ch);
+	fprintf(OutputFile, "%s%c", "PID_TID", Args.separator);
 
 	if (Args.timestamp)
-		fprintf(Out_lf, "%s%c", "TIME(nsec)", Args.out_lf_fld_sep_ch);
+		fprintf(OutputFile, "%s%c", "TIME(nsec)", Args.separator);
 
-	fprintf(Out_lf, "%s%c",  "ERR",	 Args.out_lf_fld_sep_ch);
-	fprintf(Out_lf, "%s%c",  "RES",	 Args.out_lf_fld_sep_ch);
-	fprintf(Out_lf, "%s%c", "SYSCALL", Args.out_lf_fld_sep_ch);
+	fprintf(OutputFile, "%s%c",  "ERR",	 Args.separator);
+	fprintf(OutputFile, "%s%c",  "RES",	 Args.separator);
+	fprintf(OutputFile, "%s%c", "SYSCALL", Args.separator);
 
-	fprintf(Out_lf, "%s%c", "ARG1", Args.out_lf_fld_sep_ch);
-	fprintf(Out_lf, "%s%c", "ARG2", Args.out_lf_fld_sep_ch);
-	fprintf(Out_lf, "%s%c", "ARG3", Args.out_lf_fld_sep_ch);
-	fprintf(Out_lf, "%s%c", "ARG4", Args.out_lf_fld_sep_ch);
-	fprintf(Out_lf, "%s%c", "ARG5", Args.out_lf_fld_sep_ch);
-	fprintf(Out_lf, "%s%c", "ARG6", Args.out_lf_fld_sep_ch);
+	fprintf(OutputFile, "%s%c", "ARG1", Args.separator);
+	fprintf(OutputFile, "%s%c", "ARG2", Args.separator);
+	fprintf(OutputFile, "%s%c", "ARG3", Args.separator);
+	fprintf(OutputFile, "%s%c", "ARG4", Args.separator);
+	fprintf(OutputFile, "%s%c", "ARG5", Args.separator);
+	fprintf(OutputFile, "%s%c", "ARG6", Args.separator);
 
 	/* For COMM and like */
-	fprintf(Out_lf, "%s", "AUX_DATA");
+	fprintf(OutputFile, "%s", "AUX_DATA");
 
-	fprintf(Out_lf, "\n");
+	fprintf(OutputFile, "\n");
 
 	return 0;
 }
@@ -389,7 +389,7 @@ fwrite_out_lf_fld_sep(FILE *f)
 {
 	size_t res;
 
-	res = fwrite(&Args.out_lf_fld_sep_ch, sizeof(Args.out_lf_fld_sep_ch),
+	res = fwrite(&Args.separator, sizeof(Args.separator),
 			1, f);
 	assert(1 == res);
 	(void) res;
@@ -403,9 +403,9 @@ init_printing_events(void)
 {
 	static char str[] = "_----------------_----------------_";
 
-	str[0]  = Args.out_lf_fld_sep_ch;
-	str[17] = Args.out_lf_fld_sep_ch;
-	str[34] = Args.out_lf_fld_sep_ch;
+	str[0]  = Args.separator;
+	str[17] = Args.separator;
+	str[34] = Args.separator;
 
 	Str_entry = str;
 	Len_str_entry = strlen(str);
@@ -655,7 +655,7 @@ print_event_hex(FILE *f, void *data, int size)
 static void
 print_event_hex_raw(void *cb_cookie, void *data, int size)
 {
-	print_event_hex(Out_lf, data, size);
+	print_event_hex(OutputFile, data, size);
 
 	(void) cb_cookie;
 }
@@ -674,7 +674,7 @@ print_event_hex_raw(void *cb_cookie, void *data, int size)
 static void
 print_event_hex_sl(void *cb_cookie, void *data, int size)
 {
-	print_event_hex(Out_lf, data, size);
+	print_event_hex(OutputFile, data, size);
 
 	(void) cb_cookie;
 }
@@ -696,7 +696,7 @@ print_header_bin(int argc, char *const argv[])
 
 	/* save BUF_SIZE */
 	int buf_size = BUF_SIZE;
-	if (1 != fwrite(&buf_size, sizeof(int), 1, Out_lf)) {
+	if (1 != fwrite(&buf_size, sizeof(int), 1, OutputFile)) {
 		return -1;
 	}
 
@@ -715,12 +715,12 @@ print_header_bin(int argc, char *const argv[])
 	data_size += offsetof(struct header_s, argv);
 
 	/* save header's size */
-	if (1 != fwrite(&data_size, sizeof(int), 1, Out_lf)) {
+	if (1 != fwrite(&data_size, sizeof(int), 1, OutputFile)) {
 		return -1;
 	}
 
 	/* save header */
-	if (1 != fwrite(&header, data_size, 1, Out_lf)) {
+	if (1 != fwrite(&header, data_size, 1, OutputFile)) {
 		return -1;
 	}
 
@@ -735,11 +735,11 @@ print_event_bin(void *cb_cookie, void *data, int size)
 {
 	(void) cb_cookie;
 
-	if (1 != fwrite(&size, sizeof(int), 1, Out_lf)) {
+	if (1 != fwrite(&size, sizeof(int), 1, OutputFile)) {
 		OutputError = 1;
 	}
 
-	if (1 != fwrite(data, (size_t)size, 1, Out_lf)) {
+	if (1 != fwrite(data, (size_t)size, 1, OutputFile)) {
 		OutputError = 1;
 	}
 }
@@ -747,7 +747,7 @@ print_event_bin(void *cb_cookie, void *data, int size)
 /*
  * out_fmt_str2enum -- This function parses log's type
  */
-enum out_lf_fmt
+enum out_format
 out_fmt_str2enum(const char *str)
 {
 	if (!strcasecmp("bin", str) || !strcasecmp("binary", str))

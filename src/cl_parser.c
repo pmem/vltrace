@@ -136,12 +136,12 @@ cl_parser(struct cl_options *const clo,
 
 		case 'o':
 			check_optarg(optarg);
-			clo->out_fn = optarg;
+			clo->output_name = optarg;
 			break;
 
 		case 'K':
 			check_optarg(optarg);
-			clo->out_lf_fld_sep_ch = *optarg;
+			clo->separator = *optarg;
 			break;
 
 		case 'N':
@@ -178,7 +178,7 @@ cl_parser(struct cl_options *const clo,
 				exit(EXIT_SUCCESS);
 			}
 			clo->out_fmt_str = optarg;
-			Out_lf_fmt = out_fmt_str2enum(clo->out_fmt_str);
+			OutputFormat = out_fmt_str2enum(clo->out_fmt_str);
 			break;
 
 		case 's':

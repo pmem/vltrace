@@ -41,7 +41,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-enum out_lf_fmt {
+enum out_format {
 	/* Write syscall's data packets "as is" */
 	EOF_HEX_RAW = 0,
 	/* Assemble multi-packet syscall data into single line */
@@ -93,11 +93,11 @@ struct cl_options {
 	pid_t pid;
 
 	/* The name of output log file */
-	const char *out_fn;
+	const char *output_name;
 	/* string constant with type of output log format */
 	const char *out_fmt_str;
 	/* Field separator for hexadecimal logs */
-	char out_lf_fld_sep_ch;
+	char separator;
 	/* Expression */
 	const char *expr;
 
@@ -141,8 +141,8 @@ extern int AbortTracing;
 extern pid_t PidToBeKilled;
 
 /* Output logfile */
-extern FILE *Out_lf;
+extern FILE *OutputFile;
 /* Output logfile format */
-extern enum out_lf_fmt Out_lf_fmt;
+extern enum out_format OutputFormat;
 
 #endif /* MAIN_H */

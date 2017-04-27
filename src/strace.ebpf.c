@@ -69,8 +69,8 @@
 #define FILE_SYSCALLS_TABLE	"syscalls_table.dat"
 
 struct cl_options Args;		/* command-line arguments */
-FILE *Out_lf;			/* output file */
-enum out_lf_fmt Out_lf_fmt;	/* format of output */
+FILE *OutputFile;			/* output file */
+enum out_format OutputFormat;	/* format of output */
 
 int OutputError;		/* I/O error in perf callback occured */
 int AbortTracing;		/* terminating signal received */
@@ -123,7 +123,7 @@ main(const int argc, char *const argv[])
 
 	/* default values */
 	Args.pid = -1;
-	Args.out_lf_fld_sep_ch = ' ';
+	Args.separator = ' ';
 	Args.fnr_mode = E_FNR_FAST;
 	Args.do_not_print_progress = 0;
 
@@ -143,7 +143,7 @@ main(const int argc, char *const argv[])
 	tracing = check_args(&Args);
 
 	setup_out_lf();
-	if (NULL == Out_lf) {
+	if (NULL == OutputFile) {
 		ERROR("failed to set up the output file");
 		return EXIT_FAILURE;
 	}
@@ -219,7 +219,7 @@ main(const int argc, char *const argv[])
 	bpf->debug  = Args.debug;
 
 	/* if printing in binary format, dump syscalls table */
-	if (Out_lf_fmt == EOF_BIN) {
+	if (OutputFormat == EOF_BIN) {
 		if (dump_syscalls_table(FILE_SYSCALLS_TABLE)) {
 			ERROR("error during saving syscalls table "
 				"to the file: '%s'", FILE_SYSCALLS_TABLE);
@@ -238,7 +238,7 @@ main(const int argc, char *const argv[])
 
 	INFO("Starting tracing...");
 
-	if (Print_header[Out_lf_fmt](argc, argv)) {
+	if (Print_header[OutputFormat](argc, argv)) {
 		ERROR("error while printing header");
 		goto error_detach;
 	}
@@ -251,7 +251,7 @@ main(const int argc, char *const argv[])
 	 */
 #define PERF_OUTPUT_NAME "events"
 	int res = attach_callback_to_perf_output(bpf, PERF_OUTPUT_NAME,
-						Print_event_cb[Out_lf_fmt]);
+						Print_event_cb[OutputFormat]);
 	if (res == 0) {
 		if (Args.command) {
 			/* let child go */
@@ -318,7 +318,7 @@ main(const int argc, char *const argv[])
 		}
 	}
 
-	fflush(Out_lf);
+	fflush(OutputFile);
 	free(readers);
 	detach_all(bpf);
 	free(bpf);

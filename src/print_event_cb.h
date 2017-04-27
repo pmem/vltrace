@@ -50,7 +50,7 @@ void init_printing_events(void);
 extern print_header_t Print_header[EOF_QTY + 1];
 extern perf_reader_raw_cb Print_event_cb[EOF_QTY + 1];
 
-enum out_lf_fmt out_fmt_str2enum(const char *str);
+enum out_format out_fmt_str2enum(const char *str);
 void choose_fnr_mode(const char *filename_length,
 			enum fnr_mode *mode, unsigned *n_str_packets);
 
