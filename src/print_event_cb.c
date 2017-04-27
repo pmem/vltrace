@@ -694,6 +694,12 @@ print_header_bin(int argc, char *const argv[])
 		char argv[MAX_LEN_STR];
 	} header;
 
+	/* save BUF_SIZE */
+	int buf_size = BUF_SIZE;
+	if (1 != fwrite(&buf_size, sizeof(int), 1, Out_lf)) {
+		return -1;
+	}
+
 	int data_size = 0;
 	int next_size = 0;
 
@@ -708,10 +714,12 @@ print_header_bin(int argc, char *const argv[])
 	header.argc = argc;
 	data_size += offsetof(struct header_s, argv);
 
+	/* save header's size */
 	if (1 != fwrite(&data_size, sizeof(int), 1, Out_lf)) {
 		return -1;
 	}
 
+	/* save header */
 	if (1 != fwrite(&header, data_size, 1, Out_lf)) {
 		return -1;
 	}
