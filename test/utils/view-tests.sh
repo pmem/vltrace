@@ -51,7 +51,7 @@ for n in $TESTS; do
 	A=$(($P + $F))
 	echo "   All $A   Passed $P   Failed $F   ($NAME)"
 	echo "----------------------------------------"
-	NUM_ERR=$(grep "Error " ./log${n}.txt | cut -c10 | sort | uniq)
+	NUM_ERR=$(grep "Error " ./log${n}.txt | cut -d' ' -f3 | cut -d':' -f1 | sort | uniq)
 	for err in $NUM_ERR; do
 		case $err in
 		0) # unknown error
