@@ -497,6 +497,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_fillrect, SyS_fillrect, 6),
 	EBPF_SYSCALL(__NR_copyarea, SyS_copyarea, 6),
 	EBPF_SYSCALL(__NR_imageblit, SyS_imageblit, 6),
+	EBPF_SYSCALL_FILEAT(__NR_statx, SyS_statx, 5),
 };
 
 /*

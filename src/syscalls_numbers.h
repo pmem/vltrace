@@ -1170,6 +1170,9 @@ enum {
 #ifndef __NR_perf_event_open
 	__NR_perf_event_open,
 #endif
+#ifndef __NR_statx
+	__NR_statx,
+#endif
 
 	/* it has to be the last one in this enum */
 	__NR_LAST_UNKNOWN,
