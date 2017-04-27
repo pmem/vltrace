@@ -41,24 +41,24 @@ HEADER_NUM="syscalls_64_num.h_gen"
 DEFINE_MOD="SYSCALLS_64_MOD_H_GEN"
 DEFINE_NUM="SYSCALLS_64_NUM_H_GEN"
 
+if [ -f $HEADER_MOD -a -f $HEADER_NUM ]; then
+	if [ "$1" != "make" ]; then
+		echo "-- Found header: $HEADER_MOD";
+		echo "-- Found header: $HEADER_NUM";
+	fi
+	exit 0 # headers $HEADER_MOD and $HEADER_NUM exists
+fi
+
 KERNEL=$(uname -r)
+FILES=$(mktemp)
 
-FILE=$(find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$(uname -r)" | tail -n1)
+[ "$1" != "make" ] \
+	&& echo -n "-- Looking for kernel header syscalls_64.h "
+find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$KERNEL" > $FILES
+[ $(cat $FILES | wc -l) -eq 0 ] \
+	&& find -L /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$KERNEL" > $FILES
 
-[ "$FILE" != "" ] && [ $HEADER_MOD -nt $FILE -a $HEADER_NUM -nt $FILE ] \
-	&& if [ "$1" != "make" ]; then \
-		echo "-- Found header: $HEADER_MOD (up to date)"; \
-		echo "-- Found header: $HEADER_NUM (up to date)"; \
-	   fi \
-	&& exit 0 # headers $HEADER_MOD and $HEADER_NUM are up to date
-
-FILE=$(mktemp)
-find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$(uname -r)" > $FILE
-
-NFILES=$(cat $FILE | wc -l)
-HEADER=$(cat $FILE)
-
-[ $NFILES -eq 0 ] \
+[ $(cat $FILES | wc -l) -eq 0 ] \
 	&& echo \
 	&& echo "ERROR: missing kernel header 'arch/x86/include/generated/asm/syscalls_64.h'" \
 	&& echo \
@@ -66,11 +66,7 @@ HEADER=$(cat $FILE)
 	&& echo \
 	&& exit 1
 
-[ $NFILES -gt 1 ] \
-	&& echo \
-	&& echo "ERROR: more than one kernel header 'syscalls_64.h': $HEADER" \
-	&& echo \
-	&& exit 1
+HEADER=$(cat $FILES | tail -n1)
 
 [ ! -f $HEADER ] \
 	&& echo \
@@ -78,6 +74,8 @@ HEADER=$(cat $FILE)
 	&& echo \
 	&& exit 1
 
+[ "$1" != "make" ] \
+	&& echo "- done"
 echo "-- Found kernel header: $HEADER"
 
 # generate two new headers
