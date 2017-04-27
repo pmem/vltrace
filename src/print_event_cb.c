@@ -297,50 +297,50 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 	if (event->packet_type != 0) {
 		max_len = STR_MAX_1;
 		str = event->aux_str;
-		nstrings = 0; /* skip next switch */
-	}
-
-	switch (nstrings) {
-	case 0:
-		break;
-	case 1:
-		max_len = STR_MAX_1;
-		str = event->aux_str;
-		break;
-	case 2:
-		max_len = STR_MAX_2;
-		switch (path) {
+	} else {
+		switch (nstrings) {
+		case 0:
+			assert(nstrings > 0);
+			break;
 		case 1:
+			max_len = STR_MAX_1;
 			str = event->aux_str;
 			break;
 		case 2:
-			str = event->aux_str + (BUF_SIZE / 2);
-			break;
-		default:
-			assert(path <= nstrings);
-			break;
-		}
-		break;
-	case 3:
-		max_len = STR_MAX_3;
-		switch (path) {
-		case 1:
-			str = event->aux_str;
-			break;
-		case 2:
-			str = event->aux_str + (BUF_SIZE / 3);
+			max_len = STR_MAX_2;
+			switch (path) {
+			case 1:
+				str = event->aux_str;
+				break;
+			case 2:
+				str = event->aux_str + (BUF_SIZE / 2);
+				break;
+			default:
+				assert(path <= nstrings);
+				break;
+			}
 			break;
 		case 3:
-			str = event->aux_str + 2 * (BUF_SIZE / 3);
+			max_len = STR_MAX_3;
+			switch (path) {
+			case 1:
+				str = event->aux_str;
+				break;
+			case 2:
+				str = event->aux_str + (BUF_SIZE / 3);
+				break;
+			case 3:
+				str = event->aux_str + 2 * (BUF_SIZE / 3);
+				break;
+			default:
+				assert(path <= nstrings);
+				break;
+			}
 			break;
 		default:
-			assert(path <= nstrings);
+			assert(nstrings <= MAX_STR_ARG);
 			break;
 		}
-		break;
-	default:
-		assert(nstrings <= MAX_STR_ARG);
-		break;
 	}
 
 	if (str == NULL)
@@ -362,6 +362,7 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 	} else {
 		*str_fini = 1;
 	}
+
 	fwrite(str, len, 1, f);
 }
 
