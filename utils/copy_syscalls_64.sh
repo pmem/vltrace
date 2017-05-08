@@ -41,15 +41,22 @@ HEADER_NUM="syscalls_64_num.h_gen"
 DEFINE_MOD="SYSCALLS_64_MOD_H_GEN"
 DEFINE_NUM="SYSCALLS_64_NUM_H_GEN"
 
-if [ -f $HEADER_MOD -a -f $HEADER_NUM ]; then
-	if [ "$1" != "make" ]; then
-		echo "-- Found header: $HEADER_MOD";
-		echo "-- Found header: $HEADER_NUM";
+KERNEL=$(uname -r)
+
+if [ "$1" != "-f" -a -f $HEADER_MOD -a -f $HEADER_NUM ]; then
+	grep -e "$KERNEL" $HEADER_MOD > /dev/null
+	RV1=$?
+	grep -e "$KERNEL" $HEADER_NUM > /dev/null
+	RV2=$?
+	if [ $RV1 -eq 0 -a $RV2 -eq 0 ]; then
+		if [ "$1" != "make" ]; then
+			echo "-- Found header: $HEADER_MOD";
+			echo "-- Found header: $HEADER_NUM";
+		fi
+		exit 0 # headers $HEADER_MOD and $HEADER_NUM exists
 	fi
-	exit 0 # headers $HEADER_MOD and $HEADER_NUM exists
 fi
 
-KERNEL=$(uname -r)
 FILES=$(mktemp)
 
 [ "$1" != "make" ] \
@@ -83,15 +90,17 @@ rm -f $HEADER_MOD $HEADER_NUM
 echo "/*"                                   >> $HEADER_MOD
 echo " * Generated from the kernel header:" >> $HEADER_MOD
 echo " * $HEADER"                           >> $HEADER_MOD
+echo " * for kernel version:"               >> $HEADER_MOD
+echo " * $KERNEL"                           >> $HEADER_MOD
 echo " */"                                  >> $HEADER_MOD
 echo ""                                     >> $HEADER_MOD
 cp $HEADER_MOD $HEADER_NUM
 
 # generate new header - removed the 'sys_' prefix
-echo "#ifndef $DEFINE_MOD"        >> $HEADER_MOD
-echo "#define $DEFINE_MOD"        >> $HEADER_MOD
-cat $HEADER | sed 's/\ sys_/\ /g' >> $HEADER_MOD
-echo "#endif /* $DEFINE_MOD */  " >> $HEADER_MOD
+echo "#ifndef $DEFINE_MOD"            >> $HEADER_MOD
+echo "#define $DEFINE_MOD"            >> $HEADER_MOD
+cat $HEADER | sed 's/\ sys_/\ SyS_/g' >> $HEADER_MOD
+echo "#endif /* $DEFINE_MOD */  "     >> $HEADER_MOD
 echo "-- Generated header: $HEADER_MOD"
 
 # generate new header with defines of syscall numbers
