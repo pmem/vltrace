@@ -277,7 +277,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_vhangup, SyS_vhangup, 1),
 	EBPF_SYSCALL(__NR_modify_ldt, SyS_modify_ldt, 3),
 	EBPF_SYSCALL_FLAGS(__NR_pivot_root, SyS_pivot_root, EM_str_1_2, 2),
-	EBPF_SYSCALL(__NR__sysctl, SyS_sysctl, 1),
+	EBPF_SYSCALL(__NR_sysctl, SyS_sysctl, 1),
 	EBPF_SYSCALL(__NR_prctl, SyS_prctl, 5),
 	EBPF_SYSCALL(__NR_arch_prctl, SyS_arch_prctl, 2),
 	EBPF_SYSCALL(__NR_adjtimex, SyS_adjtimex, 1),

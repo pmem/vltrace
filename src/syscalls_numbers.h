@@ -99,8 +99,8 @@ enum {
 #ifndef __NR_waitpid
 	__NR_waitpid,
 #endif
-#ifndef __NR__sysctl
-	__NR__sysctl,
+#ifndef __NR_sysctl
+	__NR_sysctl,
 #endif
 #ifndef __NR_capget
 	__NR_capget,
