@@ -104,7 +104,7 @@ load_ebpf_2_str_tmpl(void)
 	case E_FNR_STR_MAX:
 		text = load_file_no_cr(ebpf_2_str_sl_file);
 		break;
-	case E_FNR_FULL:
+	case E_FNR_FULL_CONST_N:
 		text = load_file_no_cr(ebpf_2_str_ml_file);
 		break;
 	default:
@@ -125,7 +125,7 @@ load_ebpf_path_1_tmpl(void)
 	case E_FNR_STR_MAX:
 		text = load_file_no_cr(ebpf_1_str_sl_file);
 		break;
-	case E_FNR_FULL:
+	case E_FNR_FULL_CONST_N:
 		text = load_file_no_cr(ebpf_1_str_full_file);
 		break;
 	default:
@@ -522,7 +522,7 @@ apply_process_attach_code(char **const pbpf_str)
 	str_replace_all(pbpf_str, "PID_CHECK_HOOK", loaded_file);
 	free(loaded_file);
 
-	if (Args.fnr_mode == E_FNR_FULL && Args.n_str_packets > 2) {
+	if (Args.fnr_mode == E_FNR_FULL_CONST_N && Args.n_str_packets > 2) {
 		loaded_file = load_file_no_cr(ebpf_full_string_mode);
 		assert(NULL != loaded_file);
 		str_replace_many(pbpf_str, "READ_AND_SUBMIT_N_MINUS_2_PACKETS",

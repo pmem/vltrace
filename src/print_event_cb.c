@@ -786,7 +786,7 @@ choose_fnr_mode(const char *filename_length,
 			"max string length = %i)", STR_MAX_1);
 
 	} else {
-		*mode = E_FNR_FULL;
+		*mode = E_FNR_FULL_CONST_N;
 		unsigned np = (len + 1) / (BUF_SIZE - 1);
 		if (np * (BUF_SIZE - 1) < (len + 1))
 			np++;

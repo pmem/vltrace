@@ -49,7 +49,6 @@ enum out_format {
 	EOF_BIN,
 	EOF_STRACE,
 
-
 	EOF_QTY, /* Should be last */
 };
 
@@ -61,9 +60,9 @@ enum ff_mode {
 
 /* filenames reading modes */
 enum fnr_mode {
-	E_FNR_FAST = 0,
-	E_FNR_STR_MAX,
-	E_FNR_FULL,
+	E_FNR_FAST = 0,		/* 1 packet per syscall */
+	E_FNR_STR_MAX,		/* 1 packet per string argument */
+	E_FNR_FULL_CONST_N,	/* always N packets per string argument */
 };
 
 /* 8 Megabytes should be something close to reasonable */
