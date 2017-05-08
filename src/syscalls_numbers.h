@@ -37,7 +37,7 @@
 #ifndef SYSCALLS_UNKNOWN_H
 #define SYSCALLS_UNKNOWN_H
 
-#include <sys/syscall.h>
+#include "syscalls_64_num.h_gen"
 
 enum {
 	__NR_FIRST_UNKNOWN = 700,
