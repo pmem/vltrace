@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <sys/utsname.h>
 
 #include "strace.ebpf.h"
 #include "ebpf_syscalls.h"
@@ -765,6 +766,31 @@ out_fmt_str2enum(const char *str)
 	return EOF_HEX_RAW;
 }
 
+/*
+ * available_bpf_probe_read_str -- check if kernel version is >= 4.11,
+ *                                 because bpf_probe_read_str() is available
+ *                                 starting from kernel 4.11
+ */
+static int
+available_bpf_probe_read_str()
+{
+/* bpf_probe_read_str() is available starting from kernel 4.11 */
+#define AVAILABLE_KERNEL_VERSION 411
+	struct utsname buf;
+	uname(&buf);
+
+	int kv = 100 * atoi(strtok(buf.release, "."));
+	kv += atoi(strtok(NULL, "."));
+	if (kv >= AVAILABLE_KERNEL_VERSION)
+		return 1;
+	else
+		return 0;
+#undef AVAILABLE_KERNEL_VERSION
+}
+
+/*
+ * choose_fnr_mode -- choose filename reading mode
+ */
 void
 choose_fnr_mode(const char *filename_length,
 		enum fnr_mode *mode, unsigned *n_str_packets)
@@ -786,14 +812,23 @@ choose_fnr_mode(const char *filename_length,
 			"max string length = %i)", STR_MAX_1);
 
 	} else {
-		*mode = E_FNR_FULL_CONST_N;
 		unsigned np = (len + 1) / (BUF_SIZE - 1);
 		if (np * (BUF_SIZE - 1) < (len + 1))
 			np++;
 		*n_str_packets = np;
-		NOTICE("FULL filename read mode "
-			"(%i packets per string argument, "
-			"max string length = %i)", np, np * (BUF_SIZE - 1) - 1);
+		if (available_bpf_probe_read_str()) {
+			*mode = E_FNR_FULL;
+			NOTICE("FULL filename read mode "
+				"(maximum %i packets per string argument, "
+				"max string length = %i)",
+				np, np * (BUF_SIZE - 1) - 1);
+		} else {
+			*mode = E_FNR_FULL_CONST_N;
+			NOTICE("CONST_FULL filename read mode "
+				"(always %i packets per string argument, "
+				"max string length = %i)",
+				np, np * (BUF_SIZE - 1) - 1);
+		}
 	}
 }
 
