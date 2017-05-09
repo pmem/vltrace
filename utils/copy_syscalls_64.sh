@@ -57,13 +57,20 @@ if [ "$1" != "-f" -a -f $HEADER_MOD -a -f $HEADER_NUM ]; then
 	fi
 fi
 
-FILES=$(mktemp)
-
 [ "$1" != "make" ] \
 	&& echo -n "-- Looking for kernel header syscalls_64.h "
-find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$KERNEL" > $FILES
+
+FILES=$(mktemp)
+FILES_ALL=$(mktemp)
+
+find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' > $FILES_ALL
+grep -e "$KERNEL" $FILES_ALL > $FILES
 [ $(cat $FILES | wc -l) -eq 0 ] \
-	&& find -L /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' | grep -e "$KERNEL" > $FILES
+	&& find -L /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated' > $FILES_ALL
+grep -e "$KERNEL" $FILES_ALL > $FILES
+
+[ $(cat $FILES | wc -l) -eq 0 ] \
+	&& mv $FILES_ALL $FILES
 
 [ $(cat $FILES | wc -l) -eq 0 ] \
 	&& echo \
@@ -86,7 +93,7 @@ HEADER=$(cat $FILES | tail -n1)
 echo "-- Found kernel header: $HEADER"
 
 # generate two new headers
-rm -f $HEADER_MOD $HEADER_NUM
+rm -f $HEADER_MOD $HEADER_NUM $FILES_ALL $FILES
 echo "/*"                                   >> $HEADER_MOD
 echo " * Generated from the kernel header:" >> $HEADER_MOD
 echo " * $HEADER"                           >> $HEADER_MOD
