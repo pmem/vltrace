@@ -65,11 +65,12 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
-	int error_bpf_read = 0;
+	int end_bpf_read = 0;
 	char *src;
 	char *dest = (char *)&u.ev.aux_str;
-	unsigned length = BUF_SIZE - 1;
-	dest[length] = 0; /* make it null-terminated */
+
+	int br; /* number of read bytes */
+	int length = BUF_SIZE; /* bpf_probe_read_str is null-terminated */
 
 /* 1st string argument */
 	src = (char *)u.ev.args[STR1];
@@ -77,10 +78,11 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	/* from the beginning (0) to 1st string - contains 1st string */
 	u.ev.packet_type = (0) + ((STR1 + 1) << 3) +
 				(1 << 7); /* will be continued */
-	if (bpf_probe_read(dest, length, (void *)src) == 0) {
+	if ((br = bpf_probe_read_str(dest, length, (void *)src)) > 0) {
 		events.perf_submit(ctx, &u.ev, _pad_size);
-	} else {
-		error_bpf_read = 1;
+	}
+	if (br < length) {
+		end_bpf_read = 1;
 	}
 
 	/* only 1st string argument */
@@ -92,12 +94,14 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	 * It is a macro for:
 	 *
 	 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-	 *	if (!error_bpf_read) {
+	 *	if (!end_bpf_read) {
 	 *		src += length;
-	 *		if (bpf_probe_read(dest, length, (void *)src) == 0) {
+	 *		if ((br = bpf_probe_read_str(dest, length,
+	 *						(void *)src)) > 0) {
 	 *			events.perf_submit(ctx, &u.ev, _pad_size);
-	 *		} else {
-	 *			error_bpf_read = 1;
+	 *		}
+	 *		if (br < length) {
+	 *			end_bpf_read = 1;
 	 *		}
 	 *	}
 	 * }
@@ -109,23 +113,24 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	/* from 1st to 2nd string argument - contains 1st string */
 	u.ev.packet_type = (STR1 + 1) + (STR2 << 3) +
 				(1 << 6); /* is a continuation */
-	if (!error_bpf_read) {
+	if (!end_bpf_read) {
 		src += length;
-		bpf_probe_read(dest, length, (void *)src);
+		bpf_probe_read_str(dest, length, (void *)src);
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 /* 2nd string argument */
-	error_bpf_read = 0;
+	end_bpf_read = 0;
 	src = (char *)u.ev.args[STR2];
 
 	/* first packet - only 2nd string argument */
 	u.ev.packet_type = (STR2) + ((STR2 + 1) << 3) +
 				(1 << 7);  /* and will be continued */
-	if (bpf_probe_read(dest, length, (void *)src) == 0) {
+	if ((br = bpf_probe_read_str(dest, length, (void *)src)) > 0) {
 		events.perf_submit(ctx, &u.ev, _pad_size);
-	} else {
-		error_bpf_read = 1;
+	}
+	if (br < length) {
+		end_bpf_read = 1;
 	}
 
 	/* only 2nd string argument */
@@ -137,12 +142,14 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	 * It is a macro for:
 	 *
 	 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-	 *	if (!error_bpf_read) {
+	 *	if (!end_bpf_read) {
 	 *		src += length;
-	 *		if (bpf_probe_read(dest, length, (void *)src) == 0) {
+	 *		if ((br = bpf_probe_read_str(dest, length,
+	 *						(void *)src)) > 0) {
 	 *			events.perf_submit(ctx, &u.ev, _pad_size);
-	 *		} else {
-	 *			error_bpf_read = 1;
+	 *		}
+	 *		if (br < length) {
+	 *			end_bpf_read = 1;
 	 *		}
 	 *	}
 	 * }
@@ -154,23 +161,24 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	/* from 1st to 2nd string argument - contains 2nd string */
 	u.ev.packet_type = (STR2 + 1) + (STR3 << 3) +
 				(1 << 6); /* is a continuation */
-	if (!error_bpf_read) {
+	if (!end_bpf_read) {
 		src += length;
-		bpf_probe_read(dest, length, (void *)src);
+		bpf_probe_read_str(dest, length, (void *)src);
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 /* 3rd string argument */
-	error_bpf_read = 0;
+	end_bpf_read = 0;
 	src = (char *)u.ev.args[STR3];
 
 	/* first packet - only 2nd string argument */
 	u.ev.packet_type = (STR3) + ((STR3 + 1) << 3) +
 				(1 << 7);  /* and will be continued */
-	if (bpf_probe_read(dest, length, (void *)src) == 0) {
+	if ((br = bpf_probe_read_str(dest, length, (void *)src)) > 0) {
 		events.perf_submit(ctx, &u.ev, _pad_size);
-	} else {
-		error_bpf_read = 1;
+	}
+	if (br < length) {
+		end_bpf_read = 1;
 	}
 
 	/* only 3rd string argument */
@@ -182,12 +190,14 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	 * It is a macro for:
 	 *
 	 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-	 *	if (!error_bpf_read) {
+	 *	if (!end_bpf_read) {
 	 *		src += length;
-	 *		if (bpf_probe_read(dest, length, (void *)src) == 0) {
+	 *		if ((br = bpf_probe_read_str(dest, length,
+	 *						(void *)src)) > 0) {
 	 *			events.perf_submit(ctx, &u.ev, _pad_size);
-	 *		} else {
-	 *			error_bpf_read = 1;
+	 *		}
+	 *		if (br < length) {
+	 *			end_bpf_read = 1;
 	 *		}
 	 *	}
 	 * }
@@ -199,9 +209,9 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	/* from 3rd string argument to the end (7) - contains 3rd string */
 	u.ev.packet_type = (STR3 + 1) + (7 << 3) +
 				(1 << 6); /* is a continuation */
-	if (!error_bpf_read) {
+	if (!end_bpf_read) {
 		src += length;
-		bpf_probe_read(dest, length, (void *)src);
+		bpf_probe_read_str(dest, length, (void *)src);
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
 

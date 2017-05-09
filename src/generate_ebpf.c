@@ -523,6 +523,13 @@ apply_process_attach_code(char **const pbpf_str)
 	free(loaded_file);
 
 	if (Args.fnr_mode == E_FNR_FULL_CONST_N && Args.n_str_packets > 2) {
+		loaded_file = load_file_no_cr(ebpf_const_string_mode);
+		assert(NULL != loaded_file);
+		str_replace_many(pbpf_str, "READ_AND_SUBMIT_N_MINUS_2_PACKETS",
+					loaded_file, Args.n_str_packets - 2);
+	}
+
+	if (Args.fnr_mode == E_FNR_FULL && Args.n_str_packets > 2) {
 		loaded_file = load_file_no_cr(ebpf_full_string_mode);
 		assert(NULL != loaded_file);
 		str_replace_many(pbpf_str, "READ_AND_SUBMIT_N_MINUS_2_PACKETS",

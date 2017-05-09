@@ -43,6 +43,9 @@ set (BIN_SRCS
 	template_3_str-sl.c
 	template_2_str-ml.c
 	template_3_str-ml.c
+	template_1_str-const.c
+	template_2_str-const.c
+	template_3_str-const.c
 	template_1_str-full.c
 	template_2_str-full.c
 	template_3_str-full.c
@@ -51,6 +54,7 @@ set (BIN_SRCS
 	template_vfork.c
 	template_exit.c
 	template_tracepoints.c
+	macro_const_string_mode.c
 	macro_full_string_mode.c
 	macro_pid_own.c
 	macro_pid_ff_disabled.c

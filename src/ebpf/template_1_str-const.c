@@ -31,8 +31,8 @@
  */
 
 /*
- * template_2_str-full.c -- templates for syscalls with two string arguments,
- *                          full string version
+ * template_1_str-const.c -- templates for syscalls with one string argument,
+ *                           full string version, constant number of packets
  */
 
 /*
@@ -65,24 +65,20 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
-	int end_bpf_read = 0;
-	char *src;
+	int error_bpf_read = 0;
+	char *src = (char *)u.ev.args[STR1];
 	char *dest = (char *)&u.ev.aux_str;
 
-	int br; /* number of read bytes */
-	int length = BUF_SIZE; /* bpf_probe_read_str is null-terminated */
-
-/* 1st string argument */
-	src = (char *)u.ev.args[STR1];
+	unsigned length = BUF_SIZE - 1;
+	dest[length] = 0; /* make it null-terminated */
 
 	/* from the beginning (0) to 1st string - contains 1st string */
 	u.ev.packet_type = (0) + ((STR1 + 1) << 3) +
 				(1 << 7); /* will be continued */
-	if ((br = bpf_probe_read_str(dest, length, (void *)src)) > 0) {
+	if (bpf_probe_read(dest, length, (void *)src) == 0) {
 		events.perf_submit(ctx, &u.ev, _pad_size);
-	}
-	if (br < length) {
-		end_bpf_read = 1;
+	} else {
+		error_bpf_read = 1;
 	}
 
 	/* only 1st string argument */
@@ -94,14 +90,12 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	 * It is a macro for:
 	 *
 	 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-	 *	if (!end_bpf_read) {
+	 *	if (!error_bpf_read) {
 	 *		src += length;
-	 *		if ((br = bpf_probe_read_str(dest, length,
-	 *						(void *)src)) > 0) {
+	 *		if (bpf_probe_read(dest, length, (void *)src) == 0) {
 	 *			events.perf_submit(ctx, &u.ev, _pad_size);
-	 *		}
-	 *		if (br < length) {
-	 *			end_bpf_read = 1;
+	 *		} else {
+	 *			error_bpf_read = 1;
 	 *		}
 	 *	}
 	 * }
@@ -110,60 +104,12 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	 */
 	READ_AND_SUBMIT_N_MINUS_2_PACKETS
 
-	/* from 1st to 2nd string argument - contains 1st string */
-	u.ev.packet_type = (STR1 + 1) + (STR2 << 3) +
+	/* from 1st string argument to the end (7) - contains 1st string */
+	u.ev.packet_type = (STR1 + 1) + (7 << 3) +
 				(1 << 6); /* is a continuation */
-	if (!end_bpf_read) {
+	if (!error_bpf_read) {
 		src += length;
-		bpf_probe_read_str(dest, length, (void *)src);
-	}
-	events.perf_submit(ctx, &u.ev, _pad_size);
-
-/* 2nd string argument */
-	end_bpf_read = 0;
-	src = (char *)u.ev.args[STR2];
-
-	/* first packet - only 2nd string argument */
-	u.ev.packet_type = (STR2) + ((STR2 + 1) << 3) +
-				(1 << 7);  /* and will be continued */
-	if ((br = bpf_probe_read_str(dest, length, (void *)src)) > 0) {
-		events.perf_submit(ctx, &u.ev, _pad_size);
-	}
-	if (br < length) {
-		end_bpf_read = 1;
-	}
-
-	/* only 2nd string argument */
-	u.ev.packet_type = (STR2 + 1) + ((STR2 + 1) << 3) +
-				(1 << 6) + /* it is a continuation */
-				(1 << 7);  /* and will be continued */
-
-	/*
-	 * It is a macro for:
-	 *
-	 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-	 *	if (!end_bpf_read) {
-	 *		src += length;
-	 *		if ((br = bpf_probe_read_str(dest, length,
-	 *						(void *)src)) > 0) {
-	 *			events.perf_submit(ctx, &u.ev, _pad_size);
-	 *		}
-	 *		if (br < length) {
-	 *			end_bpf_read = 1;
-	 *		}
-	 *	}
-	 * }
-	 *
-	 * because no loops can be used here in eBPF code.
-	 */
-	READ_AND_SUBMIT_N_MINUS_2_PACKETS
-
-	/* from 2nd string argument to the end (7) - contains 2nd string */
-	u.ev.packet_type = (STR2 + 1) + (7 << 3) +
-				(1 << 6); /* is a continuation */
-	if (!end_bpf_read) {
-		src += length;
-		bpf_probe_read_str(dest, length, (void *)src);
+		bpf_probe_read(dest, length, (void *)src);
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
 

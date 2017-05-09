@@ -109,7 +109,7 @@ Could be useful with old libbcc versions.
  - kernel headers installed:
     - 'kernel-devel' package on RHEL, Fedora and CentOS or
     - 'linux-headers' package on Debian and Ubuntu
- - libbcc v0.3.0-65-g4b764de or later
+ - libbcc v0.3.0-150-g3263805 or later
  - CAP_SYS_ADMIN capability (required by the bpf() syscall)
  - mounted tracefs
 

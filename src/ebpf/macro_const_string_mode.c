@@ -31,18 +31,18 @@
  */
 
 /*
- * macro_full_string_mode.c -- macro for reading string arguments
- *                             in 'full-string' mode
+ * macro_const_string_mode.c -- macro for reading string arguments
+ *                              in 'full-string' mode with constant
+ *                              number of packets
  */
 
 /* BEGIN */
-	if (!end_bpf_read) {
+	if (!error_bpf_read) {
 		src += length;
-		if ((br = bpf_probe_read_str(dest, length, (void *)src)) > 0) {
+		if (bpf_probe_read(dest, length, (void *)src) == 0) {
 			events.perf_submit(ctx, &u.ev, _pad_size);
-		}
-		if (br < length) {
-			end_bpf_read = 1;
+		} else {
+			error_bpf_read = 1;
 		}
 	}
 /* END */

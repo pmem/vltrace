@@ -225,7 +225,7 @@ main(const int argc, char *const argv[])
 				"to the file: '%s'", FILE_SYSCALLS_TABLE);
 			goto error_free_bpf;
 		} else {
-			INFO("Saved syscalls table to the file: '%s'",
+			NOTICE("saved syscalls table to the file: '%s'",
 				FILE_SYSCALLS_TABLE);
 		}
 	}

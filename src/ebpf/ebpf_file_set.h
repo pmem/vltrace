@@ -53,6 +53,10 @@ extern const char *ebpf_3_str_sl_file;
 extern const char *ebpf_2_str_ml_file;
 extern const char *ebpf_3_str_ml_file;
 
+extern const char *ebpf_1_str_const_file;
+extern const char *ebpf_2_str_const_file;
+extern const char *ebpf_3_str_const_file;
+
 extern const char *ebpf_1_str_full_file;
 extern const char *ebpf_2_str_full_file;
 extern const char *ebpf_3_str_full_file;
@@ -64,13 +68,14 @@ extern const char *ebpf_exit_file;
 
 extern const char *ebpf_tracepoints_file;
 
+extern const char *ebpf_const_string_mode;
 extern const char *ebpf_full_string_mode;
 
 extern const char *ebpf_pid_own_file;
 extern const char *ebpf_pid_ff_disabled_file;
 extern const char *ebpf_pid_ff_full_file;
 
-extern const char *ebpf_file_table[4][3];
+extern const char *ebpf_file_table[4][4];
 
 /* functions */
 
@@ -92,6 +97,15 @@ extern const char _binary_template_2_str_ml_c_start[];
 
 extern const char _binary_template_3_str_ml_c_end[];
 extern const char _binary_template_3_str_ml_c_start[];
+
+extern const char _binary_template_1_str_const_c_end[];
+extern const char _binary_template_1_str_const_c_start[];
+
+extern const char _binary_template_2_str_const_c_end[];
+extern const char _binary_template_2_str_const_c_start[];
+
+extern const char _binary_template_3_str_const_c_end[];
+extern const char _binary_template_3_str_const_c_start[];
 
 extern const char _binary_template_1_str_full_c_end[];
 extern const char _binary_template_1_str_full_c_start[];
@@ -125,6 +139,9 @@ extern const char _binary_template_0_str_c_start[];
 
 extern const char _binary_template_tracepoints_c_end[];
 extern const char _binary_template_tracepoints_c_start[];
+
+extern const char _binary_macro_const_string_mode_c_end[];
+extern const char _binary_macro_const_string_mode_c_start[];
 
 extern const char _binary_macro_full_string_mode_c_end[];
 extern const char _binary_macro_full_string_mode_c_start[];
