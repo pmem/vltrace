@@ -149,7 +149,7 @@ main(const int argc, char *const argv[])
 	}
 
 	/* check JIT acceleration of BPF */
-	check_bpf_jit_status(stderr);
+	check_bpf_jit_status();
 
 	INFO("Initializing...");
 	init_printing_events();

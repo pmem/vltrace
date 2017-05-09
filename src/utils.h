@@ -58,7 +58,7 @@ char *load_file(const char *fn);
 char *load_file_no_cr(const char *const fn);
 char *load_pid_check_hook(enum ff_mode ff_mode);
 char *load_file_from_disk(const char *const fn);
-void check_bpf_jit_status(FILE *file);
+void check_bpf_jit_status();
 
 void save_trace_h(void);
 

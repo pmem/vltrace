@@ -260,7 +260,7 @@ turn_on_bpf_jit_compiler(void)
  *                         and print appropriate message
  */
 void
-check_bpf_jit_status(FILE *file)
+check_bpf_jit_status()
 {
 	int status;
 
