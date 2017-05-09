@@ -53,7 +53,7 @@
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
 
-static inline int
+static inline void
 check_optarg(const char * const optarg)
 {
 	if (optarg == NULL) {
