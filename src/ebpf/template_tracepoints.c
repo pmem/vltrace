@@ -49,18 +49,18 @@ tracepoint__sys_enter(struct tracepoint__raw_syscalls__sys_enter *args)
 int
 tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 {
-	struct tp_s tp;
+	struct data_exit_s tp;
 	uint64_t pid_tid = bpf_get_current_pid_tgid();
 
 	tp.finish_ts_nsec = bpf_ktime_get_ns();
-	tp.id = args->id;
+	tp.sc_id = args->id;
 	tp.ret = args->ret;
 
 	PID_CHECK_HOOK
 
-	if (tp.id == __NR_clone ||
-	    tp.id == __NR_fork  ||
-	    tp.id == __NR_vfork) {
+	if (tp.sc_id == __NR_clone ||
+	    tp.sc_id == __NR_fork  ||
+	    tp.sc_id == __NR_vfork) {
 		if (tp.ret > 0) {
 			uint64_t one = 1;
 			children_map.update(&tp.ret, &one);

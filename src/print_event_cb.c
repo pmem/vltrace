@@ -112,7 +112,7 @@ static void
 print_event_strace(void *cb_cookie, void *data, int size)
 {
 	int64_t res = 0, err = 0;
-	struct data_entry_t *const event = data;
+	struct data_entry_s *const event = data;
 
 	/* XXX Check size arg */
 	(void) size;
@@ -285,7 +285,7 @@ is_path(int argn, unsigned sc_num)
  */
 static void
 fprint_path(unsigned path, int *str_fini, FILE *f,
-		struct data_entry_t *const event, int size)
+		struct data_entry_s *const event, int size)
 {
 	char *str = NULL;
 	size_t len = 0;
@@ -371,7 +371,7 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
  * fprint_arg_hex -- print argument in hex form
  */
 static void
-fprint_arg_hex(int argn, FILE *f, struct data_entry_t *const event, int size,
+fprint_arg_hex(int argn, FILE *f, struct data_entry_s *const event, int size,
 		int *n_str, int *str_fini)
 {
 	if (is_path(argn, (unsigned)event->sc_id)) {
@@ -420,7 +420,7 @@ init_printing_events(void)
 static void
 print_event_hex_kp_entry(FILE *f, void *data, int size)
 {
-	struct data_entry_t *const event = data;
+	struct data_entry_s *const event = data;
 	static int str_fini = 1; /* printing last string was finished */
 	static int n_str = 0; /* counter of string arguments */
 
@@ -520,7 +520,7 @@ static void
 print_event_hex_kp_exit(FILE *f, void *data, int size)
 {
 	int64_t res, err;
-	struct data_exit_t *const event = data;
+	struct data_exit_s *const event = data;
 
 	/* XXX Check size arg */
 	(void) size;
@@ -564,7 +564,7 @@ static void
 print_event_hex_tp_exit(FILE *f, void *data, int size)
 {
 	int64_t res, err;
-	struct tp_s *const event = data;
+	struct data_exit_s *const event = data;
 	static const char *str_sys_exit = "sys_exit ";
 	static const size_t len_sys_exit = 9; /* length of the string above */
 
@@ -595,11 +595,11 @@ print_event_hex_tp_exit(FILE *f, void *data, int size)
 	fprint_i64(f, (uint64_t)res);
 	fwrite_out_lf_fld_sep(f);
 
-	if (event->id >= 0 && event->id < SC_TBL_SIZE) {
-		fwrite_sc_name(f, event->id);
+	if (event->sc_id >= 0 && event->sc_id < SC_TBL_SIZE) {
+		fwrite_sc_name(f, event->sc_id);
 	} else {
 		fwrite(str_sys_exit, len_sys_exit, 1, f);
-		fprint_i64(f, (uint64_t)(event->id));
+		fprint_i64(f, (uint64_t)(event->sc_id));
 	}
 
 	fwrite("\n", 1, 1, f);

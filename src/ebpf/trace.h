@@ -55,7 +55,7 @@ enum {
 	E_TP_EXIT,	/* exit  of TracePoint */
 };
 
-struct data_entry_t {
+struct data_entry_s {
 	uint64_t type; /* E_KP_ENTRY or E_KP_EXIT or E_TP_EXIT */
 
 	/*
@@ -114,51 +114,11 @@ struct data_entry_t {
 	};
 };
 
-struct data_exit_t {
-	uint64_t type; /* E_KP_ENTRY or E_KP_EXIT or E_TP_EXIT */
-
-	/*
-	 * This field describes a series of packets for every syscall.
-	 *
-	 * It is needed because stack size is limited to 512 bytes and used part
-	 * of the stack is initialized with zero on every call of syscall handlers.
-	 *
-	 * the value equal to 0 means that this is "single-packet" syscall
-	 *    and there will be no additional packets sent.
-	 * the value bigger than 0 means that this is a first packet and there
-	 *    will be sent 'packet_type' more additional packets.
-	 * the value less than 0 means that this is additional packet with
-	 *   serial number 'packet_type'.
-	 *
-	 * Content of additional packets is defined by syscall number in
-	 *    first packet.
-	 */
-	int64_t packet_type;
-
-	/*
-	 * Syscall's signature. All packets with the same signature belong to one
-	 *    syscall. We need two time stamps here, because syscalls can nest
-	 *    from one pid_tid by calling syscall from signal handler, before
-	 *    syscall called from main context has returned.
-	 */
-	struct {
-		uint64_t pid_tid;
-
-		/* timestamp */
-		uint64_t finish_ts_nsec;
-
-		/* value -1 means "header" */
-		int64_t sc_id;
-	};
-
-	int64_t ret;
-};
-
-struct tp_s {
+struct data_exit_s {
 	uint64_t type;
 	uint64_t pid_tid;
 	uint64_t finish_ts_nsec;
-	int64_t id;
+	int64_t sc_id;
 	int64_t ret;
 };
 

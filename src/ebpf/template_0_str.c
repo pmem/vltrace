@@ -41,7 +41,7 @@
 int
 kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 {
-	struct data_entry_t ev;
+	struct data_entry_s ev;
 	uint64_t pid_tid = bpf_get_current_pid_tgid();
 
 	PID_CHECK_HOOK
@@ -60,7 +60,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	ev.args[4] = PT_REGS_PARM5(ctx);
 	ev.args[5] = PT_REGS_PARM6(ctx);
 
-	events.perf_submit(ctx, &ev, offsetof(struct data_entry_t, aux_str));
+	events.perf_submit(ctx, &ev, offsetof(struct data_entry_s, aux_str));
 
 	return 0;
 };
@@ -72,21 +72,19 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 int
 kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 {
-	struct data_exit_t ev;
-
-	uint64_t cur_nsec = bpf_ktime_get_ns();
+	struct data_exit_s ev;
 	uint64_t pid_tid = bpf_get_current_pid_tgid();
+
+	ev.finish_ts_nsec = bpf_ktime_get_ns();
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.ret = PT_REGS_RC(ctx);
 
 	PID_CHECK_HOOK
 
 	ev.type = E_KP_EXIT;
-	ev.packet_type = 0; /* No additional packets */
-	ev.sc_id = SYSCALL_NR; /* SysCall ID */
 	ev.pid_tid = pid_tid;
-	ev.finish_ts_nsec = cur_nsec;
-	ev.ret = PT_REGS_RC(ctx);
 
-	events.perf_submit(ctx, &ev, sizeof(struct data_exit_t));
+	events.perf_submit(ctx, &ev, sizeof(ev));
 
 	return 0;
 }
