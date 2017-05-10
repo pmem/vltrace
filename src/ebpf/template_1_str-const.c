@@ -70,7 +70,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	char *dest = (char *)&u.ev.aux_str;
 
 	unsigned length = BUF_SIZE - 1;
-	dest[length] = 0; /* make it null-terminated */
+	memset(dest, 0, BUF_SIZE);
 
 	/* from the beginning (0) to 1st string - contains 1st string */
 	u.ev.packet_type = (0) + ((STR1 + 1) << 3) +

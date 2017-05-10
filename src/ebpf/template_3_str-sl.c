@@ -69,6 +69,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	unsigned length = (BUF_SIZE / 3) - 1;
 	char *dest = (char *)&u.ev.aux_str;
 
+	memset(dest, 0, BUF_SIZE);
+
 	bpf_probe_read(dest, length, (void *)u.ev.args[STR1]);
 	dest[length] = 0; /* make it null-terminated */
 

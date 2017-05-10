@@ -69,7 +69,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	char *src;
 	char *dest = (char *)&u.ev.aux_str;
 	unsigned length = BUF_SIZE - 1;
-	dest[length] = 0; /* make it null-terminated */
+
+	memset(dest, 0, BUF_SIZE);
 
 /* 1st string argument */
 	src = (char *)u.ev.args[STR1];
