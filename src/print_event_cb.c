@@ -415,10 +415,10 @@ init_printing_events(void)
 }
 
 /*
- * print_event_hex_entry -- print syscall's logs entry in stream
+ * print_event_hex_kp_entry -- print syscall's logs on KProbe's entry
  */
 static void
-print_event_hex_entry(FILE *f, void *data, int size)
+print_event_hex_kp_entry(FILE *f, void *data, int size)
 {
 	struct data_entry_t *const event = data;
 	static int str_fini = 1; /* printing last string was finished */
@@ -514,15 +514,10 @@ print_event_hex_entry(FILE *f, void *data, int size)
 }
 
 /*
- * print_event_hex_exit -- This function prints syscall's logs entry in stream.
- *
- * WARNING
- *
- *    PLEASE don't use *printf() calls because it will slow down this
- *		 function too much.
+ * print_event_hex_kp_exit -- print syscall's logs on KProbe's exit
  */
 static void
-print_event_hex_exit(FILE *f, void *data, int size)
+print_event_hex_kp_exit(FILE *f, void *data, int size)
 {
 	int64_t res, err;
 	struct data_exit_t *const event = data;
@@ -563,15 +558,10 @@ print_event_hex_exit(FILE *f, void *data, int size)
 }
 
 /*
- * print_event_hex_tp -- This function prints syscall's logs entry in stream.
- *
- * WARNING
- *
- *    PLEASE don't use *printf() calls because it will slow down this
- *		 function too much.
+ * print_event_hex_tp_exit -- print syscall's logs on TracePoint's exit
  */
 static void
-print_event_hex_tp(FILE *f, void *data, int size)
+print_event_hex_tp_exit(FILE *f, void *data, int size)
 {
 	int64_t res, err;
 	struct tp_s *const event = data;
@@ -616,12 +606,7 @@ print_event_hex_tp(FILE *f, void *data, int size)
 }
 
 /*
- * print_event_hex -- This function prints syscall's logs entry in stream.
- *
- * WARNING
- *
- *    PLEASE don't use *printf() calls because it will slow down this
- *		 function too much.
+ * print_event_hex -- print syscall's logs
  */
 static void
 print_event_hex(FILE *f, void *data, int size)
@@ -630,14 +615,14 @@ print_event_hex(FILE *f, void *data, int size)
 	const char *str = "ERROR: Unknown type of event\n";
 
 	switch (*type) {
-	case E_SC_ENTRY:
-		print_event_hex_entry(f, data, size);
+	case E_KP_ENTRY:
+		print_event_hex_kp_entry(f, data, size);
 		break;
-	case E_SC_EXIT:
-		print_event_hex_exit(f, data, size);
+	case E_KP_EXIT:
+		print_event_hex_kp_exit(f, data, size);
 		break;
-	case E_SC_TP:
-		print_event_hex_tp(f, data, size);
+	case E_TP_EXIT:
+		print_event_hex_tp_exit(f, data, size);
 		break;
 	default:
 		fwrite(str, strlen(str), 1, f);

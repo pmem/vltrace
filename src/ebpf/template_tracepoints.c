@@ -67,7 +67,7 @@ tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 		}
 	}
 
-	tp.type = E_SC_TP;
+	tp.type = E_TP_EXIT;
 	tp.pid_tid = pid_tid;
 
 	events.perf_submit(args, &tp, sizeof(tp));

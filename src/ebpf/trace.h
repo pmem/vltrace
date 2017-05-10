@@ -49,13 +49,14 @@
 #define STR_MAX_3	((BUF_SIZE / 3) - 2)
 
 enum {
-	E_SC_ENTRY	= 0,
-	E_SC_EXIT	= 1,
-	E_SC_TP		= 2
+	E_KP_ENTRY,	/* entry of KProbe */
+	E_KP_EXIT,	/* exit  of KProbe */
+	E_TP_ENTRY,	/* entry of TracePoint */
+	E_TP_EXIT,	/* exit  of TracePoint */
 };
 
 struct data_entry_t {
-	uint64_t type; /* E_SC_ENTRY or E_SC_EXIT or E_SC_TP */
+	uint64_t type; /* E_KP_ENTRY or E_KP_EXIT or E_TP_EXIT */
 
 	/*
 	 * This field describes a series of packets for every syscall.
@@ -114,7 +115,7 @@ struct data_entry_t {
 };
 
 struct data_exit_t {
-	uint64_t type; /* E_SC_ENTRY or E_SC_EXIT or E_SC_TP */
+	uint64_t type; /* E_KP_ENTRY or E_KP_EXIT or E_TP_EXIT */
 
 	/*
 	 * This field describes a series of packets for every syscall.
