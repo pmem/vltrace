@@ -40,8 +40,6 @@ MAINTAINER lukasz.dorau@intel.com
 
 # Update the Apt cache and install basic tools
 RUN apt-get update && apt-get install -y apt-transport-https apt-utils
-RUN echo "deb [trusted=yes] https://repo.iovisor.org/apt/xenial xenial-nightly main" \
-	| tee /etc/apt/sources.list.d/iovisor.list
 RUN apt-get update && apt-get install -y \
 	clang \
 	cmake \
@@ -53,9 +51,11 @@ RUN apt-get update && apt-get install -y \
 	sudo \
 	whois
 
-RUN apt-get install -y bcc-tools # 1
+RUN apt-get install -y linux-headers-4.8.0-46-generic
 
-RUN grep -A2 bpf_open_perf_buffer /usr/include/bcc/libbpf.h
+RUN echo "deb [trusted=yes] https://repo.iovisor.org/apt/xenial xenial-nightly main" \
+	| tee /etc/apt/sources.list.d/iovisor.list
+RUN apt-get update && apt-get install -y bcc-tools
 
 # Add user
 ENV USER user

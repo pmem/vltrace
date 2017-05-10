@@ -54,9 +54,8 @@ RUN dnf install -y \
 	which \
 	whois
 
-RUN dnf install -y bcc-tools # 1
-
-RUN grep -A2 bpf_open_perf_buffer /usr/include/bcc/libbpf.h
+RUN dnf install -y kernel-devel
+RUN dnf install -y bcc-tools
 
 # Add user
 ENV USER user

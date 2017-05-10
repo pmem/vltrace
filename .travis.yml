@@ -1,3 +1,6 @@
+dist: trusty
+sudo: required
+
 language: c
 
 env:
@@ -6,7 +9,7 @@ env:
     - OS=ubuntu OS_VER=16.04
 
 before_install:
-  - uname -a
+  - uname -r
   - sudo apt-get install -y linux-headers-$(uname -r)
   - sudo find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated'
   - export HOST_WORKDIR=`pwd`
