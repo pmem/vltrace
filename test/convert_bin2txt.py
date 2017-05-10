@@ -221,7 +221,7 @@ def print_arg(n, args, mask, n_str, str_fini, nstrargs, bdata, packet):
     return (n_str , str_fini)
 
 ###############################################################################
-# process_log_entry - process next log entry
+# process_log_kprobe_entry - process kprobe entry log
 ###############################################################################
 
 def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
@@ -321,11 +321,12 @@ def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
         Str_fini = 1
         print()
 
+
 ###############################################################################
-# process_log_entry - process next log entry
+# process_log_exit - process kprobe exit or raw tracepoint sys_exit log
 ###############################################################################
 
-def process_log_tracepoint_sys_exit(i, etype, bdata, sized, sc_table):
+def process_log_exit(i, etype, bdata, sized, sc_table):
 
     global Time_start
 
@@ -369,14 +370,9 @@ def process_log_entry(i, etype, bdata, sized, sc_table):
         # kprobe entry handler
         process_log_kprobe_entry(i, etype, bdata, sized, sc_table)
 
-    elif (etype == 1):
-        # kprobe exit handler - NOT IMPLEMENTED
-        print("ERROR: KPROBE EXIT ({}, {}) NOT IMPLEMENTED".format(etype, sized), file=stderr)
-        raise NotImplementedError
-
-    elif (etype == 2):
-        # raw tracepoint sys_exit
-        process_log_tracepoint_sys_exit(i, etype, bdata, sized, sc_table)
+    elif ((etype == 1) or (etype == 3)):
+        # kprobe exit handler or raw tracepoint sys_exit
+        process_log_exit(i, etype, bdata, sized, sc_table)
 
     else:
         print("Error: unknown even type", file=stderr)
