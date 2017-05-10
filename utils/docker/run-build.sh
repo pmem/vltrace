@@ -82,8 +82,19 @@ for release in Debug Release; do
 			sudo mount -t debugfs debugfs /sys/kernel/debug
 			if [ $? -eq 0 ]; then
 				echo "Mounted: $(mount | grep -e 'debugfs')"
+				echo
 			else
 				echo "Error: required mounted debugfs" >&2 && exit 1
+			fi
+		fi
+		mount | grep -e "tracefs" >/dev/null
+		if [ $? -ne 0 ]; then
+			sudo mount -t tracefs tracefs /sys/kernel/debug/tracing
+			if [ $? -eq 0 ]; then
+				echo "Mounted: $(mount | grep -e 'tracefs')"
+				echo
+			else
+				echo "Error: required mounted tracefs" >&2 && exit 1
 			fi
 		fi
 		set -e
