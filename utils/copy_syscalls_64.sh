@@ -109,7 +109,7 @@ echo "#define $DEFINE_NUM"        >> $HEADER_NUM
 cat $HEADER | sed 's/\ sys_/\ /g' | \
 while IFS='' read -r line || [[ -n "$line" ]]; do
 	echo $line | grep -e "__SYSCALL_64" -e "__SYSCALL_COMMON" >/dev/null 2>&1
-	[ $? -ne 0 ] && echo "$line" >> $HEADER_NUM && continue
+	[ $? -ne 0 ] && continue
 	NUMBER=$(echo $line | cut -d'(' -f2 | cut -d',' -f1)
 	NAME=$(echo $line | cut -d',' -f2 | cut -d' ' -f2)
 	echo "#define __NR_${NAME} $NUMBER" >> $HEADER_NUM
