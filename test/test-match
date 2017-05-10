@@ -98,7 +98,10 @@ set +e
 grep --text -v -e "PID_TID" -e "$OUTBIN" $OUT > $OUT_BARE
 set -e
 
-[ $(cat $OUT_BARE | wc -l) -eq 0 ] && echo "ERROR: no traces in output of strace.ebpf" && exit 1
+[ $(cat $OUT_BARE | wc -l) -eq 0 ] \
+	&& echo "ERROR: no traces in output of strace.ebpf:" \
+	&& cat $OUT \
+	&& exit 1
 
 if [ "$FF" == "" ]; then
 	# tests without fork()
