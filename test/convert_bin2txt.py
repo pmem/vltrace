@@ -30,7 +30,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from sys import exc_info
+from sys import exc_info, stderr
 import argparse
 import struct
 
@@ -57,7 +57,7 @@ def open_file(path, flags):
     try:
         fh = open(path, flags)
     except FileNotFoundError:
-        print("Error: file not found:", path)
+        print("Error: file not found:", path, file=stderr)
         exit(1)
 
     return fh
@@ -88,9 +88,9 @@ def read_syscalls_table(path_to_syscalls_table_dat):
 
     size_check, = read_data(fh, sizei, 'i')
     if (size_check != size_fmt):
-        print("Error: wrong format of syscalls table file:", path_to_syscalls_table_dat)
-        print("       format size : ", size_fmt)
-        print("       data size   : ", size_check)
+        print("Error: wrong format of syscalls table file:", path_to_syscalls_table_dat, file=stderr)
+        print("       format size : ", size_fmt, file=stderr)
+        print("       data size   : ", size_check, file=stderr)
         raise
 
     while True:
@@ -98,10 +98,10 @@ def read_syscalls_table(path_to_syscalls_table_dat):
             syscall = read_data(fh, size_fmt, fmt)
         except EndOfFile as err:
             if (err.val > 0):
-                print("Input file is truncated:", path_to_syscalls_table_dat)
+                print("Input file is truncated:", path_to_syscalls_table_dat, file=stderr)
             break
         except:
-            print("Unexpected error:", exc_info()[0])
+            print("Unexpected error:", exc_info()[0], file=stderr)
             raise
         else:
             sc_table.append(syscall)
@@ -371,7 +371,7 @@ def process_log_entry(i, etype, bdata, sized, sc_table):
 
     elif (etype == 1):
         # kprobe exit handler - NOT IMPLEMENTED
-        print("ERROR: KPROBE EXIT ({}, {}) NOT IMPLEMENTED".format(etype, sized))
+        print("ERROR: KPROBE EXIT ({}, {}) NOT IMPLEMENTED".format(etype, sized), file=stderr)
         raise NotImplementedError
 
     elif (etype == 2):
@@ -379,7 +379,7 @@ def process_log_entry(i, etype, bdata, sized, sc_table):
         process_log_tracepoint_sys_exit(i, etype, bdata, sized, sc_table)
 
     else:
-        print("Error: unknown even type")
+        print("Error: unknown even type", file=stderr)
         raise NotImplementedError
 
     return
@@ -427,10 +427,10 @@ def convert_bin2txt(path_to_trace_log, sc_table):
 
         except EndOfFile as err:
             if (err.val > 0):
-                print("Log file is truncated:", path_to_trace_log)
+                print("Log file is truncated:", path_to_trace_log, file=stderr)
             break
         except:
-            print("Unexpected error:", exc_info()[0])
+            print("Unexpected error:", exc_info()[0], file=stderr)
             raise
 
     fh.close()
