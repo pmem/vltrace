@@ -69,6 +69,8 @@ get_sc_num(const char *sc_name)
 
 		if (strcasecmp(sc_name, Syscall_array[i].handler_name) == 0) {
 			Syscall_array[i].attached = 1;
+			DEBUG_INFO("attached syscall [%i] = %s",
+					i, Syscall_array[i].handler_name);
 			return i;
 		}
 	}

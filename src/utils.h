@@ -48,10 +48,17 @@
 #define INFO(str, ...) fprintf(stderr, str "\n", ##__VA_ARGS__);
 
 #ifdef DEBUG
+
 #define DEBUG_NOTICE(str, ...) \
 	fprintf(stderr, "DEBUG Notice: " str "\n", ##__VA_ARGS__);
-#else
+#define DEBUG_INFO(str, ...) \
+	fprintf(stderr, "DEBUG: " str "\n", ##__VA_ARGS__);
+
+#else /* DEBUG */
+
 #define DEBUG_NOTICE(str, ...)
+#define DEBUG_INFO(str, ...)
+
 #endif /* DEBUG */
 
 char *load_file(const char *fn);
