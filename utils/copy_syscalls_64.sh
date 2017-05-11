@@ -119,7 +119,9 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 	[ $? -ne 0 ] && continue
 	NUMBER=$(echo $line | cut -d'(' -f2 | cut -d',' -f1)
 	NAME=$(echo $line | cut -d',' -f2 | cut -d' ' -f2)
+	echo "#ifndef __NR_${NAME}"         >> $HEADER_NUM
 	echo "#define __NR_${NAME} $NUMBER" >> $HEADER_NUM
+	echo "#endif"                       >> $HEADER_NUM
 done
 echo "#endif /* $DEFINE_NUM */  " >> $HEADER_NUM
 echo "-- Generated header: $HEADER_NUM"
