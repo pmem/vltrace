@@ -52,6 +52,8 @@ if (NOT ${KERNEL_RESULT} EQUAL 0)
 	execute_process(COMMAND echo "${STRACE_EBPF_MINIMUM_KERNEL_VERSION}")
 	message(FATAL_ERROR
 		"Error: cannot read required kernel version from the file ${README_FILE}")
+else ()
+	execute_process(COMMAND echo "-- Minimum required kernel version: ${STRACE_EBPF_MINIMUM_KERNEL_VERSION}")
 endif ()
 
 include(GNUInstallDirs)

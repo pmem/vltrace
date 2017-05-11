@@ -29,6 +29,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-result")
+add_executable(test_syscalls test_syscalls.c)
+
 # check if the running kernel meets version requirements
 execute_process(COMMAND utils/check-kernel.sh ${STRACE_EBPF_MINIMUM_KERNEL_VERSION}
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -39,17 +42,12 @@ if (NOT ${STRACE_EBPF_KERNEL_OK} EQUAL 0)
 else ()
 
 	# running kernel meets version requirements, so we can add tests
-
 	set(TEST_APP "./test_syscalls")
 	set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-result")
-
-	add_executable(test_syscalls test_syscalls.c)
 
 	#
 	# TESTS
 	#
-
 	foreach(STR_LEN 126 382)
 		# 1
 		add_test(NAME "${STR_LEN}-basic-syscalls"

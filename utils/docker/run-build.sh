@@ -46,8 +46,6 @@ V_ACT=$(uname -r)
 REQ_KV=$(format_kernel_version $V_REQ)
 ACT_KV=$(format_kernel_version $V_ACT)
 
-SKIP_MESSAGE="Notice: skipping tests (too old kernel: required >= $V_REQ, actual = $V_ACT)"
-
 echo
 echo
 
@@ -74,36 +72,52 @@ for release in Debug Release; do
 	make
 	echo
 
-	if [ $ACT_KV -ge $REQ_KV ]; then
-		# check if debugfs is mounted
-		set +e
-		mount | grep -e "debugfs" >/dev/null
-		if [ $? -ne 0 ]; then
-			sudo mount -t debugfs debugfs /sys/kernel/debug
-			if [ $? -eq 0 ]; then
-				echo "Mounted: $(mount | grep -e 'debugfs')"
-				echo
-			else
-				echo "Error: required mounted debugfs" >&2 && exit 1
-			fi
+	# check if debugfs and tracefs are mounted
+	set +e
+	mount | grep -e "debugfs" >/dev/null
+	if [ $? -ne 0 ]; then
+		sudo mount -t debugfs debugfs /sys/kernel/debug
+		if [ $? -eq 0 ]; then
+			echo "Mounted: $(mount | grep -e 'debugfs')"
+			echo
+		else
+			echo "Error: required mounted debugfs" >&2 && exit 1
 		fi
-		mount | grep -e "tracefs" >/dev/null
-		if [ $? -ne 0 ]; then
-			sudo mount -t tracefs tracefs /sys/kernel/debug/tracing
-			if [ $? -eq 0 ]; then
-				echo "Mounted: $(mount | grep -e 'tracefs')"
-				echo
-			else
-				echo "Error: required mounted tracefs" >&2 && exit 1
-			fi
+	fi
+	mount | grep -e "tracefs" >/dev/null
+	if [ $? -ne 0 ]; then
+		sudo mount -t tracefs tracefs /sys/kernel/debug/tracing
+		if [ $? -eq 0 ]; then
+			echo "Mounted: $(mount | grep -e 'tracefs')"
+			echo
+		else
+			echo "Error: required mounted tracefs" >&2 && exit 1
 		fi
-		set -e
+	fi
+	set -e
 
-		echo "$ ctest --output-on-failure"
-		ctest --output-on-failure
+	if [ $ACT_KV -ge $REQ_KV ]; then
+		echo "$ ctest -V"
+		ctest -V
+		echo
+	elif [ $ACT_KV -ge 404 ]; then
+		echo "Notice: running basic tests available for kernels >= 4.4"
+		echo
+		STRACE="ulimit -l 10240 && ulimit -n 10240 && src/strace.ebpf -t -e trace=kp-kern-all"
+
+		echo "$ sudo bash -c \"$STRACE -s 126  date\""
+		sudo bash -c "$STRACE -s 126  date"
+		echo
+
+		echo "$ sudo bash -c \"$STRACE -s 382  date\""
+		sudo bash -c "$STRACE -s 382  date"
+		echo
+
+		echo "$ sudo bash -c \"$STRACE -s 4096 date\""
+		sudo bash -c "$STRACE -s 4096 date"
 		echo
 	else
-		echo $SKIP_MESSAGE
+		echo "Notice: skipping tests (too old kernel: required >= $V_REQ, actual = $V_ACT)"
 		echo
 	fi
 
