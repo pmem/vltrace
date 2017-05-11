@@ -1,18 +1,18 @@
-# Contributing to the strace.ebpf
+# Contributing to the vltrace
 
-Here you'll find instructions on how to contribute to the strace.ebpf.
+Here you'll find instructions on how to contribute to the vltrace.
 
 Your contributions are most welcome!  You'll find it is best to begin
 with a conversation about your changes, rather than just writing a bunch
 of code and contributing it out of the blue.
 There are several good ways to suggest new features, offer to add a feature,
-or just begin a dialog about the strace.ebpf:
+or just begin a dialog about the vltrace:
 
 * Open an issue in GitHub
 
 **NOTE: If you do decide to implement code changes and contribute them,
 please make sure you agree your contribution can be made available
-under the [BSD-style License used for the strace.ebpf]
+under the [BSD-style License used for the vltrace]
 
 **NOTE: Submitting your changes also means that you certify the following:**
 
@@ -49,7 +49,7 @@ i.e. via email or by including a `Signed-off-by:` line at the bottom
 of your commit comments.
 
 To improve tracking of who is the author of a contribution, we kindly ask you
-to use your real name (not an alias) when commiting your changes to the strace.ebpf:
+to use your real name (not an alias) when commiting your changes to the vltrace:
 ```
 Author: Random J Developer <random@developer.example.org>
 ```

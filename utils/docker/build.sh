@@ -36,7 +36,7 @@
 #
 
 export DOCKER_USER=ldorau
-export DOCKER_PROJECT=strace.ebpf
+export DOCKER_PROJECT=vltrace
 
 if [[ -z "$OS" || -z "$OS_VER" ]]; then
 	echo "ERROR: The variables OS and OS_VER have to be set properly " \

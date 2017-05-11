@@ -1,4 +1,4 @@
-This directory contains very basic functional tests of strace.ebpf.
+This directory contains very basic functional tests of vltrace.
 
 
 ** REQUIREMENTS **

@@ -31,7 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-# test/utils/view-tests-short.sh -- view results of ctests for strace.ebpf
+# test/utils/view-tests-short.sh -- view results of ctests for vltrace
 #                                   in short form
 #
 # Usage: view-tests-short.sh [long] [<minimum-value>]

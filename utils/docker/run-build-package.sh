@@ -32,7 +32,7 @@
 
 #
 # run-build-package.sh - is called inside a Docker container;
-#                		 starts a build of strace.ebpf
+#                		 starts a build of vltrace
 #
 
 # Build all and run tests

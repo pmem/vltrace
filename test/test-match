@@ -31,10 +31,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-# test/test-match -- test for strace.ebpf using match and *.match files
+# test/test-match -- test for vltrace using match and *.match files
 #
 
-STRACE_EBPF=../src/strace.ebpf
+STRACE_EBPF=../src/vltrace
 
 [ ! -x $STRACE_EBPF ] \
 	&& echo "Error: executable file '$STRACE_EBPF' does not exist" \
@@ -99,7 +99,7 @@ grep --text -v -e "PID_TID" -e "$OUTBIN" $OUT > $OUT_BARE
 set -e
 
 [ $(cat $OUT_BARE | wc -l) -eq 0 ] \
-	&& echo "ERROR: no traces in output of strace.ebpf:" \
+	&& echo "ERROR: no traces in output of vltrace:" \
 	&& cat $OUT \
 	&& exit 1
 

@@ -41,7 +41,7 @@
 
 #include <bcc/libbpf.h>
 
-#include "strace.ebpf.h"
+#include "vltrace.h"
 
 typedef int (*print_header_t)(int argc, char *const argv[]);
 

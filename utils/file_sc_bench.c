@@ -31,7 +31,7 @@
  */
 
 /*
- * file_sc_bench.c -- testing BenchMark for strace.ebpf. This simple benchmark
+ * file_sc_bench.c -- testing BenchMark for vltrace. This simple benchmark
  *    allow us to measure and compare different tracing tools. This benchmark
  *    doesn't have any dependencies and will be compiled during 'make run'.
  */

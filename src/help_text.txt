@@ -75,6 +75,6 @@ Miscellaneous:
         Print a list of all known syscalls.
 
 Examples:
-    ./strace.ebpf           # trace all syscalls in the system
-    ./strace.ebpf ls        # trace syscalls of ls command
-    ./strace.ebpf -p 342    # only trace PID 342
+    ./vltrace           # trace all syscalls in the system
+    ./vltrace ls        # trace syscalls of ls command
+    ./vltrace -p 342    # only trace PID 342

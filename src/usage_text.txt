@@ -1,5 +1,5 @@
 USAGE:
-    strace.ebpf -h
-    strace.ebpf [-t] [-p PID | command [arg ...]]
+    vltrace -h
+    vltrace [-t] [-p PID | command [arg ...]]
 
 WARNING: System-wide tracing can fill out your disk really fast.

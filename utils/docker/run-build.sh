@@ -32,7 +32,7 @@
 
 #
 # run-build.sh - is called inside a Docker container,
-#                starts a build of strace.ebpf
+#                starts a build of vltrace
 #
 
 [ "$1" == "" ] \
@@ -60,8 +60,8 @@ for release in Debug Release; do
 	mkdir build
 	cd build
 
-	echo "$ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release"
-	cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/strace.ebpf -DCMAKE_BUILD_TYPE=$release
+	echo "$ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/vltrace -DCMAKE_BUILD_TYPE=$release"
+	cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/vltrace -DCMAKE_BUILD_TYPE=$release
 	echo
 
 	echo "$ make cstyle"
@@ -103,7 +103,7 @@ for release in Debug Release; do
 	elif [ $ACT_KV -ge 404 ]; then
 		echo "Notice: running basic tests available for kernels >= 4.4"
 		echo
-		STRACE="ulimit -l 10240 && ulimit -n 10240 && src/strace.ebpf -t -e trace=kp-kern-all"
+		STRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t -e trace=kp-kern-all"
 
 		echo "$ sudo bash -c \"$STRACE -s 126  date\""
 		sudo bash -c "$STRACE -s 126  date"

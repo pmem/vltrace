@@ -1,4 +1,4 @@
-strace.ebpf
+vltrace
 
 This is man/README.
 
@@ -13,4 +13,4 @@ To create more readable text files from the source, use:
 	$ make
 An even more convenient way to read these is to use the "man" command to
 format them (includes bold, underline, etc. when run in a terminal window):
-	$ man -l strace.ebpf.1
+	$ man -l vltrace.1

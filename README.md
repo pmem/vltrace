@@ -1,11 +1,11 @@
-strace.ebpf: tool tracing syscalls using eBPF
+vltrace: tool tracing syscalls using eBPF
 =================================
 
 [![Build Status](https://travis-ci.org/ldorau/strace.ebpf.svg)](https://travis-ci.org/ldorau/strace.ebpf)
 
-This is the top-level README.md of strace.ebpf.
+This is the top-level README.md of vltrace.
 
-strace.ebpf is a tool tracing syscalls in a fast way using eBPF linux kernel feature.
+vltrace is a tool tracing syscalls in a fast way using eBPF linux kernel feature.
 
 ### LICENSE ###
 
@@ -14,7 +14,7 @@ for information on how this tool is licensed.
 
 ### DEPENDENCIES ###
 
-The strace.ebpf depends on [libbcc](https://github.com/iovisor/bcc) library.
+The vltrace depends on [libbcc](https://github.com/iovisor/bcc) library.
 
 Warning: some old libbcc packages require manual coping of libbcc.pc from sources to
 appropriate place in a system. In case of Ubuntu 16.04 LTS appropriate place

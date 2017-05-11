@@ -30,7 +30,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 2.8.7)
-project(strace.ebpf.exe C)
+project(vltrace.exe C)
 
 execute_process(COMMAND ../utils/copy_syscalls_64.sh
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -68,7 +68,7 @@ find_package(PkgConfig)
 pkg_check_modules(LIBBCC REQUIRED libbcc)
 
 set(SOURCES
-	strace.ebpf.c
+	vltrace.c
 	txt.c
 	cl_parser.c
 	bpf_ctx.c
@@ -83,7 +83,7 @@ include_directories(compat)
 include_directories(${LIBBCC_INCLUDE_DIRS})
 link_directories(${LIBBCC_LIBRARY_DIRS})
 
-add_executable(strace.ebpf ${SOURCES} ${TXT_OBJS})
+add_executable(vltrace ${SOURCES} ${TXT_OBJS})
 
 # XXX libbcc expects multi-treading safety. Currently it's required for
 # print_event_cb.o only, although we will apply it for overall application.
@@ -102,9 +102,9 @@ endif()
 
 add_subdirectory(ebpf)
 
-target_link_libraries(strace.ebpf ebpf ${LIBBCC_LIBRARIES})
+target_link_libraries(vltrace ebpf ${LIBBCC_LIBRARIES})
 
-install(TARGETS strace.ebpf
+install(TARGETS vltrace
         CONFIGURATIONS Release Debug None
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

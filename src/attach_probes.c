@@ -39,7 +39,7 @@
 
 #include <bcc/bpf_common.h>
 
-#include "strace.ebpf.h"
+#include "vltrace.h"
 #include "utils.h"
 #include "bpf_ctx.h"
 #include "attach_probes.h"

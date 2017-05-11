@@ -1,4 +1,4 @@
-% Strace.eBPF
+% vltrace
 % **Fast syscall's tracing**
 % Vitalii Chernookyi
 

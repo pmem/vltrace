@@ -42,7 +42,7 @@
 #include "ebpf/trace.h"
 #include "ebpf/ebpf_file_set.h"
 
-#include "strace.ebpf.h"
+#include "vltrace.h"
 #include "utils.h"
 #include "ebpf_syscalls.h"
 #include "generate_ebpf.h"

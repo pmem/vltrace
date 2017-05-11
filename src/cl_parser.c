@@ -31,7 +31,7 @@
  */
 
 /*
- * cl_parser.c -- Command-line parser for strace.ebpf
+ * cl_parser.c -- Command-line parser for vltrace
  */
 
 #include <errno.h>
@@ -47,7 +47,7 @@
 #include <sys/types.h>
 
 #include "txt.h"
-#include "strace.ebpf.h"
+#include "vltrace.h"
 #include "utils.h"
 #include "cl_parser.h"
 #include "ebpf_syscalls.h"

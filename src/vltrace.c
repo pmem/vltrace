@@ -31,7 +31,7 @@
  */
 
 /*
- * strace.ebpf.c -- trace syscalls using eBPF linux kernel feature
+ * vltrace.c -- trace syscalls using eBPF linux kernel feature
  */
 
 #include <errno.h>
@@ -54,7 +54,7 @@
 #include <bcc/bpf_common.h>
 #include <bcc/perf_reader.h>
 
-#include "strace.ebpf.h"
+#include "vltrace.h"
 #include "bpf_ctx.h"
 #include "txt.h"
 #include "utils.h"

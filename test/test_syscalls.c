@@ -31,7 +31,7 @@
  */
 
 /*
- * test_syscalls.c -- functional tests for strace.eBPF
+ * test_syscalls.c -- functional tests for vltrace
  */
 
 #include <stdio.h>
@@ -66,7 +66,7 @@
 #define MARK_END()	close(PATTERN_END)
 
 #define FILE_EXIST	"/etc/fstab"
-#define FILE_CREATE	"/tmp/tmp-strace.ebpf"
+#define FILE_CREATE	"/tmp/tmp-vltrace"
 
 #define NON_EXIST_PATH_1	"111_non_exist"
 #define NON_EXIST_PATH_2	"222_non_exist"

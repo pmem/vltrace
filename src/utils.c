@@ -49,7 +49,7 @@
 
 #include "ebpf/ebpf_file_set.h"
 
-#include "strace.ebpf.h"
+#include "vltrace.h"
 #include "utils.h"
 #include "generate_ebpf.h"
 
@@ -281,7 +281,7 @@ check_bpf_jit_status()
 
 	case  0:
 		WARNING("eBPF JIT compiler is DISABLED.\n"
-			"\tPlease refer to `man strace.ebpf`,"
+			"\tPlease refer to `man vltrace`,"
 			" section 'Configuration'.\n"
 			"\tEnabling this will improve performance\n"
 			"\tsignificantly and fix some problems.");

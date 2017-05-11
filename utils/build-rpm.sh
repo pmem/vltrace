@@ -424,7 +424,7 @@ Usefull applications for administration and diagnostic purposes.
 %files tools
 %{_bindir}/pmempool
 %{_mandir}/man1/pmempool.1.gz
-%{_mandir}/man1/strace.ebpf.1.gz
+%{_mandir}/man1/vltrace.1.gz
 %{_mandir}/man1/pmempool-info.1.gz
 %{_mandir}/man1/pmempool-create.1.gz
 %{_mandir}/man1/pmempool-dump.1.gz

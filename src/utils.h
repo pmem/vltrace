@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <signal.h>
 
-#include "strace.ebpf.h"
+#include "vltrace.h"
 
 #define ERROR(str, ...) fprintf(stderr, "ERROR: "   str "\n", ##__VA_ARGS__);
 #define WARNING(str, ...) fprintf(stderr, "Warning: " str "\n", ##__VA_ARGS__);

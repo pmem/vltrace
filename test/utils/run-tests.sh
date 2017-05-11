@@ -32,7 +32,7 @@
 #
 
 #
-# test/utils/run-tests.sh -- run ctests for strace.ebpf
+# test/utils/run-tests.sh -- run ctests for vltrace
 #
 
 MAX=$1

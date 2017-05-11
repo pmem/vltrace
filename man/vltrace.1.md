@@ -1,7 +1,7 @@
 ---
 layout: manual
 Content-Style: 'text/css'
-title: strace.ebpf(1)
+title: vltrace(1)
 header: NVM Library
 date: pmem Tools version 1.0.2
 ...
@@ -33,7 +33,7 @@ date: pmem Tools version 1.0.2
 [comment]: <> ((INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE)
 [comment]: <> (OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.)
 
-[comment]: <> (strace.ebpf.1 -- man page for strace.ebpf)
+[comment]: <> (vltrace.1 -- man page for vltrace)
 
 [NAME](#name)<br />
 [SYNOPSIS](#synopsis)<br />
@@ -50,20 +50,20 @@ date: pmem Tools version 1.0.2
 
 # NAME #
 
-**strace.ebpf** -- extreamely fast strace-like tool built on top of eBPF
+**vltrace** -- extreamely fast strace-like tool built on top of eBPF
 and KProbe technologies.
 
 
 # SYNOPSIS #
 
 ```
-$ strace.ebpf [options] [command [arg ...]]
+$ vltrace [options] [command [arg ...]]
 ```
 
 
 # DESCRIPTION #
 
-strace.ebpf is a limited functional strace equivalent for Linux but based on
+vltrace is a limited functional strace equivalent for Linux but based on
 eBPF and KProbe technologies and libbcc library.
 
 # FEATURES #
@@ -276,7 +276,7 @@ Putting into directory, supplied with -N option, modified template files
 allow to customize eBPF code for supporting more newer eBPF VM features in
 newer kernels.
 
-Also if current directory does not contain trace.h file, strace.ebpf on first
+Also if current directory does not contain trace.h file, vltrace on first
 start saves built-in trace.h into current directory. Saved built-in describe
 binary log's format.
 
@@ -290,9 +290,9 @@ source code.
 
 #Example output:
 
- # ./strace.ebpf -l hex
+ # ./vltrace -l hex
 
-./strace.ebpf     -l                hex
+./vltrace     -l                hex
 
 PID               ERR               RES               SYSCALL ARG1              ARG2  ARG3  AUX_DATA
 
@@ -328,9 +328,9 @@ PID               ERR               RES               SYSCALL ARG1              
 #The -p option can be used to filter on a PID, which is filtered in-kernel.
 Here -t option is used to print timestamps:
 
- # ./strace.ebpf -l hex -tp 2833
+ # ./vltrace -l hex -tp 2833
 
-./strace.ebpf     -l                hex               -tp               2833
+./vltrace     -l                hex               -tp               2833
 PID               TIME(usec)        ERR               RES               SYSCALL ARG1              ARG2  ARG3  AUX_DATA
 
 0000000000000B11  0000000000000000  0000000000000000  0000000000000001  read    000000000000001B
@@ -358,9 +358,9 @@ PID               TIME(usec)        ERR               RES               SYSCALL 
 
 #The -X option only prints failed syscalls:
 
- # ./strace.ebpf -l hex -X mkdir .
+ # ./vltrace -l hex -X mkdir .
 
-./strace.ebpf     -l                      hex                     -X      mkdir                                                      .
+./vltrace     -l                      hex                     -X      mkdir                                                      .
 
 PID               ERR                     RES                     SYSCALL ARG1                                                       ARG2  ARG3  AUX_DATA
 

@@ -40,7 +40,7 @@
 #include <string.h>
 #include <sys/utsname.h>
 
-#include "strace.ebpf.h"
+#include "vltrace.h"
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
 #include "utils.h"

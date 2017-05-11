@@ -126,10 +126,10 @@ We already have an option for it, but we need to finish implemantation.
 4.4 Finish implementation of print_event_hex_sl()
 ---------------------------------------------------
 
-It will improove usability in sl mode
+It will improve usability in sl mode
 
 
-5. Improovemetns
+5. Improvments
 ==================
 
 5.1 enum masks_t

@@ -48,7 +48,7 @@
 #include <bcc/perf_reader.h>
 
 #include "utils.h"
-#include "strace.ebpf.h"
+#include "vltrace.h"
 #include "bpf_ctx.h"
 #include "ebpf_syscalls.h"
 

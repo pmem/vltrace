@@ -33,18 +33,18 @@
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .SH NAME
 .PP
-\f[B]strace.ebpf\f[] \-\- extreamely fast strace\-like tool built on top
+\f[B]vltrace\f[] \-\- extreamely fast strace\-like tool built on top
 of eBPF and KProbe technologies.
 .SH SYNOPSIS
 .IP
 .nf
 \f[C]
-$\ strace.ebpf\ [options]\ [command\ [arg\ ...]]
+$\ vltrace\ [options]\ [command\ [arg\ ...]]
 \f[]
 .fi
 .SH DESCRIPTION
 .PP
-strace.ebpf is a limited functional strace equivalent for Linux but
+vltrace is a limited functional strace equivalent for Linux but
 based on eBPF and KProbe technologies and libbcc library.
 .SH FEATURES
 .IP \[bu] 2
@@ -296,7 +296,7 @@ Putting into directory, supplied with \-N option, modified template
 files allow to customize eBPF code for supporting more newer eBPF VM
 features in newer kernels.
 .PP
-Also if current directory does not contain trace.h file, strace.ebpf on
+Also if current directory does not contain trace.h file, vltrace on
 first start saves built\-in trace.h into current directory.
 Saved built\-in describe binary log\[aq]s format.
 .IP \[bu] 2
@@ -309,9 +309,9 @@ into eBPF source code.
 .SH EXAMPLES
 .SH Example output:
 .PP
-# ./strace.ebpf \-l hex
+# ./vltrace \-l hex
 .PP
-\&./strace.ebpf \-l hex
+\&./vltrace \-l hex
 .PP
 PID ERR RES SYSCALL ARG1 ARG2 ARG3 AUX_DATA
 .PP
@@ -351,9 +351,9 @@ in\-kernel.
 .PP
 Here \-t option is used to print timestamps:
 .PP
-# ./strace.ebpf \-l hex \-tp 2833
+# ./vltrace \-l hex \-tp 2833
 .PP
-\&./strace.ebpf \-l hex \-tp 2833 PID TIME(usec) ERR RES SYSCALL ARG1
+\&./vltrace \-l hex \-tp 2833 PID TIME(usec) ERR RES SYSCALL ARG1
 ARG2 ARG3 AUX_DATA
 .PP
 0000000000000B11 0000000000000000 0000000000000000 0000000000000001 read
@@ -387,9 +387,9 @@ ARG2 ARG3 AUX_DATA
 #
 .SH The \-X option only prints failed syscalls:
 .PP
-# ./strace.ebpf \-l hex \-X mkdir .
+# ./vltrace \-l hex \-X mkdir .
 .PP
-\&./strace.ebpf \-l hex \-X mkdir .
+\&./vltrace \-l hex \-X mkdir .
 .PP
 PID ERR RES SYSCALL ARG1 ARG2 ARG3 AUX_DATA
 .PP

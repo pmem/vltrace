@@ -40,7 +40,7 @@
 #
 
 export DOCKER_USER=ldorau
-export DOCKER_PROJECT=strace.ebpf
+export DOCKER_PROJECT=vltrace
 
 function usage {
 	echo "Usage:"

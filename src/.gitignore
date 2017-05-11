@@ -1,4 +1,4 @@
-strace.ebpf
+vltrace
 nondebug/
 config.h
 syscalls_64_mod.h_gen

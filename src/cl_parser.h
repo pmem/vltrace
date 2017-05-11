@@ -32,13 +32,13 @@
 
 
 /*
- * cl_parser.h -- Command-line parser for strace.ebpf
+ * cl_parser.h -- Command-line parser for vltrace
  */
 
 #ifndef CL_PARSER_H
 #define CL_PARSER_H
 
-#include "strace.ebpf.h"
+#include "vltrace.h"
 
 int cl_parser(struct cl_options *const clo,
 		const int argc, char *const argv[]);

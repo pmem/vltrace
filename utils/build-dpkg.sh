@@ -614,7 +614,7 @@ EOF
 cat << EOF > debian/$PACKAGE_NAME-tools.install
 usr/bin/pmempool
 usr/share/man/man1/pmempool.1.gz
-usr/share/man/man1/strace.ebpf.1.gz
+usr/share/man/man1/vltrace.1.gz
 usr/share/man/man1/pmempool-create.1.gz
 usr/share/man/man1/pmempool-info.1.gz
 usr/share/man/man1/pmempool-dump.1.gz

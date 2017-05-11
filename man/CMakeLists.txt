@@ -52,7 +52,7 @@ function(generate_manpage name)
         add_dependencies(manpages manpage-${name})
 endfunction()
 
-generate_manpage(strace.ebpf.1)
+generate_manpage(vltrace.1)
 
 if(PANDOC)
         set(DIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -60,6 +60,6 @@ else()
         set(DIR ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/generated/strace.ebpf.1
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/generated/vltrace.1
 	DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
 	CONFIGURATIONS Release Debug None)
