@@ -87,6 +87,7 @@ get_sc_num(const char *sc_name)
 	Syscall_array[i].mask = 0;
 	Syscall_array[i].attached = 1;
 	Syscall_array[i].nstrings = 0;
+	Syscall_array[i].positions[0] = 0;
 
 	NOTICE("added syscall to the table [%i]: %s",
 		i, Syscall_array[i].handler_name);

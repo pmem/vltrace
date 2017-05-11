@@ -532,7 +532,10 @@ init_syscalls_table(void)
 		if (Syscall_array[i].handler_name == NULL &&
 		    syscall_names[i] != NULL) {
 			Syscall_array[i].handler_name = syscall_names[i];
-			NOTICE("assigning syscalls table [%i] to '%s'",
+			Syscall_array[i].args_qty = 6;
+			Syscall_array[i].mask = 0;
+
+			NOTICE("assigned syscalls table [%i] to '%s'",
 				i, syscall_names[i]);
 		}
 
