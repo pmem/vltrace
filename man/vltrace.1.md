@@ -387,6 +387,6 @@ file or directory.
 
 # SEE ALSO #
 
-**strace**(1), **bpf**(2), **<https://github.com/ldorau/strace.ebpf>**.
+**strace**(1), **bpf**(2), **<https://github.com/pmem/vltrace>**.
 
 Also Documentation/networking/filter.txt in kernel sources.

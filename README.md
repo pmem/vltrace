@@ -1,7 +1,7 @@
 vltrace: tool tracing syscalls using eBPF
 =================================
 
-[![Build Status](https://travis-ci.org/ldorau/strace.ebpf.svg)](https://travis-ci.org/ldorau/strace.ebpf)
+[![Build Status](https://travis-ci.org/pmem/vltrace.svg)](https://travis-ci.org/pmem/vltrace)
 
 This is the top-level README.md of vltrace.
 
@@ -9,7 +9,7 @@ vltrace is a tool tracing syscalls in a fast way using eBPF linux kernel feature
 
 ### LICENSE ###
 
-Please see the file [LICENSE](https://github.com/ldorau/strace.ebpf/blob/master/LICENSE)
+Please see the file [LICENSE](https://github.com/pmem/vltrace/blob/master/LICENSE)
 for information on how this tool is licensed.
 
 ### DEPENDENCIES ###
@@ -36,4 +36,4 @@ For more information about this tool contact:
 
  - Lukasz Dorau (lukasz.dorau at intel.com)
 
-or create an issue [here](https://github.com/ldorau/strace.ebpf/issues).
+or create an issue [here](https://github.com/pmem/vltrace/issues).
