@@ -276,7 +276,7 @@ check_bpf_jit_status()
 
 	switch (status) {
 	case -1:
-		ERROR("cannot read status of eBPF JIT compiler: '%m'");
+		WARNING("cannot read status of eBPF JIT compiler: '%m'");
 		return;
 
 	case  0:
