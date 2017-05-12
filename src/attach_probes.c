@@ -49,6 +49,9 @@ typedef int (*attach_f)(struct bpf_ctx *, const char *);
 
 enum { HANDLER_NAME_MAX_SIZE = 128 };
 
+/*
+ * print_kprobe_name -- snprintf kprobe name
+ */
 static void
 print_kprobe_name(char *str, size_t size, const char *name)
 {
@@ -60,6 +63,9 @@ print_kprobe_name(char *str, size_t size, const char *name)
 	(void) res;
 }
 
+/*
+ * print_kretprobe_name -- snprintf kretprobe name
+ */
 static void
 print_kretprobe_name(char *str, size_t size, const char *name)
 {
@@ -71,6 +77,9 @@ print_kretprobe_name(char *str, size_t size, const char *name)
 	(void) res;
 }
 
+/*
+ * attach_single_sc -- attach single syscall (entry and exit handlers)
+ */
 static int
 attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 {
@@ -112,6 +121,9 @@ attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 	return res;
 }
 
+/*
+ * attach_single_sc -- attach the entry handler of a single syscall
+ */
 static int
 attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 {
@@ -133,6 +145,7 @@ attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 
 /*
  * attach_kp_mask -- attach eBPF handler to each syscall that matches the mask
+ *                   using KProbes
  */
 static int
 attach_kp_mask(struct bpf_ctx *b, attach_f attach, unsigned mask)
@@ -162,7 +175,8 @@ static const char tp_all_exit_name[]  = "sys_exit";
 static const char tp_all_exit_fn[]  = "tracepoint__sys_exit";
 
 /*
- * attach_tp_exit -- intercept raw syscall sys_exit using TracePoints.
+ * attach_tp_exit -- attach eBPF handler to raw syscall sys_exit
+ *                   using TracePoints
  *
  * Should be faster and better but requires kernel >= v4.7
  *
@@ -185,7 +199,9 @@ attach_tp_exit(struct bpf_ctx *b)
 }
 
 /*
- * attach_all_kp_tp -- intercept all syscalls using kprobes and tracepoints
+ * attach_all_kp_tp -- attach eBPF handlers to all syscalls using:
+ *                     - KProbes for entry handlers and
+ *                     - TracePoints for exit handlers
  *
  * Requires kernel >= v4.7
  *
@@ -202,7 +218,8 @@ attach_all_kp_tp(struct bpf_ctx *b)
 }
 
 /*
- * attach_probes -- attach probes according to the expression
+ * attach_probes -- attach eBPF handlers to all syscalls
+ *                  according to the expression
  */
 int
 attach_probes(struct bpf_ctx *b)
