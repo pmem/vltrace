@@ -181,8 +181,6 @@ detach_all(struct bpf_ctx *b)
 		"Detaching probes... (please wait, it can take "
 		"few tens of seconds) ...");
 
-	free_syscalls_table();
-
 	for (unsigned i = 0; i < b->pr_arr_qty; i++) {
 		perf_reader_free(b->pr_arr[i]->pr);
 

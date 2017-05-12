@@ -523,12 +523,105 @@ init_string_args_data(unsigned sc_num)
 }
 
 /*
+ * mark_available -- mark syscall as available in syscall table
+ */
+static void
+mark_available(const char *sc_name)
+{
+	static int last_free = __NR_LAST_UNKNOWN;
+	int n = -1;
+
+	assert(__NR_LAST_UNKNOWN < SC_TBL_SIZE);
+
+	for (int i = 0; i < last_free; i++) {
+		if (Syscall_array[i].available)
+			continue;
+
+		if (NULL == Syscall_array[i].handler_name)
+			continue;
+
+		if (strcasecmp(sc_name, Syscall_array[i].handler_name) == 0) {
+			/* found number */
+			n = i;
+			break;
+		}
+	}
+
+	if (n == -1) {
+		/* add unknown syscall to the array */
+		n = last_free++;
+		assert(n < SC_TBL_SIZE);
+
+		NOTICE("added syscall to the table [%i]: %s", n, sc_name);
+
+		Syscall_array[n].args_qty = 6;
+		Syscall_array[n].mask = 0;
+		Syscall_array[n].nstrings = 0;
+		Syscall_array[n].positions[0] = 0;
+	}
+
+	Syscall_array[n].available = 1;
+
+	Syscall_array[n].name_length = strlen(sc_name);
+	assert(Syscall_array[n].name_length <= SC_NAME_LEN);
+
+	strncpy(Syscall_array[n].syscall_name, sc_name, SC_NAME_LEN);
+	Syscall_array[n].syscall_name[SC_NAME_LEN] = '\0';
+
+	Syscall_array[n].num = n;
+	sprintf(Syscall_array[n].num_str, "%u", Syscall_array[n].num);
+
+	init_string_args_data(n);
+}
+
+/*
+ * mark_available_syscalls -- mark available syscalls
+ */
+static int
+mark_available_syscalls()
+{
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	int SyS_sigsuspend = 0;
+
+	FILE *file = fopen(Debug_tracing_aff, "r");
+	if (file == NULL) {
+		ERROR("error opening '%s': %m", Debug_tracing_aff);
+		exit(-1);
+	}
+
+	while ((read = getline(&line, &len, file)) != -1) {
+		line[read - 1] = '\0';
+		if (!is_a_sc(line, read - 1))
+			continue;
+
+		/* SyS_sigsuspend is exported by kernel twice */
+		if (strcasecmp("SyS_sigsuspend", line) == 0) {
+			if (SyS_sigsuspend)
+				continue;
+			SyS_sigsuspend = 1;
+		}
+
+		mark_available(line);
+	}
+
+	free(line);
+	fclose(file);
+	return 0;
+}
+
+/*
  * init_syscalls_table -- init the table of syscalls
  */
 void
 init_syscalls_table(void)
 {
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
+
+		Syscall_array[i].available = 0;
+		Syscall_array[i].syscall_name[0] = 0;
+
 		if (Syscall_array[i].handler_name == NULL &&
 		    syscall_names[i] != NULL) {
 			Syscall_array[i].handler_name = syscall_names[i];
@@ -538,42 +631,9 @@ init_syscalls_table(void)
 			NOTICE("assigned syscalls table [%i] to '%s'",
 				i, syscall_names[i]);
 		}
-
-		Syscall_array[i].attached = 0;
-
-		if (Syscall_array[i].handler_name != NULL) {
-			Syscall_array[i].name_length =
-				strlen(Syscall_array[i].handler_name);
-
-			assert(Syscall_array[i].name_length <= SC_NAME_LEN);
-
-			strncpy(Syscall_array[i].syscall_name,
-				Syscall_array[i].handler_name, SC_NAME_LEN);
-			Syscall_array[i].syscall_name[SC_NAME_LEN] = '\0';
-
-			Syscall_array[i].num = i;
-			sprintf(Syscall_array[i].num_str, "%u",
-				Syscall_array[i].num);
-
-			init_string_args_data(i);
-		}
 	}
-}
 
-/*
- * free_syscalls_table -- free names from Syscall_array[]
- *                        allocated by get_sc_num()
- */
-void
-free_syscalls_table(void)
-{
-	for (unsigned i = __NR_LAST_UNKNOWN; i < SC_TBL_SIZE; i++) {
-		if (Syscall_array[i].attached &&
-		    Syscall_array[i].handler_name) {
-			free(Syscall_array[i].handler_name);
-			Syscall_array[i].handler_name = NULL;
-		}
-	}
+	mark_available_syscalls();
 }
 
 /*
@@ -591,10 +651,10 @@ print_syscalls_table(FILE *f)
 			fprintf(f, "\nSyscalls with unknown "
 					"or duplicated number:\n");
 
-		if (NULL != Syscall_array[i].handler_name) {
+		if (Syscall_array[i].available) {
 			res = fprintf(f, "%03d:\t%s\n",
 					Syscall_array[i].num,
-					Syscall_array[i].handler_name);
+					Syscall_array[i].syscall_name);
 			if (res <= 0)
 				return res;
 		}

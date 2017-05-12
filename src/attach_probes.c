@@ -45,6 +45,8 @@
 #include "attach_probes.h"
 #include "ebpf_syscalls.h"
 
+typedef int (*attach_f)(struct bpf_ctx *, const char *);
+
 enum { HANDLER_NAME_MAX_SIZE = 128 };
 
 static void
@@ -129,94 +131,24 @@ attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 	return res;
 }
 
-/* XXX HACK: this syscall is exported by kernel twice. */
-static unsigned SyS_sigsuspend = 0;
-
-/*
- * attach_kp_kern -- attach eBPF handler to all syscalls in running kernel
- */
-static bool
-attach_kp_kern(struct bpf_ctx *b, int (*attach)(struct bpf_ctx *, const char *))
-{
-	unsigned counter = 0;
-
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t read;
-
-	FILE *in = fopen(Debug_tracing_aff, "r");
-
-	if (NULL == in) {
-		ERROR("%s: '%m'", __func__);
-		return false;
-	}
-
-	while ((read = getline(&line, &len, in)) != -1) {
-		int res;
-
-		if (!is_a_sc(line, read - 1))
-			continue;
-
-		line [read - 1] = '\0';
-
-		/* XXX HACK: this syscall is exported by kernel twice. */
-		if (!strcasecmp("SyS_sigsuspend", line)) {
-			if (SyS_sigsuspend)
-				continue;
-
-			SyS_sigsuspend ++;
-		}
-
-		res = (*attach)(b, line);
-
-		if (res >= 0)
-			counter ++;
-	}
-
-	free(line);
-	fclose(in);
-
-	return counter > 0;
-}
-
-/*
- * attach_kp_all -- attach eBPF handler to all existing
- *                       syscalls in running kernel.
- */
-static bool
-attach_kp_all(struct bpf_ctx *b)
-{
-	return attach_kp_kern(b, attach_single_sc);
-}
-
-/*
- * attach_kp_all_enter -- attach eBPF handler to entry of all existing
- *                             syscalls in running kernel.
- */
-static bool
-attach_kp_all_enter(struct bpf_ctx *b)
-{
-	return attach_kp_kern(b, attach_single_sc_enter);
-}
-
 /*
  * attach_kp_mask -- attach eBPF handler to each syscall that matches the mask
  */
 static int
-attach_kp_mask(struct bpf_ctx *b, unsigned mask)
+attach_kp_mask(struct bpf_ctx *b, attach_f attach, unsigned mask)
 {
 	unsigned counter = 0;
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		int res;
 
-		if (NULL == Syscall_array[i].handler_name)
+		if (!Syscall_array[i].available)
 			continue;
 
-		if ((mask & Syscall_array[i].mask) == 0)
+		if (mask && ((mask & Syscall_array[i].mask) == 0))
 			continue;
 
-		res = attach_single_sc(b, Syscall_array[i].handler_name);
+		res = (*attach)(b, Syscall_array[i].syscall_name);
 
 		if (res >= 0)
 			counter ++;
@@ -226,9 +158,7 @@ attach_kp_mask(struct bpf_ctx *b, unsigned mask)
 }
 
 static const char tp_all_category[] = "raw_syscalls";
-static const char tp_all_enter_name[] = "sys_enter";
 static const char tp_all_exit_name[]  = "sys_exit";
-static const char tp_all_enter_fn[] = "tracepoint__sys_enter";
 static const char tp_all_exit_fn[]  = "tracepoint__sys_exit";
 
 /*
@@ -237,7 +167,7 @@ static const char tp_all_exit_fn[]  = "tracepoint__sys_exit";
  * Should be faster and better but requires kernel >= v4.7
  *
  */
-static bool
+static int
 attach_tp_exit(struct bpf_ctx *b)
 {
 	int res;
@@ -255,50 +185,15 @@ attach_tp_exit(struct bpf_ctx *b)
 }
 
 /*
- * attach_tp_all -- intercept all syscalls using TracePoints.
- *
- * Should be faster and better but requires kernel >= v4.7
- *
- */
-static bool
-attach_tp_all(struct bpf_ctx *b)
-{
-	int res;
-
-	/* 'sys_exit' should be first to prevent race condition */
-	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_exit_name,
-					tp_all_exit_fn, Args.pid, 0, -1);
-
-	if (res == -1) {
-		ERROR("%s: Can't attach %s to '%s:%s'. Exiting.",
-			__func__, tp_all_exit_fn,
-			tp_all_category, tp_all_exit_name);
-
-		return false;
-	}
-
-	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_enter_name,
-			tp_all_enter_fn, Args.pid, 0, -1);
-
-	if (res == -1) {
-		NOTICE("%s: Can't attach %s to '%s:%s'. Ignoring.",
-			__func__, tp_all_enter_fn,
-			tp_all_category, tp_all_enter_name);
-	}
-
-	return true;
-}
-
-/*
  * attach_all_kp_tp -- intercept all syscalls using kprobes and tracepoints
  *
  * Requires kernel >= v4.7
  *
  */
-static bool
+static int
 attach_all_kp_tp(struct bpf_ctx *b)
 {
-	bool res = attach_kp_all_enter(b);
+	int res = attach_kp_mask(b, attach_single_sc_enter, 0);
 
 	if (res)
 		res = attach_tp_exit(b);
@@ -307,12 +202,9 @@ attach_all_kp_tp(struct bpf_ctx *b)
 }
 
 /*
- * attach_probes -- parse and processe expression
- *
- * XXX Think about applying 'fn_name' via str_replace_all()
- *     to be more consistent
+ * attach_probes -- parse and process expression
  */
-bool
+int
 attach_probes(struct bpf_ctx *b)
 {
 	if (NULL == Args.expr)
@@ -321,18 +213,17 @@ attach_probes(struct bpf_ctx *b)
 	if (!strcasecmp(Args.expr, "trace=all")) {
 		return attach_all_kp_tp(b);
 	} else if (!strcasecmp(Args.expr, "trace=kp-all")) {
-		return attach_kp_all(b);
+		return attach_kp_mask(b, attach_single_sc, 0);
 	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
-		return attach_kp_mask(b, EM_file);
+		return attach_kp_mask(b, attach_single_sc, EM_file);
 	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
-		return attach_kp_mask(b, EM_desc);
+		return attach_kp_mask(b, attach_single_sc, EM_desc);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
-		return attach_kp_mask(b, EM_str_1 | EM_str_2 | EM_fd_1);
-	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
-		return attach_tp_all(b);
+		return attach_kp_mask(b, attach_single_sc,
+					EM_str_1 | EM_str_2 | EM_fd_1);
 	} else {
 		ERROR("%s: unknown option: '%s'", __func__, Args.expr);
-		return false;
+		return -1;
 	}
 
 default_option:

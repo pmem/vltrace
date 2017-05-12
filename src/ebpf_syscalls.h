@@ -150,8 +150,8 @@ struct syscall_descriptor {
 	/* mask of flags */
 	unsigned mask;
 
-	/* helper field used to speed up attaching */
-	int attached;
+	/* syscall is available in current kernel */
+	int available;
 
 	/* number of string arguments */
 	unsigned nstrings;
@@ -163,7 +163,6 @@ struct syscall_descriptor {
 extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
 
 void init_syscalls_table(void);
-void free_syscalls_table(void);
 int print_syscalls_table(FILE *f);
 int dump_syscalls_table(const char *path);
 

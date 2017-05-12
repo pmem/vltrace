@@ -50,77 +50,26 @@
 
 static const char *Tmpl_str[MAX_STR_ARG] = {"STR1", "STR2", "STR3"};
 
-/*
- * get_sc_num -- return syscall number by name according to the syscalls table
- */
-static int
-get_sc_num(const char *sc_name)
-{
-	static int last_free = __NR_LAST_UNKNOWN;
-	unsigned i;
-
-	assert(__NR_LAST_UNKNOWN <= SC_TBL_SIZE);
-
-	for (i = 0; i < __NR_LAST_UNKNOWN; i++) {
-		if (NULL == Syscall_array[i].handler_name)
-			continue;
-
-		if (Syscall_array[i].attached)
-			continue;
-
-		if (strcasecmp(sc_name, Syscall_array[i].handler_name) == 0) {
-			Syscall_array[i].attached = 1;
-			DEBUG_INFO("attached syscall [%i] = %s",
-					i, Syscall_array[i].handler_name);
-			return i;
-		}
-	}
-
-	/* add unknown syscall to the array */
-	i = last_free++;
-
-	Syscall_array[i].num = i;
-	sprintf(Syscall_array[i].num_str, "%u", Syscall_array[i].num);
-
-	/* will be freed in free_syscalls_table() */
-	Syscall_array[i].handler_name = strdup(sc_name);
-
-	Syscall_array[i].name_length = strlen(Syscall_array[i].handler_name);
-	Syscall_array[i].args_qty = 6;
-	Syscall_array[i].mask = 0;
-	Syscall_array[i].attached = 1;
-	Syscall_array[i].nstrings = 0;
-	Syscall_array[i].positions[0] = 0;
-
-	NOTICE("added syscall to the table [%i]: %s",
-		i, Syscall_array[i].handler_name);
-
-	return i;
-}
-
 static char *
 get_template(unsigned sc_num)
 {
 	char *text = NULL;
 
-	if (Syscall_array[sc_num].handler_name == NULL)
-		return NULL;
-
 	if (Args.ff_mode == E_FF_FULL) {
 		switch (sc_num) {
 		case __NR_clone:
 			text = load_file_no_cr(ebpf_clone_file);
-			goto replace;
+			goto replace_skip_STRX;
 		case __NR_vfork:
 			text = load_file_no_cr(ebpf_vfork_file);
-			goto replace;
+			goto replace_skip_STRX;
 		case __NR_fork:
 			text = load_file_no_cr(ebpf_fork_file);
-			goto replace;
+			goto replace_skip_STRX;
 		case __NR_exit:
 		case __NR_exit_group:
 			text = load_file_no_cr(ebpf_exit_file);
-			goto replace;
+			goto replace_skip_STRX;
 		}
 	}
 
@@ -129,16 +78,16 @@ get_template(unsigned sc_num)
 	if (nstr > MAX_STR_ARG) {
 		WARNING("syscall '%s' has more than %i string arguments,\n"
 			"\t only first %i of them will be printed\n",
-			Syscall_array[sc_num].handler_name,
+			Syscall_array[sc_num].syscall_name,
 			MAX_STR_ARG, MAX_STR_ARG);
 
 		nstr = MAX_STR_ARG;
 	}
 
-	text = load_file_no_cr(ebpf_file_table[nstr][Args.fnr_mode]);
+	const char *file = ebpf_file_table[nstr][Args.fnr_mode];
+	text = load_file_no_cr(file);
 	if (NULL == text) {
-		ERROR("cannot load the file: %s",
-			ebpf_file_table[nstr][Args.fnr_mode]);
+		ERROR("cannot load the file: %s", file);
 		return NULL;
 	}
 
@@ -148,111 +97,41 @@ get_template(unsigned sc_num)
 					Syscall_array[sc_num].positions[i]);
 	}
 
-replace:
+replace_skip_STRX:
+
 	str_replace_all(&text, "SYSCALL_NR",
 			Syscall_array[sc_num].num_str);
+
+	str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
+			Syscall_array[sc_num].syscall_name);
 
 	return text;
 }
 
-/* XXX HACK: this syscall is exported by kernel twice. */
-static unsigned SyS_sigsuspend = 0;
-
-/*
- * generate_ebpf_kp_all -- generate eBPF syscall handlers for all syscalls
- */
-static int
-generate_ebpf_kp_all(FILE *ts)
-{
-	char *text = NULL;
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t read;
-
-	FILE *in = fopen(Debug_tracing_aff, "r");
-
-	if (NULL == in) {
-		ERROR("error opening '%s': %m", Debug_tracing_aff);
-		return -1;
-	}
-
-	while ((read = getline(&line, &len, in)) != -1) {
-		unsigned sc_num;
-		size_t fw_res;
-
-		if (!is_a_sc(line, read - 1))
-			continue;
-
-		line[read - 1] = '\0';
-
-		/* XXX HACK: this syscall is exported by kernel twice. */
-		if (!strcasecmp("SyS_sigsuspend", line)) {
-			if (SyS_sigsuspend)
-				continue;
-			SyS_sigsuspend = 1;
-		}
-
-		sc_num = get_sc_num(line);
-		text = get_template(sc_num);
-		if (text == NULL) {
-			ERROR("no template found for syscall: '%s'", line);
-			free(line);
-			return -1;
-		}
-
-		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace", line);
-
-		fw_res = fwrite(text, strlen(text), 1, ts);
-		if (fw_res < 1) {
-			perror("fwrite");
-			free(line);
-			free(text);
-			return -1;
-		}
-
-		free(text);
-	}
-
-	free(line);
-	fclose(in);
-	return 0;
-}
-
 /*
  * generate_ebpf_kp_mask -- generate eBPF syscall handlers specific
- *                          for syscalls with 1 string argument and given mask
+ *                          for KProbes with given mask
  */
 static int
 generate_ebpf_kp_mask(FILE *ts, unsigned mask)
 {
 	char *text = NULL;
+	size_t fw_res;
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		size_t fw_res;
 
-		if (NULL == Syscall_array[i].handler_name)
+		if (!Syscall_array[i].available)
 			continue;
 
-		if ((mask & Syscall_array[i].mask) == 0)
+		if (mask && ((mask & Syscall_array[i].mask) == 0))
 			continue;
 
-		int nstr = Syscall_array[i].nstrings;
-
-		text = load_file_no_cr(ebpf_file_table[nstr][Args.fnr_mode]);
-		if (NULL == text) {
-			ERROR("cannot load the file: %s",
-				ebpf_file_table[nstr][Args.fnr_mode]);
+		text = get_template(i);
+		if (text == NULL) {
+			ERROR("no template found for syscall: '%s'",
+				Syscall_array[i].syscall_name);
 			return -1;
 		}
-
-		for (int s = 0; s < nstr; s++) {
-			str_replace_with_char(text, Tmpl_str[s],
-						Syscall_array[i].positions[s]);
-		}
-		str_replace_all(&text, "SYSCALL_NR",
-				Syscall_array[i].num_str);
-		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
-				Syscall_array[i].handler_name);
 
 		fw_res = fwrite(text, strlen(text), 1, ts);
 		if (fw_res < 1) {
@@ -267,8 +146,8 @@ generate_ebpf_kp_mask(FILE *ts, unsigned mask)
 }
 
 /*
- * generate_ebpf_tp_all -- generate eBPF syscall handler
- *                         specific for tracepoint feature
+ * generate_ebpf_tp_all -- generate eBPF syscall handlers
+ *                         specific for TracePoints
  */
 static int
 generate_ebpf_tp_all(FILE *ts)
@@ -288,15 +167,15 @@ generate_ebpf_tp_all(FILE *ts)
 }
 
 /*
- * generate_ebpf_all_kp_tp -- generate eBPF syscall handler
- *                         specific for kprobes and tracepoints
+ * generate_ebpf_all_kp_tp -- generate eBPF syscall handlers
+ *                            specific for KProbes and TracePoints
  */
 static int
 generate_ebpf_all_kp_tp(FILE *ts)
 {
 	int ret;
 
-	ret = generate_ebpf_kp_all(ts);
+	ret = generate_ebpf_kp_mask(ts, 0);
 	if (ret)
 		return ret;
 
@@ -304,7 +183,7 @@ generate_ebpf_all_kp_tp(FILE *ts)
 }
 
 /*
- * generate_ebpf -- This function parses and process expression.
+ * generate_ebpf -- parse and process expression
  */
 char *
 generate_ebpf()
@@ -333,15 +212,13 @@ generate_ebpf()
 	} else if (!strcasecmp(Args.expr, "trace=all")) {
 		ret = generate_ebpf_all_kp_tp(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-all")) {
-		ret = generate_ebpf_kp_all(ts);
+		ret = generate_ebpf_kp_mask(ts, 0);
 	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
 		ret = generate_ebpf_kp_mask(ts, EM_file);
 	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
 		ret = generate_ebpf_kp_mask(ts, EM_desc);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
 		ret = generate_ebpf_kp_mask(ts, EM_str_1 | EM_str_2 | EM_fd_1);
-	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
-		ret = generate_ebpf_tp_all(ts);
 	} else {
 		ERROR("unknown option: '%s'", Args.expr);
 		ret = -1;

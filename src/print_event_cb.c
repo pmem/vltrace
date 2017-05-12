@@ -58,7 +58,6 @@ enum { LEN_SYS = 4 }; /* = strlen("SyS_") */
 
 static unsigned long long start_ts_nsec = 0;
 
-static inline const char *sc_num2str(const int64_t sc_num);
 static inline void fprint_i64(FILE *f, uint64_t x);
 static inline char b2hex(char b);
 
@@ -153,8 +152,7 @@ b2hex(char b)
 }
 
 /*
- * fprint_i64 -- This function prints 64-bit integer in hexadecimal form
- *     in stream.
+ * fprint_i64 -- print 64-bit integer in hexadecimal form
  */
 static inline void
 fprint_i64(FILE *f, uint64_t x)
@@ -172,36 +170,12 @@ fprint_i64(FILE *f, uint64_t x)
 }
 
 /*
- * sc_num2str -- This function returns syscall's name by number
- */
-static inline const char *
-sc_num2str(const int64_t sc_num)
-{
-	int res;
-	static char buf[32];
-
-	if ((0 <= sc_num) && (SC_TBL_SIZE > sc_num)) {
-		if (NULL == Syscall_array[sc_num].handler_name)
-			goto out;
-		return Syscall_array[sc_num].handler_name + LEN_SYS;
-	}
-
-out:
-	res = snprintf(buf, sizeof(buf), "sys_%ld", sc_num);
-
-	assert(res > 0);
-	(void) res;
-
-	return buf;
-}
-
-/*
  * fwrite_sc_name -- write syscall's name to stream
  */
 static inline void
 fwrite_sc_name(FILE *f, const int64_t sc_id)
 {
-	fwrite(Syscall_array[sc_id].handler_name + LEN_SYS,
+	fwrite(Syscall_array[sc_id].syscall_name + LEN_SYS,
 		Syscall_array[sc_id].name_length - LEN_SYS, 1, f);
 }
 

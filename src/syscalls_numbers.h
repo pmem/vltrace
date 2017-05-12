@@ -1174,7 +1174,7 @@ enum {
 	__NR_statx,
 #endif
 
-	/* it has to be the last one in this enum */
+	/* it MUST be the last one in this enum */
 	__NR_LAST_UNKNOWN,
 };
 

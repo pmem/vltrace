@@ -41,6 +41,6 @@
 
 #include "bpf_ctx.h"
 
-bool attach_probes(struct bpf_ctx *b);
+int attach_probes(struct bpf_ctx *b);
 
 #endif /* ATTACH_PROBES_H */
