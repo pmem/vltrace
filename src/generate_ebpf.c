@@ -31,7 +31,7 @@
  */
 
 /*
- * generate_ebpf.h -- generate_ebpf() function
+ * generate_ebpf.c -- generate ebpf code
  */
 
 #include <assert.h>
@@ -48,9 +48,10 @@
 #include "generate_ebpf.h"
 #include "syscalls_numbers.h"
 
+static const char *Tmpl_str[MAX_STR_ARG] = {"STR1", "STR2", "STR3"};
+
 /*
- * get_sc_num -- this function returns syscall number by name
- *               according to the table of syscalls
+ * get_sc_num -- return syscall number by name according to the syscalls table
  */
 static int
 get_sc_num(const char *sc_name)
@@ -98,51 +99,8 @@ get_sc_num(const char *sc_name)
 }
 
 static char *
-load_ebpf_2_str_tmpl(void)
-{
-	char *text = NULL;
-
-	switch (Args.fnr_mode) {
-	case E_FNR_FAST:
-	case E_FNR_STR_MAX:
-		text = load_file_no_cr(ebpf_2_str_sl_file);
-		break;
-	case E_FNR_FULL_CONST_N:
-		text = load_file_no_cr(ebpf_2_str_ml_file);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	return text;
-}
-
-static char *
-load_ebpf_path_1_tmpl(void)
-{
-	char *text = NULL;
-
-	switch (Args.fnr_mode) {
-	case E_FNR_FAST:
-	case E_FNR_STR_MAX:
-		text = load_file_no_cr(ebpf_1_str_sl_file);
-		break;
-	case E_FNR_FULL_CONST_N:
-		text = load_file_no_cr(ebpf_1_str_full_file);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	return text;
-}
-
-static char *
 get_template(unsigned sc_num)
 {
-	static const char *tmpl_str[MAX_STR_ARG] = {"STR1", "STR2", "STR3"};
 	char *text = NULL;
 
 	if (Syscall_array[sc_num].handler_name == NULL)
@@ -170,7 +128,7 @@ get_template(unsigned sc_num)
 
 	if (nstr > MAX_STR_ARG) {
 		WARNING("syscall '%s' has more than %i string arguments,\n"
-			"\tonly first %i of them will be printed\n",
+			"\t only first %i of them will be printed\n",
 			Syscall_array[sc_num].handler_name,
 			MAX_STR_ARG, MAX_STR_ARG);
 
@@ -186,7 +144,7 @@ get_template(unsigned sc_num)
 
 	/* replace STRX */
 	for (int i = 0; i < nstr; i++) {
-		str_replace_with_char(text, tmpl_str[i],
+		str_replace_with_char(text, Tmpl_str[i],
 					Syscall_array[sc_num].positions[i]);
 	}
 
@@ -201,17 +159,12 @@ replace:
 static unsigned SyS_sigsuspend = 0;
 
 /*
- * generate_ebpf_kp_kern_all -- This function generates universal default eBPF
- *     syscall handler.
- *
- * Primary purpose of generated handler - new and unknown syscalls.
+ * generate_ebpf_kp_all -- generate eBPF syscall handlers for all syscalls
  */
 static int
-generate_ebpf_kp_kern_all(FILE *ts)
+generate_ebpf_kp_all(FILE *ts)
 {
 	char *text = NULL;
-
-
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t read;
@@ -266,11 +219,11 @@ generate_ebpf_kp_kern_all(FILE *ts)
 }
 
 /*
- * generate_ebpf_kp_file -- generate eBPF syscall handlers specific
- *                          for syscalls with filename in arguments
+ * generate_ebpf_kp_mask -- generate eBPF syscall handlers specific
+ *                          for syscalls with 1 string argument and given mask
  */
 static int
-generate_ebpf_kp_file(FILE *ts)
+generate_ebpf_kp_mask(FILE *ts, unsigned mask)
 {
 	char *text = NULL;
 
@@ -280,11 +233,22 @@ generate_ebpf_kp_file(FILE *ts)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_file != (EM_file & Syscall_array[i].mask))
+		if ((mask & Syscall_array[i].mask) == 0)
 			continue;
 
-		text = load_ebpf_path_1_tmpl();
+		int nstr = Syscall_array[i].nstrings;
 
+		text = load_file_no_cr(ebpf_file_table[nstr][Args.fnr_mode]);
+		if (NULL == text) {
+			ERROR("cannot load the file: %s",
+				ebpf_file_table[nstr][Args.fnr_mode]);
+			return -1;
+		}
+
+		for (int s = 0; s < nstr; s++) {
+			str_replace_with_char(text, Tmpl_str[s],
+						Syscall_array[i].positions[s]);
+		}
 		str_replace_all(&text, "SYSCALL_NR",
 				Syscall_array[i].num_str);
 		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
@@ -300,98 +264,6 @@ generate_ebpf_kp_file(FILE *ts)
 		free(text);
 	}
 	return 0;
-}
-
-/*
- * generate_ebpf_kp_fileat -- generate eBPF syscall handlers specific
- *                            for syscalls with relative filename in arguments
- */
-static int
-generate_ebpf_kp_fileat(FILE *ts)
-{
-	char *text = NULL;
-
-	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		size_t fw_res;
-
-		if (NULL == Syscall_array[i].handler_name)
-			continue;
-
-		if (EM_fileat != (EM_fileat & Syscall_array[i].mask))
-			continue;
-
-		text = load_ebpf_2_str_tmpl();
-
-		str_replace_all(&text, "SYSCALL_NR",
-				Syscall_array[i].num_str);
-		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
-				Syscall_array[i].handler_name);
-
-		fw_res = fwrite(text, strlen(text), 1, ts);
-		if (fw_res < 1) {
-			perror("fwrite");
-			free(text);
-			return -1;
-		}
-
-		free(text);
-	}
-	return 0;
-}
-
-/*
- * generate_ebpf_kp_desc -- generate eBPF syscall handlers specific
- *                          for syscalls with file-descriptor in arguments
- */
-static int
-generate_ebpf_kp_desc(FILE *ts)
-{
-	char *text = NULL;
-
-	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		size_t fw_res;
-
-		if (NULL == Syscall_array[i].handler_name)
-			continue;
-
-		if (EM_desc != (EM_desc & Syscall_array[i].mask))
-			continue;
-
-		text = load_file_no_cr(ebpf_0_str_file);
-
-		str_replace_all(&text, "SYSCALL_NR",
-				Syscall_array[i].num_str);
-		str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
-				Syscall_array[i].handler_name);
-
-		fw_res = fwrite(text, strlen(text), 1, ts);
-		if (fw_res < 1) {
-			perror("fwrite");
-			free(text);
-			return -1;
-		}
-
-		free(text);
-	}
-	return 0;
-}
-
-/*
- * generate_ebpf_kp_fileio -- generate eBPF syscall handlers specific
- *                            for syscalls which operate on files
- */
-static int
-generate_ebpf_kp_fileio(FILE *ts)
-{
-	int ret = generate_ebpf_kp_file(ts);
-	if (ret)
-		return ret;
-
-	ret = generate_ebpf_kp_desc(ts);
-	if (ret)
-		return ret;
-
-	return generate_ebpf_kp_fileat(ts);
 }
 
 /*
@@ -416,15 +288,15 @@ generate_ebpf_tp_all(FILE *ts)
 }
 
 /*
- * generate_ebpf_common -- generate eBPF syscall handler
+ * generate_ebpf_all_kp_tp -- generate eBPF syscall handler
  *                         specific for kprobes and tracepoints
  */
 static int
-generate_ebpf_common(FILE *ts)
+generate_ebpf_all_kp_tp(FILE *ts)
 {
 	int ret;
 
-	ret = generate_ebpf_kp_kern_all(ts);
+	ret = generate_ebpf_kp_all(ts);
 	if (ret)
 		return ret;
 
@@ -456,18 +328,18 @@ generate_ebpf()
 	free(head);
 
 	if (NULL == Args.expr) {
-		NOTICE("defaulting to 'trace=common'");
-		ret = generate_ebpf_common(ts);
-	} else if (!strcasecmp(Args.expr, "trace=common")) {
-		ret = generate_ebpf_common(ts);
-	} else if (!strcasecmp(Args.expr, "trace=kp-kern-all")) {
-		ret = generate_ebpf_kp_kern_all(ts);
+		NOTICE("defaulting to 'trace=all'");
+		ret = generate_ebpf_all_kp_tp(ts);
+	} else if (!strcasecmp(Args.expr, "trace=all")) {
+		ret = generate_ebpf_all_kp_tp(ts);
+	} else if (!strcasecmp(Args.expr, "trace=kp-all")) {
+		ret = generate_ebpf_kp_all(ts);
 	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
-		ret = generate_ebpf_kp_file(ts);
+		ret = generate_ebpf_kp_mask(ts, EM_file);
 	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
-		ret = generate_ebpf_kp_desc(ts);
+		ret = generate_ebpf_kp_mask(ts, EM_desc);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
-		ret = generate_ebpf_kp_fileio(ts);
+		ret = generate_ebpf_kp_mask(ts, EM_str_1 | EM_str_2 | EM_fd_1);
 	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
 		ret = generate_ebpf_tp_all(ts);
 	} else {

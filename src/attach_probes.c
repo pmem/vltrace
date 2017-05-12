@@ -91,10 +91,8 @@ attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 			Args.pid, 0, -1);
 
 	if (res == -1) {
-		fprintf(stderr,
-			"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-			__func__, kretprobe,
-			handler_name);
+		NOTICE("%s: Can't attach %s to '%s'. Ignoring.",
+			__func__, kretprobe, handler_name);
 
 		/* Kretprobe fails. There is no reason to try probe */
 		return res;
@@ -105,10 +103,8 @@ attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 			Args.pid, 0, -1);
 
 	if (res == -1) {
-		fprintf(stderr,
-			"ERROR:%s:Can't attach %s to '%s'. Ignoring.\n",
-			__func__, kprobe,
-			handler_name);
+		NOTICE("%s: Can't attach %s to '%s'. Ignoring.",
+			__func__, kprobe, handler_name);
 	}
 
 	return res;
@@ -127,8 +123,7 @@ attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 
 	res = load_fn_and_attach_to_kp(b, handler, kprobe, Args.pid, 0, -1);
 	if (res == -1) {
-		fprintf(stderr, "ERROR:%s:Can't attach %s to '%s'.\n",
-				__func__, kprobe, handler);
+		ERROR("%s: Can't attach %s to '%s'", __func__, kprobe, handler);
 	}
 
 	return res;
@@ -143,7 +138,7 @@ static unsigned SyS_sigsuspend = 0;
 static bool
 attach_kp_kern(struct bpf_ctx *b, int (*attach)(struct bpf_ctx *, const char *))
 {
-	unsigned succ_counter = 0;
+	unsigned counter = 0;
 
 	char *line = NULL;
 	size_t len = 0;
@@ -152,7 +147,7 @@ attach_kp_kern(struct bpf_ctx *b, int (*attach)(struct bpf_ctx *, const char *))
 	FILE *in = fopen(Debug_tracing_aff, "r");
 
 	if (NULL == in) {
-		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);
+		ERROR("%s: '%m'", __func__);
 		return false;
 	}
 
@@ -175,45 +170,42 @@ attach_kp_kern(struct bpf_ctx *b, int (*attach)(struct bpf_ctx *, const char *))
 		res = (*attach)(b, line);
 
 		if (res >= 0)
-			succ_counter ++;
+			counter ++;
 	}
 
 	free(line);
 	fclose(in);
 
-	return succ_counter > 0;
+	return counter > 0;
 }
 
 /*
- * attach_kp_kern_all -- attach eBPF handler to all existing
+ * attach_kp_all -- attach eBPF handler to all existing
  *                       syscalls in running kernel.
  */
 static bool
-attach_kp_kern_all(struct bpf_ctx *b)
+attach_kp_all(struct bpf_ctx *b)
 {
 	return attach_kp_kern(b, attach_single_sc);
 }
 
 /*
- * attach_kp_kern_all_enter -- attach eBPF handler to entry of all existing
+ * attach_kp_all_enter -- attach eBPF handler to entry of all existing
  *                             syscalls in running kernel.
  */
 static bool
-attach_kp_kern_all_enter(struct bpf_ctx *b)
+attach_kp_all_enter(struct bpf_ctx *b)
 {
 	return attach_kp_kern(b, attach_single_sc_enter);
 }
 
 /*
- * attach_kp_desc -- attach eBPF handler to each syscall which
- *                   operates on file descriptor.
- *
- * Inspired by: 'strace -e trace=desc'
+ * attach_kp_mask -- attach eBPF handler to each syscall that matches the mask
  */
-static bool
-attach_kp_desc(struct bpf_ctx *b)
+static int
+attach_kp_mask(struct bpf_ctx *b, unsigned mask)
 {
-	unsigned succ_counter = 0;
+	unsigned counter = 0;
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		int res;
@@ -221,91 +213,16 @@ attach_kp_desc(struct bpf_ctx *b)
 		if (NULL == Syscall_array[i].handler_name)
 			continue;
 
-		if (EM_desc != (EM_desc & Syscall_array[i].mask))
+		if ((mask & Syscall_array[i].mask) == 0)
 			continue;
 
 		res = attach_single_sc(b, Syscall_array[i].handler_name);
 
 		if (res >= 0)
-			succ_counter ++;
+			counter ++;
 	}
 
-	return succ_counter > 0;
-}
-
-/*
- * attach_kp_file -- attach eBPF handler to each syscall which
- *                   operates on filenames.
- *
- * Inspired by 'strace -e trace=file'.
- */
-static bool
-attach_kp_file(struct bpf_ctx *b)
-{
-	unsigned succ_counter = 0;
-
-	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		int res;
-
-		if (NULL == Syscall_array[i].handler_name)
-			continue;
-
-		if (EM_file != (EM_file & Syscall_array[i].mask))
-			continue;
-
-		res = attach_single_sc(b, Syscall_array[i].handler_name);
-
-		if (res >= 0)
-			succ_counter ++;
-	}
-
-	return succ_counter > 0;
-}
-
-/*
- * attach_kp_fileat -- attach eBPF handler to each syscall
- *                     which operates on relative file path.
- *
- * There are no equivalents in strace.
- */
-static bool
-attach_kp_fileat(struct bpf_ctx *b)
-{
-	unsigned succ_counter = 0;
-
-	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
-		int res;
-
-		if (NULL == Syscall_array[i].handler_name)
-			continue;
-
-		if (EM_fileat != (EM_fileat & Syscall_array[i].mask))
-			continue;
-
-		res = attach_single_sc(b, Syscall_array[i].handler_name);
-
-		if (res >= 0)
-			succ_counter ++;
-	}
-
-	return succ_counter > 0;
-}
-
-/*
- * attach_kp_fileio -- attach eBPF handlers to all file-related syscalls.
- *
- * Inspired by: 'strace -e trace=desc,file'
- */
-static bool
-attach_kp_fileio(struct bpf_ctx *b)
-{
-	bool res = false;
-
-	res |= attach_kp_desc(b);
-	res |= attach_kp_file(b);
-	res |= attach_kp_fileat(b);
-
-	return res;
+	return counter;
 }
 
 static const char tp_all_category[] = "raw_syscalls";
@@ -328,8 +245,7 @@ attach_tp_exit(struct bpf_ctx *b)
 	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_exit_name,
 					tp_all_exit_fn, Args.pid, 0, -1);
 	if (res == -1) {
-		fprintf(stderr,
-			"ERROR:%s:Can't attach %s to '%s:%s'. Exiting.\n",
+		ERROR("%s: Can't attach %s to '%s:%s'. Exiting.",
 			__func__, tp_all_exit_fn,
 			tp_all_category, tp_all_exit_name);
 		return false;
@@ -354,8 +270,7 @@ attach_tp_all(struct bpf_ctx *b)
 					tp_all_exit_fn, Args.pid, 0, -1);
 
 	if (res == -1) {
-		fprintf(stderr,
-			"ERROR:%s:Can't attach %s to '%s:%s'. Exiting.\n",
+		ERROR("%s: Can't attach %s to '%s:%s'. Exiting.",
 			__func__, tp_all_exit_fn,
 			tp_all_category, tp_all_exit_name);
 
@@ -366,8 +281,7 @@ attach_tp_all(struct bpf_ctx *b)
 			tp_all_enter_fn, Args.pid, 0, -1);
 
 	if (res == -1) {
-		fprintf(stderr,
-			"ERROR:%s:Can't attach %s to '%s:%s'. Ignoring.\n",
+		NOTICE("%s: Can't attach %s to '%s:%s'. Ignoring.",
 			__func__, tp_all_enter_fn,
 			tp_all_category, tp_all_enter_name);
 	}
@@ -376,15 +290,15 @@ attach_tp_all(struct bpf_ctx *b)
 }
 
 /*
- * attach_common -- intercept all syscalls using kprobes and tracepoints.
+ * attach_all_kp_tp -- intercept all syscalls using kprobes and tracepoints
  *
  * Requires kernel >= v4.7
  *
  */
 static bool
-attach_common(struct bpf_ctx *b)
+attach_all_kp_tp(struct bpf_ctx *b)
 {
-	bool res = attach_kp_kern_all_enter(b);
+	bool res = attach_kp_all_enter(b);
 
 	if (res)
 		res = attach_tp_exit(b);
@@ -404,24 +318,23 @@ attach_probes(struct bpf_ctx *b)
 	if (NULL == Args.expr)
 		goto default_option;
 
-	if (!strcasecmp(Args.expr, "trace=common")) {
-		return attach_common(b);
-	} else if (!strcasecmp(Args.expr, "trace=kp-kern-all")) {
-		return attach_kp_kern_all(b);
+	if (!strcasecmp(Args.expr, "trace=all")) {
+		return attach_all_kp_tp(b);
+	} else if (!strcasecmp(Args.expr, "trace=kp-all")) {
+		return attach_kp_all(b);
 	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
-		return attach_kp_file(b);
+		return attach_kp_mask(b, EM_file);
 	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
-		return attach_kp_desc(b);
+		return attach_kp_mask(b, EM_desc);
 	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
-		return attach_kp_fileio(b);
+		return attach_kp_mask(b, EM_str_1 | EM_str_2 | EM_fd_1);
 	} else if (!strcasecmp(Args.expr, "trace=tp-all")) {
 		return attach_tp_all(b);
 	} else {
-		fprintf(stderr, "ERROR: %s: unknown option: '%s'\n",
-				__func__, Args.expr);
+		ERROR("%s: unknown option: '%s'", __func__, Args.expr);
 		return false;
 	}
 
 default_option:
-	return attach_common(b);
+	return attach_all_kp_tp(b);
 }

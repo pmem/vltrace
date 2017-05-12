@@ -69,7 +69,7 @@
 #define FILE_SYSCALLS_TABLE	"syscalls_table.dat"
 
 struct cl_options Args;		/* command-line arguments */
-FILE *OutputFile;			/* output file */
+FILE *OutputFile;		/* output file */
 enum out_format OutputFormat;	/* format of output */
 
 int OutputError;		/* I/O error in perf callback occured */

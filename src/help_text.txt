@@ -32,7 +32,7 @@ Filtering:
         only show failed syscalls
     -e, --expr   <expr>
         expression, 'help' or 'list' for supported list.
-        Default: trace=common
+        Default: trace=all
 
 Tracing:
     -f, --full-follow-fork

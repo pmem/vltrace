@@ -340,8 +340,8 @@ load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
 }
 
 /*
- * load_fn_and_attach_to_kretp -- Load ebpf function code into VM and attach
- *     it to syscall exit point using KProbe.
+ * load_fn_and_attach_to_kretp -- load ebpf function code into VM and attach it
+ *                                to syscall exit point using KProbe
  */
 int
 load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,

@@ -40,6 +40,7 @@
 int
 tracepoint__sys_enter(struct tracepoint__raw_syscalls__sys_enter *args)
 {
+	/* NOT IMPLEMENTED */
 	return 0;
 }
 
