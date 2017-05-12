@@ -35,9 +35,6 @@
 #            prepared for building this project.
 #
 
-export DOCKER_USER=ldorau
-export DOCKER_PROJECT=vltrace
-
 if [[ -z "$OS" || -z "$OS_VER" ]]; then
 	echo "ERROR: The variables OS and OS_VER have to be set properly " \
              "(eg. OS=ubuntu, OS_VER=16.04)."
@@ -50,8 +47,8 @@ if [[ -z "$HOST_WORKDIR" ]]; then
 	exit 1
 fi
 
-imageName=${DOCKER_USER}/${DOCKER_PROJECT}_${OS}:${OS_VER}
-containerName=${DOCKER_USER}-${DOCKER_PROJECT}-${OS}-${OS_VER}
+imageName=pmem/vltrace:${OS}-${OS_VER}
+containerName=vltrace-${OS}-${OS_VER}
 
 REQUIRED_KERNEL=$(../get-required-kernel.sh ../../README.md)
 
@@ -60,11 +57,11 @@ if [[ $MAKE_PKG -eq 1 ]] ; then command="./run-build-package.sh"; fi
 
 if [ -n "$DNS_SERVER" ]; then DNS_SETTING=" --dns=$DNS_SERVER "; fi
 
-WORKDIR=/${DOCKER_PROJECT}
+WORKDIR=/vltrace
 
 # Run a container with
 #  - environment variables set (--env)
-#  - host directory containing nvml source mounted (-v)
+#  - host directory containing vltrace source mounted (-v)
 #  - working directory set (-w)
 sudo docker run --rm --privileged=true --name=$containerName -ti \
 	$DNS_SETTING \

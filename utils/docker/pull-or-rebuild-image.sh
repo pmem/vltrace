@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -e
 #
 # Copyright 2016-2017, Intel Corporation
 #
@@ -44,11 +44,8 @@
 # further scripts.
 #
 # If the Docker image does not have to be rebuilt, it will be pulled from
-# the Docker Hub.
+# Docker Hub.
 #
-
-export DOCKER_USER=ldorau
-export DOCKER_PROJECT=vltrace
 
 if [[ -z "$OS" || -z "$OS_VER" ]]; then
 	echo "ERROR: The variables OS and OS_VER have to be set properly " \
@@ -58,8 +55,16 @@ fi
 
 if [[ -z "$HOST_WORKDIR" ]]; then
 	echo "ERROR: The variable HOST_WORKDIR has to contain a path to " \
-	"the root of this project on the host machine"
+		"the root of the vltrace project on the host machine"
 	exit 1
+fi
+
+# TRAVIS_COMMIT_RANGE is usually invalid for force pushes - ignore such values
+# when used with non-upstream repository
+if [ -n "$TRAVIS_COMMIT_RANGE" -a $TRAVIS_REPO_SLUG != "pmem/vltrace" ]; then
+	if ! git rev-list $TRAVIS_COMMIT_RANGE; then
+		TRAVIS_COMMIT_RANGE=
+	fi
 fi
 
 # Find all the commits for the current build
@@ -87,30 +92,31 @@ for file in $files; do
 	if [[ $file =~ ^($base_dir)\/Dockerfile\.($OS)-($OS_VER)$ ]] \
 		|| [[ $file =~ ^($base_dir)\/.*\.sh$ ]]
 	then
-		DOCKER_REBUILD=1
+		# Rebuild Docker image for the current OS version
+		echo "Rebuilding the Docker image for the Dockerfile.$OS-$OS_VER"
+		pushd $images_dir_name
+		./build-image.sh ${OS}-${OS_VER}
+		popd
+
+		# Check if the image has to be pushed to Docker Hub
+		# (i.e. the build is triggered by commits to the pmem/vltrace
+		# repository's master branch, and the Travis build is not
+		# of the "pull_request" type). In that case, create the empty
+		# file.
+		if [[ $TRAVIS_REPO_SLUG == "pmem/vltrace" \
+			&& $TRAVIS_BRANCH == "master" \
+			&& $TRAVIS_EVENT_TYPE != "pull_request" ]]
+		then
+			echo "The image will be pushed to Docker Hub"
+			touch push_image_to_repo_flag
+		else
+			echo "Skip pushing the image to Docker Hub"
+		fi
+		exit 0
 	fi
 done
 
-if [ "$DOCKER_REBUILD" == "1" ]; then
-	# Rebuild Docker image for the current OS version
-	echo "Rebuilding the Docker image for the Dockerfile.$OS-$OS_VER"
-	pushd $images_dir_name
-	./build-image.sh $OS:$OS_VER
-	popd
+# Getting here means rebuilding the Docker image is not required.
+# Pull the image from Docker Hub.
+sudo docker pull pmem/vltrace:${OS}-${OS_VER}
 
-	# Check if the image has to be pushed to the Docker Hub
-	# (i.e. the build is triggered by commits to the ${DOCKER_USER}/${DOCKER_PROJECT}
-	# repository's master branch, and the Travis build is not
-	# of the "pull_request" type). In that case, create the empty file.
-	if [[ $TRAVIS_BRANCH == "master" && $TRAVIS_EVENT_TYPE != "pull_request"
-		|| $DOCKER_PUSH == "1" ]]
-	then
-		echo "The image will be pushed to the Docker Hub"
-		touch push_image_to_repo_flag
-	else
-		echo "Skip pushing the image to the Docker Hub"
-	fi
-else
-	# Pull the image from the Docker Hub.
-	sudo docker pull ${DOCKER_USER}/${DOCKER_PROJECT}_$OS:$OS_VER
-fi
