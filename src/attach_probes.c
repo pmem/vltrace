@@ -202,7 +202,7 @@ attach_all_kp_tp(struct bpf_ctx *b)
 }
 
 /*
- * attach_probes -- parse and process expression
+ * attach_probes -- attach probes according to the expression
  */
 int
 attach_probes(struct bpf_ctx *b)
@@ -210,15 +210,15 @@ attach_probes(struct bpf_ctx *b)
 	if (NULL == Args.expr)
 		goto default_option;
 
-	if (!strcasecmp(Args.expr, "trace=all")) {
+	if (!strcasecmp(Args.expr, "all")) {
 		return attach_all_kp_tp(b);
-	} else if (!strcasecmp(Args.expr, "trace=kp-all")) {
+	} else if (!strcasecmp(Args.expr, "kp-all")) {
 		return attach_kp_mask(b, attach_single_sc, 0);
-	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
+	} else if (!strcasecmp(Args.expr, "kp-file")) {
 		return attach_kp_mask(b, attach_single_sc, EM_file);
-	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
+	} else if (!strcasecmp(Args.expr, "kp-desc")) {
 		return attach_kp_mask(b, attach_single_sc, EM_desc);
-	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
+	} else if (!strcasecmp(Args.expr, "kp-fileio")) {
 		return attach_kp_mask(b, attach_single_sc,
 					EM_str_1 | EM_str_2 | EM_fd_1);
 	} else {

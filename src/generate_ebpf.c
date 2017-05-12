@@ -207,17 +207,17 @@ generate_ebpf()
 	free(head);
 
 	if (NULL == Args.expr) {
-		NOTICE("defaulting to 'trace=all'");
+		NOTICE("defaulting to 'all'");
 		ret = generate_ebpf_all_kp_tp(ts);
-	} else if (!strcasecmp(Args.expr, "trace=all")) {
+	} else if (!strcasecmp(Args.expr, "all")) {
 		ret = generate_ebpf_all_kp_tp(ts);
-	} else if (!strcasecmp(Args.expr, "trace=kp-all")) {
+	} else if (!strcasecmp(Args.expr, "kp-all")) {
 		ret = generate_ebpf_kp_mask(ts, 0);
-	} else if (!strcasecmp(Args.expr, "trace=kp-file")) {
+	} else if (!strcasecmp(Args.expr, "kp-file")) {
 		ret = generate_ebpf_kp_mask(ts, EM_file);
-	} else if (!strcasecmp(Args.expr, "trace=kp-desc")) {
+	} else if (!strcasecmp(Args.expr, "kp-desc")) {
 		ret = generate_ebpf_kp_mask(ts, EM_desc);
-	} else if (!strcasecmp(Args.expr, "trace=kp-fileio")) {
+	} else if (!strcasecmp(Args.expr, "kp-fileio")) {
 		ret = generate_ebpf_kp_mask(ts, EM_str_1 | EM_str_2 | EM_fd_1);
 	} else {
 		ERROR("unknown option: '%s'", Args.expr);

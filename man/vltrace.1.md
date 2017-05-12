@@ -163,7 +163,7 @@ only show failed syscalls
 
 expression, 'help' or 'list' for supported list.
 
-Default: trace=kp-all.
+Default: kp-all.
 
 #Tracing:
 

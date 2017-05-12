@@ -58,7 +58,7 @@ TEST_FILE=$1
 TEST_NUM=$2
 MAX_STR_LEN=$3
 
-OPT_STRACE_EBPF="-l bin -t -e trace=all -r -s $MAX_STR_LEN"
+OPT_STRACE_EBPF="-l bin -t -e all -r -s $MAX_STR_LEN"
 RUN_STRACE="ulimit -l 10240 && ulimit -n 10240 && $STRACE_EBPF $OPT_STRACE_EBPF"
 
 if [ ! -x $TEST_FILE ]; then

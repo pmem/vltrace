@@ -103,7 +103,7 @@ for release in Debug Release; do
 	elif [ $ACT_KV -ge 404 ]; then
 		echo "Notice: running basic tests available for kernels >= 4.4"
 		echo
-		STRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t -e trace=kp-all"
+		STRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t -e kp-all"
 
 		echo "$ sudo bash -c \"$STRACE -s 126  date\""
 		sudo bash -c "$STRACE -s 126  date"
