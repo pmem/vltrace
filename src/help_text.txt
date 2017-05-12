@@ -1,0 +1,85 @@
+Startup:
+    -p, --pid    <pid>
+        Trace this PID only, <command> option should be missing.
+        Press (CTRL-C) to send interrupt signal to exit.
+        Note -p "`pidof PROG`" syntax.
+    -N, --ebpf-src-dir <dir>
+        Enable checking of updated ebpf templates in directory <dir>.
+
+Output format:
+    -o, --output <file>
+        log filename
+    -t, --timestamp
+        include timestamp in output
+    -l, --format <fmt>
+        format of output logs. Possible values:
+        - 'bin'/'binary' file format is the fastest one and is described
+              in trace.h.
+        - 'hex'/'hex_raw' is the fastest text format.
+        - 'hex_sl' is compromized single-line text format. If used with
+              '--filenames name_max' or '--filenames full' could be slow.
+              Implementation is not finished.
+        Default: 'hex'
+    -K, --hex-separator <sep>
+        set field separator for hex logs. Default is a single space ' '.
+
+Filtering:
+    -X, --failed
+        only show failed syscalls
+    -e, --expr <expr>
+        which syscalls should be traced (Default: 'all'):
+	1) Intercepting using both KProbes and TracePoints (requires kernel >= 4.7):
+	- 'all' all syscalls provided by the kernel using:
+		- KProbes on syscalls' entry and
+		- TracePoint (raw syscall sys_exit) on syscalls' exit.
+		This is the default and recommended option.
+	2) Intercepting using KProbes only:
+	- 'kp-all'    - all syscalls provided by kernel
+	- 'kp-fileio' - all syscalls related to file IO
+	- 'kp-file'   - all syscalls with path arguments
+	- 'kp-desc'   - all syscalls with file descriptor arguments
+
+Tracing:
+    -f, --full-follow-fork
+        Follow new processes created with fork()/vfork()/clone() syscall as
+        regular strace does.
+    -ff, --full-follow-fork=f
+        Same as above, but put logs for each process in separate file with
+        name <file>.pid
+        Implementation is not finished and is postponned.
+    -fff, --full-follow-fork=ff
+        Same as above, but put logs for each thread in separate file with
+        name <file>.tid.pid
+        Implementation is not finished and is postponned.
+    -n, --filenames <mode>
+        Mode of fetching filenames:
+        - 'fast' - everything what we could not fit into single packet will
+            be truncated.
+        - 'name_max' - fetch-up STR_MAX bytes of name. Every name will be sent
+            via separate packet. Processing of that packets is controlled by
+            output log format
+        - 'number' - fetch-up 'number * STR_MAX' bytes of name. Every part of
+            name will be sent via separate packet. Processing of that packets
+            is controlled by output log format. Minimal accepted value: 1.
+            Implementation is not finished and is postponned.
+        - 'full' - will be implemented as soon as this issue will be fixed:
+              https://github.com/iovisor/bcc/issues/900
+        Default: fast
+
+Miscellaneous:
+    -d, --debug
+        enable debug output
+    -h, --help
+        print help
+    -L, --list
+        Print a list of all traceable syscalls of the running kernel.
+    -R, --ll-list
+        Print a list of all traceable low-level funcs of the running kernel.
+        WARNING: really long. ~45000 functions.
+    -B, --builtin-list
+        Print a list of all known syscalls.
+
+Examples:
+    ./vltrace           # trace all syscalls in the system
+    ./vltrace ls        # trace syscalls of ls command
+    ./vltrace -p 342    # only trace PID 342

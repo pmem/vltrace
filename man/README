@@ -1,0 +1,16 @@
+vltrace
+
+This is man/README.
+
+This directory contains source for the man page.
+
+All files in the *generated* directory are automatically generated.
+**DO NOT MODIFY THE FILES IN THAT DIRECTORY**. All changes to the
+documentation are to be made by modifying the \*.md files in the main doc
+directory.
+
+To create more readable text files from the source, use:
+	$ make
+An even more convenient way to read these is to use the "man" command to
+format them (includes bold, underline, etc. when run in a terminal window):
+	$ man -l vltrace.1
