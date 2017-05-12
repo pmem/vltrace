@@ -31,7 +31,7 @@
  */
 
 /*
- * txt.c -- Text messages
+ * txt.c -- text messages
  */
 
 #include <assert.h>
@@ -39,7 +39,7 @@
 #include "txt.h"
 
 /*
- * fprint_usage -- This function prints usage message in stream.
+ * fprint_usage -- print usage message
  */
 void
 fprint_usage(FILE *f)
@@ -47,8 +47,7 @@ fprint_usage(FILE *f)
 	size_t fw_res;
 
 	fw_res = fwrite(_binary_usage_text_txt_start,
-			(size_t)_binary_usage_text_txt_size,
-			1, f);
+			(size_t)_binary_usage_text_txt_size, 1, f);
 
 	assert(fw_res > 0);
 	(void) fw_res;
@@ -57,7 +56,7 @@ fprint_usage(FILE *f)
 }
 
 /*
- * fprint_help -- This function prints help message in stream.
+ * fprint_help -- print help message
  */
 void
 fprint_help(FILE *f)
@@ -72,27 +71,7 @@ fprint_help(FILE *f)
 	(void) fw_res;
 
 	fw_res = fwrite(_binary_help_text_txt_start,
-			(size_t)_binary_help_text_txt_size,
-			1, f);
-
-	assert(fw_res > 0);
-	(void) fw_res;
-
-	fflush(f);
-}
-
-/*
- * fprint_trace_list -- This function prints description of expressions
- *     in stream.
- */
-void
-fprint_trace_list(FILE *f)
-{
-	size_t fw_res;
-
-	fw_res = fwrite(_binary_trace_list_text_txt_start,
-			(size_t)_binary_trace_list_text_txt_size,
-			1, f);
+			(size_t)_binary_help_text_txt_size, 1, f);
 
 	assert(fw_res > 0);
 	(void) fw_res;

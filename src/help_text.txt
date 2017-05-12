@@ -12,16 +12,12 @@ Output format:
     -t, --timestamp
         include timestamp in output
     -l, --format <fmt>
-        output logs format. Possible values:
-        'bin', 'binary', 'hex', 'hex_raw', 'hex_sl', 'strace', 'list' & 'help'.
+        format of output logs. Possible values:
         - 'bin'/'binary' file format is the fastest one and is described
               in trace.h.
         - 'hex'/'hex_raw' is the fastest text format.
         - 'hex_sl' is compromized single-line text format. If used with
               '--filenames name_max' or '--filenames full' could be slow.
-              Implementation is not finished.
-        - 'strace' is going to emulate usual strace output, but is the
-              slowest one.
               Implementation is not finished.
         Default: 'hex'
     -K, --hex-separator <sep>
@@ -30,9 +26,18 @@ Output format:
 Filtering:
     -X, --failed
         only show failed syscalls
-    -e, --expr   <expr>
-        expression, 'help' or 'list' for supported list.
-        Default: trace=all
+    -e, --expr <expr>
+        which syscalls should be traced (Default: 'all'):
+	1) Intercepting using both KProbes and TracePoints (requires kernel >= 4.7):
+	- 'all' all syscalls provided by the kernel using:
+		- KProbes on syscalls' entry and
+		- TracePoint (raw syscall sys_exit) on syscalls' exit.
+		This is the default and recommended option.
+	2) Intercepting using KProbes only:
+	- 'kp-all'    - all syscalls provided by kernel
+	- 'kp-fileio' - all syscalls related to file IO
+	- 'kp-file'   - all syscalls with path arguments
+	- 'kp-desc'   - all syscalls with file descriptor arguments
 
 Tracing:
     -f, --full-follow-fork

@@ -42,7 +42,6 @@
 
 void fprint_usage(FILE *f);
 void fprint_help(FILE *f);
-void fprint_trace_list(FILE *f);
 
 /* Bodies of messages */
 
@@ -51,8 +50,5 @@ extern const char _binary_help_text_txt_start[];
 
 extern const char _binary_usage_text_txt_size[];
 extern const char _binary_usage_text_txt_start[];
-
-extern const char _binary_trace_list_text_txt_size[];
-extern const char _binary_trace_list_text_txt_start[];
 
 #endif /* TXT_H */

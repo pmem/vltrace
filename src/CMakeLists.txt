@@ -46,8 +46,7 @@ add_custom_target(syscalls_64 ALL ../utils/copy_syscalls_64.sh make
 # .txt sources
 set (TXT_SRCS
 	help_text.txt
-	usage_text.txt
-	trace_list_text.txt)
+	usage_text.txt)
 
 set(TXT_OBJS "")
 foreach(FILE_SRC ${TXT_SRCS})

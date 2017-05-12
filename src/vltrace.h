@@ -47,7 +47,6 @@ enum out_format {
 	/* Assemble multi-packet syscall data into single line */
 	EOF_HEX_SL,
 	EOF_BIN,
-	EOF_STRACE,
 
 	EOF_QTY, /* Should be last */
 };

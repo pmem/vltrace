@@ -84,68 +84,6 @@ static unsigned Arg_is_str[6] = {
  *    static variable above.
  */
 
-/*
- * print_header_strace -- print logs header in human-readable strace-like logs
- */
-static int
-print_header_strace(int argc, char *const argv[])
-{
-	(void) argc;
-	(void) argv;
-
-	if (Args.timestamp)
-		fprintf(OutputFile, "%-14s", "TIME(s)");
-
-	fprintf(OutputFile, "%-7s %-6s %4s %3s %s\n",
-			"SYSCALL", "PID_TID", "ARG1", "ERR", "PATH");
-
-	return 0;
-}
-
-/*
- * print_event_strace -- Print syscall's log entry.
- *    Single-line mode only.
- *
- * XXX A blank for human-readable strace-like logs
- */
-static void
-print_event_strace(void *cb_cookie, void *data, int size)
-{
-	int64_t res = 0, err = 0;
-	struct data_entry_s *const event = data;
-
-	/* XXX Check size arg */
-	(void) size;
-
-	if (start_ts_nsec == 0)
-		start_ts_nsec = event->start_ts_nsec;
-
-	if (Args.failed /* && (event->ret >= 0) */)
-		return;
-
-	if (Args.timestamp) {
-		unsigned long long delta_nsec =
-			event->start_ts_nsec - start_ts_nsec;
-		fprintf(OutputFile, "%-14.9f",
-				(double)((double)delta_nsec / 1000000000.0));
-	}
-
-	fprintf(OutputFile, "%-7s ", sc_num2str(event->sc_id));
-
-	if (0 == event->packet_type)
-		/*
-		 * XXX Check presence of aux_str by checking sc_id
-		 *    and size arg
-		 */
-		fprintf(OutputFile, "%-6lu %4ld %3ld %s\n",
-				event->pid_tid, res, err, event->aux_str);
-	else
-		fprintf(OutputFile, "%-6lu %4ld %3ld %s\n",
-				event->pid_tid, res, err, event->str);
-
-	(void) cb_cookie;
-}
-
 /* ** Hex logs ** */
 
 /*
@@ -739,9 +677,6 @@ out_fmt_str2enum(const char *str)
 	if (!strcasecmp("bin", str) || !strcasecmp("binary", str))
 		return EOF_BIN;
 
-	if (!strcasecmp("strace", str))
-		return EOF_STRACE;
-
 	if (!strcasecmp("hex", str) || !strcasecmp("hex_raw", str))
 		return EOF_HEX_RAW;
 
@@ -821,12 +756,10 @@ perf_reader_raw_cb Print_event_cb[EOF_QTY + 1] = {
 	[EOF_HEX_RAW]	= print_event_hex_raw,
 	[EOF_HEX_SL]	= print_event_hex_sl,
 	[EOF_BIN]	= print_event_bin,
-	[EOF_STRACE]	= print_event_strace,
 };
 
 print_header_t Print_header[EOF_QTY + 1] = {
 	[EOF_HEX_RAW]	= print_header_hex,
 	[EOF_HEX_SL]	= print_header_hex,
 	[EOF_BIN]	= print_header_bin,
-	[EOF_STRACE]	= print_header_strace,
 };

@@ -57,7 +57,7 @@ static inline void
 check_optarg(const char * const optarg)
 {
 	if (optarg == NULL) {
-		ERROR("missing mandatory option's argument");
+		ERROR("missing mandatory argument of the option");
 		fprint_help(stderr);
 		exit(EXIT_FAILURE);
 	}
@@ -151,19 +151,6 @@ cl_parser(struct cl_options *const clo,
 
 		case 'e':
 			check_optarg(optarg);
-			if (!strcasecmp(optarg, "list") ||
-			    !strcasecmp(optarg, "help")) {
-				INFO("List of supported expressions: "
-					"'help', 'list', 'trace=set'");
-				INFO("For list of supported sets you should "
-					"use 'trace=help' or 'trace=list'");
-				exit(EXIT_SUCCESS);
-			} else if (!strcasecmp(optarg, "trace=help") ||
-					!strcasecmp(optarg, "trace=list")) {
-				fprint_trace_list(stderr);
-				INFO("You can combine sets by using comma.");
-				exit(EXIT_SUCCESS);
-			}
 			clo->expr = optarg;
 			break;
 
