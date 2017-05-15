@@ -59,6 +59,9 @@ if [[ -z "$HOST_WORKDIR" ]]; then
 	exit 1
 fi
 
+# Temporarily disable rebuilding docker images for whole range
+TRAVIS_COMMIT_RANGE=
+
 # TRAVIS_COMMIT_RANGE is usually invalid for force pushes - ignore such values
 # when used with non-upstream repository
 if [ -n "$TRAVIS_COMMIT_RANGE" -a $TRAVIS_REPO_SLUG != "pmem/vltrace" ]; then
