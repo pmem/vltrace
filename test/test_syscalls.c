@@ -114,7 +114,7 @@ test_basic_syscalls(void)
 	read (0x102, buffer, 2);
 	lseek(0x103, 3, SEEK_END);
 	fstat(0x104, &buf);
-	syscall(SYS_futex, 1, 2, 3, 4, 5, 6); /* futex */
+	syscall(SYS_futex, 1, FUTEX_WAKE_OP, 3, 4, 5, FLAGS_SET); /* futex */
 }
 
 /*
@@ -132,7 +132,10 @@ test_unsupported_syscalls(void)
 
 	setsockopt(0x101, 0x102, 0x103, (void *)0x104, (socklen_t)0x105);
 	getsockopt(0x106, 0x107, 0x108, (void *)0x109, (socklen_t *)0x110);
-	getsockname(0x101, (struct sockaddr *)0x102, (socklen_t *)0x103);
+
+	struct sockaddr addr;
+	socklen_t addrlen = sizeof(addr);
+	getsockname(0x101, &addr, &addrlen);
 
 	inotify_add_watch(0x104, NON_EXIST_PATH_1, 0x105);
 	inotify_rm_watch(0x106, 0x107);
