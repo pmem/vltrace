@@ -57,6 +57,35 @@ else ()
 endif ()
 
 include(GNUInstallDirs)
+include(CheckCCompilerFlag)
+set(CMAKE_C_STANDARD 99)
+
+macro(add_c_flag flag)
+	if(${ARGC} GREATER 2)
+		set(check_name ${ARGV2})
+	else()
+		string(REPLACE - _ flag2 ${flag})
+		set(check_name C_HAS_${flag2})
+	endif()
+
+	check_c_compiler_flag("${flag}" ${check_name})
+
+	if (${${check_name}})
+		if (${ARGC} EQUAL 1)
+			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}")
+		else()
+			set(CMAKE_C_FLAGS_${ARGV1} "${CMAKE_C_FLAGS_${ARGV1}} ${flag}")
+		endif()
+	endif()
+endmacro()
+
+# DEBUG configuration
+add_c_flag(-ggdb DEBUG)
+add_c_flag(-DDEBUG DEBUG)
+
+# RelWithDebInfo configuration
+add_c_flag(-ggdb RELWITHDEBINFO)
+add_c_flag(-fno-omit-frame-pointer RELWITHDEBINFO)
 
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
@@ -76,8 +105,6 @@ set(STRACE_EBPF_VERSION_MINOR ${CMAKE_MATCH_2} CACHE INTERNAL "Minor." FORCE)
 set(STRACE_EBPF_VERSION
 	${STRACE_EBPF_VERSION_MAJOR}.${STRACE_EBPF_VERSION_MINOR} CACHE INTERNAL
 	"Version." FORCE)
-
-set(CMAKE_C_STANDARD 99)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)

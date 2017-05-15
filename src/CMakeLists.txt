@@ -104,6 +104,6 @@ add_subdirectory(ebpf)
 target_link_libraries(vltrace ebpf ${LIBBCC_LIBRARIES})
 
 install(TARGETS vltrace
-        CONFIGURATIONS Release Debug None
+        CONFIGURATIONS Release RelWithDebInfo Debug None
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

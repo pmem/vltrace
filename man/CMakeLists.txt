@@ -62,4 +62,4 @@ endif()
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/generated/vltrace.1
 	DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
-	CONFIGURATIONS Release Debug None)
+	CONFIGURATIONS Release None RelWithDebInfo)
