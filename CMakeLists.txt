@@ -49,7 +49,8 @@ if (NOT ${KERNEL_RESULT} EQUAL 0)
 	message(FATAL_ERROR
 		"Error: cannot read required kernel version from the file ${README_FILE}")
 else ()
-	execute_process(COMMAND echo "-- Minimum required kernel version: ${STRACE_EBPF_MINIMUM_KERNEL_VERSION}")
+	message(STATUS
+		"Minimum required kernel version: ${STRACE_EBPF_MINIMUM_KERNEL_VERSION}")
 endif ()
 
 include(GNUInstallDirs)
@@ -117,7 +118,6 @@ add_custom_target(check_whitespace
 	-r ${PROJECT_SOURCE_DIR}/src)
 
 add_executable(check_license_executable utils/check_license/check-license.c)
-set_property(TARGET check_license_executable PROPERTY C_STANDARD 99)
 set_property(TARGET check_license_executable PROPERTY
 	RUNTIME_OUTPUT_DIRECTORY
 	${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY})

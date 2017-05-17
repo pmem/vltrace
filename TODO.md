@@ -1,20 +1,20 @@
 # TODO
 
-1. Performance improovement
+1. Performance improvement
 ============================
 
-Currently we require a bit more than 1000 nsec for tracing single syscall.
-It is not bad but there are at least few places which could allow us to
-reduce this value may be to 600 nsec. Every syscall itself currently requires
-a bit more than 100 nsec for entering, and close to the same value for
+Currently we require a bit more than 1000 nsec for tracing a single syscall.
+It is not bad but there are at least a few places which could allow us to
+reduce this value maybe to 600 nsec. Every syscall itself currently requires
+a bit more than 100 nsec for entering and close to the same value for
 returning. So a bit more than 200 nsec together.
 
 1.1 Extra poll()
 -----------------
 
-_Currently libbcc does two poll() same syscalls per iter. There are no reason for
-it and we should drop it. It will improove our time for about 200 nsec, but it
-is a libbcc bug. Back trace for one of that poll() syscalls:_
+_Currently libbcc does two poll() syscalls per iter. There is no reason for
+it and we should drop it. It will improve our time by about 200 nsec, but it
+is a libbcc bug. A backtrace for one of that poll() syscalls:_
 
 ```
 (gdb) bt
@@ -27,17 +27,17 @@ is a libbcc bug. Back trace for one of that poll() syscalls:_
 GitHub issue: https://github.com/iovisor/bcc/issues/779
 
 1.2 Tracepoints support
-------------------------
+-----------------------
 
 Currently kernel provides a way for fast intercepting of all syscalls together.
 But we temporarily can't use it because of this bug:
 
     - https://github.com/iovisor/bcc/issues/748
 
-As soon as this bug will be fixed we should try it one time more.
+As soon as this bug will be fixed we should try it one more time.
 
-1.3 out buffering
-------------------
+1.3 Output buffering
+--------------------
 
 Optimization of this place is critical to achieve maximum possible log
 bandwidth. Most likely we should use fd directly.
@@ -78,23 +78,17 @@ _Currently Valgrind fails with a message like:_
 3.1 Multi-process tracing
 --------------------------
 
-It is not difficult to attach to few PIDs simultaneously. Maybe we should do
+It is not difficult to attach to multiple PIDs simultaneously. Maybe we should do
 it for parallel applications like apache, nginx and like. Most likelly we
 should simulate -p option from `man 1 strace`.
 
 3.2 Attaching by name
 ----------------------
 
-It is good to have ability to attach to processes not only by PIDs but also by
-names.
+It is good to have the ability to attach to processes not only by PIDs
+but also by names.
 
-3.3 Read full file name
-------------------------
-
-We should implement it as soon as this bug will be closed:
- - https://github.com/iovisor/bcc/issues/900
-
-3.4 Implement one more way to attach, using hack with seccomp
+3.3 Implement one more way to attach, using hack with seccomp
 --------------------------------------------------------------
 
 It will improve the time of attaching and detaching.
@@ -110,30 +104,5 @@ It will improve the time of attaching and detaching.
 
 We should think about writting 64-bit packet number before length
 of packet, because it will enlarge reliability of logs. But there is
-probabilty that counting packets will be very expensive, because we run
+probability that counting packets will be very expensive, because we run
 in multi-threading environment.
-
-4.2 Splitting log-files per-pid
---------------------------------
-
-We already have an option for it, but we need to finish implemantation.
-
-4.3 Splitting log-files per-tid
---------------------------------
-
-We already have an option for it, but we need to finish implemantation.
-
-4.4 Finish implementation of print_event_hex_sl()
----------------------------------------------------
-
-It will improve usability in sl mode
-
-
-5. Improvments
-==================
-
-5.1 enum masks_t
-------------------
-
-It looks like current version is not enough scallable for full-features
-immitation of strace. Subject to redevelop.

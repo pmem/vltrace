@@ -1,6 +1,6 @@
-# Contributing to the vltrace
+# Contributing to vltrace
 
-Here you'll find instructions on how to contribute to the vltrace.
+Here you'll find instructions on how to contribute to vltrace.
 
 Your contributions are most welcome!  You'll find it is best to begin
 with a conversation about your changes, rather than just writing a bunch

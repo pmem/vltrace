@@ -2,7 +2,7 @@ vltrace
 
 This is man/README.
 
-This directory contains source for the man page.
+This directory contains the source file used to generate the man page.
 
 All files in the *generated* directory are automatically generated.
 **DO NOT MODIFY THE FILES IN THAT DIRECTORY**. All changes to the

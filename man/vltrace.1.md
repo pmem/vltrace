@@ -2,8 +2,6 @@
 layout: manual
 Content-Style: 'text/css'
 title: vltrace(1)
-header: NVM Library
-date: pmem Tools version 1.0.2
 ...
 
 [comment]: <> (Copyright 2016, Intel Corporation)
@@ -28,9 +26,9 @@ date: pmem Tools version 1.0.2
 [comment]: <> (OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,)
 [comment]: <> (SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT)
 [comment]: <> (LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,)
-[comment]: <> (DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY)
+[comment]: <> (DATA, OR PROFITS; OR BUSINESS INTERRUPTION HOWEVER CAUSED AND ON ANY)
 [comment]: <> (THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT)
-[comment]: <> ((INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE)
+[comment]: <> ((INCLUDING NEGLIGENCE OR OTHERWISE ARISING IN ANY WAY OUT OF THE USE)
 [comment]: <> (OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.)
 
 [comment]: <> (vltrace.1 -- man page for vltrace)
@@ -50,8 +48,8 @@ date: pmem Tools version 1.0.2
 
 # NAME #
 
-**vltrace** -- extreamely fast strace-like tool built on top of eBPF
-and KProbe technologies.
+**vltrace** -- extremely fast strace-like tool built on top of eBPF, KProbe
+and TracePoint technologies.
 
 
 # SYNOPSIS #
@@ -63,18 +61,18 @@ $ vltrace [options] [command [arg ...]]
 
 # DESCRIPTION #
 
-vltrace is a limited functional strace equivalent for Linux but based on
-eBPF and KProbe technologies and libbcc library.
+vltrace is a strace equivalent tool for Linux with limited functionality
+based on eBPF, KProbe and TracePoint technologies and libbcc library.
 
 # FEATURES #
 
  - Used combination of technologies allow tool to be about one order faster
    than regular system strace.
- - This tool consume much less amount of CPU resource
+ - This tool consumes far less CPU resources
  - Output of this tool is designed to be suitable for processing with
    classical tools and technologies, like awk.
  - Could trace syscalls system-wide.
- - Could trace init (process with 'pid == 1'). Finally we have a proper
+ - Could trace init (process with 'pid == 1') - finally we have a proper
    tool for debugging systemd ;-)
 
 WARNING: System-wide tracing can fill out your disk really fast.
@@ -83,16 +81,12 @@ WARNING: System-wide tracing can fill out your disk really fast.
 
  - Limited functionality
  - Slow attaching and detaching
- - Asynchronity. If user will not provide enough system resources for
-   performance tool will skip some calls. Tool does not assume to try
+ - Asynchronity. If a user will not provide enough system resources for
+   performance, the tool skips some calls. Tool does not assume to try
    any work-around behind the scene.
- - Depend on modern kernel features
- - Underlaing eBPF technology still is in active development. So we should
-   expect hangs and crashes more often as for regular strace, especially on
-   low-res systems.
- - Truncating of very long filenames (longer then ~STR_MAX bytes) to ~STR_MAX.
-   Details:
-    - https://github.com/iovisor/bcc/issues/900
+ - Depends on modern kernel features
+ - The underlying eBPF technology is still in active development, so we can
+   expect hangs and crashes, especially on low-res systems.
 
 # Outdated limitations
 
@@ -111,7 +105,7 @@ Could be useful with old libbcc versions.
     - 'linux-headers' package on Debian and Ubuntu
  - libbcc v0.3.0-150-g3263805 or later
  - CAP_SYS_ADMIN capability (required by the bpf() syscall)
- - mounted tracefs
+ - mounted debugfs and tracefs
 
 # OPTIONS #
 
@@ -127,88 +121,89 @@ include timestamp in output
 
 `-l, --format <fmt>`
 
-output logs format. Possible values:
+output logs format. Possible values: 'bin' or 'text':
 
-	'bin', 'binary', 'hex', 'hex_raw', 'hex_sl', 'strace', 'list' & 'help'.
+ - 'bin' - the binary format, allows the fastest operation. It is described
+   in generated trace.h. If current directory is not writable,
+   generating of trace.h is skipped.
 
- - 'bin'/'binary' file format is the fastest one and is described in generated
-   trace.h. If current directory is not writable generating of trace.h
-   is skipped.
+ - 'text' - the text log format.
 
- - 'hex'/'hex_raw' the fastest text log format. Records for some calls could be
-   splitted in few lines if used with '--filenames name_max' or like.
-
- - 'hex_sl' one-line text log format. Assembling syscall's record into one line
-   by this tool will improove readability and simplify processing but could
-   slowdown this tool if used with '--filenames name_max' or '--filenames full'.
-   Implementation is not finished and is postponned.
-
- - 'strace' is going to emulate usual strace output, but is the slowest one.
-   Assume assembling syscall's packets into one line.
-   Implementation is not finished and is postponned.
-
-Default: 'hex'
+   Default: 'text'
 
 `-K, --hex-separator <sep>`
 
 set field separator for hex logs. Default is a single space ' '.
 
-
 #Filtering:
+
 `-X, --failed`
 
 only show failed syscalls
 
 `-e, --expr <expr>`
 
-expression, 'help' or 'list' for supported list.
+defines which syscalls should be traced:
+	1) Intercepting using both KProbes and TracePoints (requires kernel >= 4.7):
+	- 'all' all syscalls provided by the kernel using:
+		- KProbes on syscalls' entry and
+		- TracePoint (raw syscall sys_exit) on syscalls' exit.
+		This is the default and recommended option.
+	2) Intercepting using KProbes only:
+	- 'kp-all'    - all syscalls provided by kernel
+	- 'kp-fileio' - all syscalls related to file IO
+	- 'kp-file'   - all syscalls with path arguments
+	- 'kp-desc'   - all syscalls with file descriptor arguments
 
-Default: kp-all.
+Default: all
 
 #Tracing:
 
 `-f, --full-follow-fork`
 
-Follow new processes created with fork()/vfork()/clone()
-syscall as regular strace does.
+Follow new processes created with fork()/vfork()/clone() syscall
+as regular strace does.
 
-`-ff, --full-follow-fork=f`
+`-s, --string-args <length>`
 
-Same as above, but put logs for each process in
-separate file with name \<file\>\.pid
-Implementation is not finished and is postponned.
-
-`-fff, --full-follow-fork=ff`
-
-Same as above, but put logs for each thread in
-separate file with name \<file\>\.tid.pid
-Implementation is not finished and is postponned.
-
-`-n, --filenames <mode>`
-
+defines the maximum possible length of string arguments read by vltrace.
 eBPF virtual machine is extremely limited in available memory. Also currently
-there are no ways to calculate a len of strings. For this reason we introduced
-four modes of fetching file-names:
- - 'fast' - everything what we could not fit into single packet will be
-   truncated.
- - 'name_max' - fetch-up STR_MAX bytes of name. Every name will be sent
-   via separate packet. Processing of that packets is controlled by output
-   log format.
- - 'number' - fetch-up 'number * STR_MAX' bytes of name. Every part of name
-   will be sent via separate packet. Processing of that packets is controlled
-   by output log format. Minimal accepted value: 1.
-   Implementation is not finished and is postponned.
- - 'full' - will be implemented as soon as this issue will be fixed:
-   https://github.com/iovisor/bcc/issues/900
+there is no way to calculate the length of a string argument. For this reason
+there are four modes of fetching such arguments chosen depending on value
+of 'length':
+
+ - 'fast'   - for 'length' <= 126:
+
+              1 packet is generated per each syscall, maximum length of a string depends on number of string arguments in the syscall:
+              - 1 string argument  = 382,
+              - 2 string arguments = 190,
+              - 3 string arguments = 126,
+              This is the fastest mode.
+
+ - 'packet' - for 'length' <= 382:
+
+              1 packet is generated per each string argument, maximum length of a string is 382.
+
+ - 'const'  - for 'length' > 382 and kernel version < 4.11:
+
+              Constant number N of packets is generated per each string argument, counted depending on value of 'length'.
+              Maximum length of a string is the smallest value of (N * 383 - 1) that is greater or equal to 'length'.
+
+ - 'full'   - for 'length' > 382 and kernel version >= 4.11:
+
+              Variable number N of packets is generated per each string argument, depending on the actual length of each string argument.
+              Maximum length of a string is the smallest value of (N * 383 - 1) that is greater or equal to 'length'.
 
 Default: fast
 
 #Startup:
-`-p, --pid <pid>`
 
-trace this PID only. In current version `command` arg should be missing.
-Press (CTRL-C) to send interrupt signal to exit.
-Note
+`-p, --pid <PID>`
+
+trace the process with this PID only. It excludes the `command` argument:
+the process to be traced can be defined by exactly one of the options:
+'command' or this one. Press (CTRL-C) to send interrupt signal to exit.
+Note:
 ```
 -p "`pidof PROG`"
 ```
@@ -219,6 +214,7 @@ syntax.
 Enable checking of updated ebpf templates in directory \<dir\>\.
 
 #Miscellaneous:
+
 `-d, --debug`
 
 enable debug output
@@ -241,10 +237,9 @@ WARNING: really long. ~45000 functions for 4.4 kernel.
 
 Print a list of all known syscalls.
 
-
 # CONFIGURATION #
 
-** System Configuring **
+** System configuration **
 
 1. You should provide permissions to access tracefs for final user
    according to your distro documentation. Some of possible options:
@@ -252,7 +247,7 @@ Print a list of all known syscalls.
     - In /etc/fstab add mode=755 option for debugfs AND tracefs.
     - Use sudo
 
-2. It's good to put this command in init scripts such as local.rc:
+2. It's a good idea to put this command in init scripts such as local.rc:
 
 	echo 1 > /proc/sys/net/core/bpf_jit_enable
 
@@ -266,25 +261,6 @@ Print a list of all known syscalls.
 4. Kernel headers for running kernel should be installed.
 
 5. CAP_SYS_ADMIN capability should be provided for user for bpf() syscall.
-   In the newest kernel (4.10 ?) there is alternate option, but your should
-   found it youself.
-
-
-# FILES #
-
-Putting into directory, supplied with -N option, modified template files
-allow to customize eBPF code for supporting more newer eBPF VM features in
-newer kernels.
-
-Also if current directory does not contain trace.h file, vltrace on first
-start saves built-in trace.h into current directory. Saved built-in describe
-binary log's format.
-
- - trace.h
- - ...
-
-The rest of files could be figured out by looking into debug output, into eBPF
-source code.
 
 # EXAMPLES #
 

@@ -327,10 +327,10 @@ init_printing_events(void)
 }
 
 /*
- * print_event_hex_kp_entry -- print syscall's logs on KProbe's entry
+ * print_event_text_kp_entry -- print syscall's logs on KProbe's entry
  */
 static void
-print_event_hex_kp_entry(FILE *f, void *data, int size)
+print_event_text_kp_entry(FILE *f, void *data, int size)
 {
 	struct data_entry_s *const event = data;
 	static int str_fini = 1; /* printing last string was finished */
@@ -426,10 +426,10 @@ print_event_hex_kp_entry(FILE *f, void *data, int size)
 }
 
 /*
- * print_event_hex_kp_exit -- print syscall's logs on KProbe's exit
+ * print_event_text_kp_exit -- print syscall's logs on KProbe's exit
  */
 static void
-print_event_hex_kp_exit(FILE *f, void *data, int size)
+print_event_text_kp_exit(FILE *f, void *data, int size)
 {
 	int64_t res, err;
 	struct data_exit_s *const event = data;
@@ -470,10 +470,10 @@ print_event_hex_kp_exit(FILE *f, void *data, int size)
 }
 
 /*
- * print_event_hex_tp_exit -- print syscall's logs on TracePoint's exit
+ * print_event_text_tp_exit -- print syscall's logs on TracePoint's exit
  */
 static void
-print_event_hex_tp_exit(FILE *f, void *data, int size)
+print_event_text_tp_exit(FILE *f, void *data, int size)
 {
 	int64_t res, err;
 	struct data_exit_s *const event = data;
@@ -518,63 +518,30 @@ print_event_hex_tp_exit(FILE *f, void *data, int size)
 }
 
 /*
- * print_event_hex -- print syscall's logs
+ * print_event_text -- print syscall's logs
  */
 static void
-print_event_hex(FILE *f, void *data, int size)
+print_event_text(void *cb_cookie, void *data, int size)
 {
 	uint64_t *type = data;
 	const char *str = "ERROR: Unknown type of event\n";
 
+	(void) cb_cookie;
+
 	switch (*type) {
 	case E_KP_ENTRY:
-		print_event_hex_kp_entry(f, data, size);
+		print_event_text_kp_entry(OutputFile, data, size);
 		break;
 	case E_KP_EXIT:
-		print_event_hex_kp_exit(f, data, size);
+		print_event_text_kp_exit(OutputFile, data, size);
 		break;
 	case E_TP_EXIT:
-		print_event_hex_tp_exit(f, data, size);
+		print_event_text_tp_exit(OutputFile, data, size);
 		break;
 	default:
-		fwrite(str, strlen(str), 1, f);
+		fwrite(str, strlen(str), 1, OutputFile);
 		break;
 	}
-}
-
-/*
- * print_event_hex_raw -- This function prints syscall's logs entry in stream.
- *
- * WARNING
- *
- *    PLEASE don't use *printf() calls because it will slow down this
- *		 function too much.
- */
-static void
-print_event_hex_raw(void *cb_cookie, void *data, int size)
-{
-	print_event_hex(OutputFile, data, size);
-
-	(void) cb_cookie;
-}
-
-/*
- * print_event_hex_sl -- This function prints syscall's logs entry in stream.
- *    This logger should assemble multi-packet data in one line.
- *
- * XXX Finish implementation
- *
- * WARNING
- *
- *    PLEASE don't use *printf() calls because it will slow down this
- *		 function too much.
- */
-static void
-print_event_hex_sl(void *cb_cookie, void *data, int size)
-{
-	print_event_hex(OutputFile, data, size);
-
-	(void) cb_cookie;
 }
 
 /* ** Binary logs ** */
@@ -648,16 +615,13 @@ print_event_bin(void *cb_cookie, void *data, int size)
 enum out_format
 out_fmt_str2enum(const char *str)
 {
-	if (!strcasecmp("bin", str) || !strcasecmp("binary", str))
+	if (strcasecmp("bin", str) == 0)
 		return EOF_BIN;
 
-	if (!strcasecmp("hex", str) || !strcasecmp("hex_raw", str))
-		return EOF_HEX_RAW;
+	if (strcasecmp("text", str) == 0)
+		return EOF_TEXT;
 
-	if (!strcasecmp("hex_sl", str))
-		return EOF_HEX_SL;
-
-	return EOF_HEX_RAW;
+	return EOF_TEXT;
 }
 
 /*
@@ -683,25 +647,25 @@ available_bpf_probe_read_str()
 }
 
 /*
- * choose_fnr_mode -- choose filename reading mode
+ * choose_fnr_mode -- choose mode of reading string arguments
  */
 void
-choose_fnr_mode(const char *filename_length,
+choose_fnr_mode(const char *str_len,
 		enum fnr_mode *mode, unsigned *n_str_packets)
 {
-	unsigned len = atoi(filename_length);
+	unsigned len = atoi(str_len);
 
 	if (len <= STR_MAX_3) {
-		*mode = E_FNR_FAST;
+		*mode = E_STR_FAST;
 		*n_str_packets = 1;
-		NOTICE("FAST filename read mode "
+		NOTICE("FAST string read mode "
 			"(1 packet per syscall, "
 			"max string length = %i)", STR_MAX_3);
 
 	} else if (len <= STR_MAX_1) {
-		*mode = E_FNR_STR_MAX;
+		*mode = E_STR_STR_MAX;
 		*n_str_packets = 1;
-		NOTICE("BUF_SIZE filename read mode "
+		NOTICE("PACKET string read mode "
 			"(1 packet per string argument, "
 			"max string length = %i)", STR_MAX_1);
 
@@ -711,14 +675,14 @@ choose_fnr_mode(const char *filename_length,
 			np++;
 		*n_str_packets = np;
 		if (available_bpf_probe_read_str()) {
-			*mode = E_FNR_FULL;
-			NOTICE("FULL filename read mode "
+			*mode = E_STR_FULL;
+			NOTICE("FULL string read mode "
 				"(maximum %i packets per string argument, "
 				"max string length = %i)",
 				np, np * (BUF_SIZE - 1) - 1);
 		} else {
-			*mode = E_FNR_FULL_CONST_N;
-			NOTICE("CONST_FULL filename read mode "
+			*mode = E_STR_FULL_CONST_N;
+			NOTICE("CONST string read mode "
 				"(always %i packets per string argument, "
 				"max string length = %i)",
 				np, np * (BUF_SIZE - 1) - 1);
@@ -727,13 +691,11 @@ choose_fnr_mode(const char *filename_length,
 }
 
 perf_reader_raw_cb Print_event_cb[EOF_QTY + 1] = {
-	[EOF_HEX_RAW]	= print_event_hex_raw,
-	[EOF_HEX_SL]	= print_event_hex_sl,
+	[EOF_TEXT]	= print_event_text,
 	[EOF_BIN]	= print_event_bin,
 };
 
 print_header_t Print_header[EOF_QTY + 1] = {
-	[EOF_HEX_RAW]	= print_header_hex,
-	[EOF_HEX_SL]	= print_header_hex,
+	[EOF_TEXT]	= print_header_hex,
 	[EOF_BIN]	= print_header_bin,
 };

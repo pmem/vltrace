@@ -13,13 +13,10 @@ Output format:
         include timestamp in output
     -l, --format <fmt>
         format of output logs. Possible values:
-        - 'bin'/'binary' file format is the fastest one and is described
-              in trace.h.
-        - 'hex'/'hex_raw' is the fastest text format.
-        - 'hex_sl' is compromized single-line text format. If used with
-              '--filenames name_max' or '--filenames full' could be slow.
-              Implementation is not finished.
-        Default: 'hex'
+        - 'bin'  - the binary format described in trace.h,
+                   allows the fastest operation,
+        - 'text' - the text format.
+        Default: 'text'
     -K, --hex-separator <sep>
         set field separator for hex logs. Default is a single space ' '.
 

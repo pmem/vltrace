@@ -1,16 +1,17 @@
 % vltrace
-% **Fast syscall's tracing**
+% **Fast syscall tracing**
 % Vitalii Chernookyi
+% Lukasz Dorau
 
 ******
 
-Why we need new tool
----------------------
+Why we need a new tool ?
+------------------------
 
  - regular system tracing tools are slow
  - regular tools slow down traced application by few orders of magnitude
- - output of regular tools is human-oriented and don't assume automated
-   processing
+ - output of regular tools is human-oriented and is not well suited
+   for automated processing
  - overcoming above problems in regular way require:
 
     - kernel hacking (sysdig)
@@ -25,16 +26,6 @@ Used technologies
  - KProbe
  - Perf Event Circular Buffer
  - event-loop
-
-******
-
-System requirements
---------------------
-
- - libbcc after commit 6c99958e95cfb741575b05bef6b5701e55b3d7c0
- - Linux Kernel 4.4 (for Perf Event Circular Buffer)
- - CAP_SYS_ADMIN capability for bpf() syscall
- - mounted tracefs
 
 ******
 

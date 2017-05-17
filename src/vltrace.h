@@ -42,10 +42,7 @@
 #include <stdbool.h>
 
 enum out_format {
-	/* Write syscall's data packets "as is" */
-	EOF_HEX_RAW = 0,
-	/* Assemble multi-packet syscall data into single line */
-	EOF_HEX_SL,
+	EOF_TEXT = 0,
 	EOF_BIN,
 
 	EOF_QTY, /* Should be last */
@@ -57,12 +54,12 @@ enum ff_mode {
 	E_FF_FULL,
 };
 
-/* filenames reading modes */
+/* modes of reading string arguments */
 enum fnr_mode {
-	E_FNR_FAST = 0,		/* 1 packet per syscall */
-	E_FNR_STR_MAX,		/* 1 packet per string argument */
-	E_FNR_FULL_CONST_N,	/* always N packets per string argument */
-	E_FNR_FULL,		/* <=N packets per string argument */
+	E_STR_FAST = 0,		/* 1 packet per syscall */
+	E_STR_STR_MAX,		/* 1 packet per string argument */
+	E_STR_FULL_CONST_N,	/* always N packets per string argument */
+	E_STR_FULL,		/* <=N packets per string argument */
 };
 
 /* 8 Megabytes should be something close to reasonable */

@@ -177,7 +177,6 @@ load_file_no_cr(const char *const fn)
 		return f;
 
 	free(f);
-	f = NULL;
 
 	return new_f;
 }

@@ -124,7 +124,7 @@ main(const int argc, char *const argv[])
 	/* default values */
 	Args.pid = -1;
 	Args.separator = ' ';
-	Args.fnr_mode = E_FNR_FAST;
+	Args.fnr_mode = E_STR_FAST;
 	Args.do_not_print_progress = 0;
 
 	/* XXX set using command-line options */
