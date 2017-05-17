@@ -53,11 +53,13 @@ tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 	struct data_exit_s tp;
 	uint64_t pid_tid = bpf_get_current_pid_tgid();
 
+	PID_CHECK_HOOK
+
+	tp.type = E_TP_EXIT;
+	tp.pid_tid = pid_tid;
 	tp.finish_ts_nsec = bpf_ktime_get_ns();
 	tp.sc_id = args->id;
 	tp.ret = args->ret;
-
-	PID_CHECK_HOOK
 
 	if (tp.sc_id == __NR_clone ||
 	    tp.sc_id == __NR_fork  ||
@@ -67,9 +69,6 @@ tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 			children_map.update(&tp.ret, &one);
 		}
 	}
-
-	tp.type = E_TP_EXIT;
-	tp.pid_tid = pid_tid;
 
 	events.perf_submit(args, &tp, sizeof(tp));
 

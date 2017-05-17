@@ -230,14 +230,13 @@ kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	struct data_exit_s ev;
 	uint64_t pid_tid = bpf_get_current_pid_tgid();
 
-	ev.finish_ts_nsec = bpf_ktime_get_ns();
-	ev.sc_id = SYSCALL_NR; /* SysCall ID */
-	ev.ret = PT_REGS_RC(ctx);
-
 	PID_CHECK_HOOK
 
 	ev.type = E_KP_EXIT;
 	ev.pid_tid = pid_tid;
+	ev.finish_ts_nsec = bpf_ktime_get_ns();
+	ev.sc_id = SYSCALL_NR; /* SysCall ID */
+	ev.ret = PT_REGS_RC(ctx);
 
 	events.perf_submit(ctx, &ev, sizeof(ev));
 
