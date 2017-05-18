@@ -523,8 +523,9 @@ print_event_text_tp_exit(FILE *f, void *data, int size)
 static void
 print_event_text(void *cb_cookie, void *data, int size)
 {
-	uint64_t *type = data;
-	const char *str = "ERROR: Unknown type of event\n";
+#define STR_LEN 30
+	const char *str = "ERROR: unknown type of event: ";
+	uint32_t *type = data;
 
 	(void) cb_cookie;
 
@@ -539,9 +540,12 @@ print_event_text(void *cb_cookie, void *data, int size)
 		print_event_text_tp_exit(OutputFile, data, size);
 		break;
 	default:
-		fwrite(str, strlen(str), 1, OutputFile);
+		fwrite(str, STR_LEN, 1, OutputFile);
+		fprint_i64(OutputFile, *type);
+		fwrite("\n", 1, 1, OutputFile);
 		break;
 	}
+#undef STR_LEN
 }
 
 /* ** Binary logs ** */

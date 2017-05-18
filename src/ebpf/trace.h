@@ -48,6 +48,7 @@
 #define STR_MAX_2	((BUF_SIZE / 2) - 2)
 #define STR_MAX_3	((BUF_SIZE / 3) - 2)
 
+/* types of data packets */
 enum {
 	E_KP_ENTRY,	/* entry of KProbe */
 	E_KP_EXIT,	/* exit  of KProbe */
@@ -55,8 +56,8 @@ enum {
 	E_TP_EXIT,	/* exit  of TracePoint */
 };
 
-struct data_entry_s {
-	uint64_t type; /* E_KP_ENTRY or E_KP_EXIT or E_TP_EXIT */
+struct __attribute__ ((__packed__)) data_entry_s {
+	uint32_t type; /* type of data packets */
 
 	/*
 	 * This field describes a series of packets for every syscall.
@@ -114,8 +115,8 @@ struct data_entry_s {
 	};
 };
 
-struct data_exit_s {
-	uint64_t type;
+struct __attribute__ ((__packed__)) data_exit_s {
+	uint32_t type; /* type of data packets */
 	uint64_t pid_tid;
 	uint64_t finish_ts_nsec;
 	int64_t sc_id;

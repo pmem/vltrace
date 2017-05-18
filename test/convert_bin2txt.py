@@ -255,7 +255,6 @@ def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
 
     # is it a continuation of a string ?
     if (arg_begin == arg_end):
-        assert(arg_is_cont == 1)
         if (Str_fini == 1):
             return
         fmt_args = 'qqqqqq'
@@ -375,8 +374,8 @@ def process_log_entry(i, etype, bdata, sized, sc_table):
         process_log_exit(i, etype, bdata, sized, sc_table)
 
     else:
-        print("Error: unknown even type", file=stderr)
-        raise NotImplementedError
+        print("Error: unknown even type:", etype, file=stderr)
+        raise
 
     return
 
@@ -389,7 +388,7 @@ def convert_bin2txt(path_to_trace_log, sc_table):
     global BUF_SIZE
 
     sizei = struct.calcsize('i')
-    sizeQ = struct.calcsize('Q')
+    sizeI = struct.calcsize('I')
 
     fh = open_file(path_to_trace_log, 'rb')
 
@@ -413,8 +412,8 @@ def convert_bin2txt(path_to_trace_log, sc_table):
             sized, = read_data(fh, sizei, 'i')
 
             # read type of log entry
-            etype, = read_data(fh, sizeQ, 'Q')
-            sized -= sizeQ
+            etype, = read_data(fh, sizeI, 'I')
+            sized -= sizeI
 
             # read and process rest of data
             bentry = read_log_entry(fh, sized)
