@@ -34,13 +34,13 @@ from sys import exc_info, stderr
 import argparse
 import struct
 
-BUF_SIZE = 0 # size of buffer for string arguments
+BUF_SIZE = 0    # size of buffer for string arguments
+CWD = ""        # current working directory
+Str_fini = 1    # printing last string was finished
+N_str = 0       # counter of string arguments
 
 Arg_str_mask = (1, 2, 4, 8, 16, 32)
 Time_start = 0
-
-Str_fini = 1 # printing last string was finished
-N_str = 0    # counter of string arguments
 
 class EndOfFile(Exception):
     def __init__(self, val):
@@ -386,16 +386,24 @@ def process_log_entry(i, etype, bdata, sized, sc_table):
 def convert_bin2txt(path_to_trace_log, sc_table):
 
     global BUF_SIZE
+    global CWD
 
     sizei = struct.calcsize('i')
     sizeI = struct.calcsize('I')
 
     fh = open_file(path_to_trace_log, 'rb')
 
-# read and init global BUF_SIZE
+    # read and init global BUF_SIZE
     BUF_SIZE, = read_data(fh, sizei, 'i')
 
-# read header = command line
+    # read length of CWD
+    cwd_len, = read_data(fh, sizei, 'i')
+    bdata = fh.read(cwd_len)
+    cwd = str(bdata.decode(errors="ignore"))
+    CWD = cwd.replace('\0', ' ')
+    print("Current working directory:", CWD)
+
+    # read header = command line
     data_size, = read_data(fh, sizei, 'i')
     argc, = read_data(fh, sizei, 'i')
     data_size -= sizei
