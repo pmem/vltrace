@@ -39,6 +39,7 @@
 #include <assert.h>
 #include <string.h>
 #include <sys/utsname.h>
+#include <linux/limits.h>
 
 #include "vltrace.h"
 #include "ebpf_syscalls.h"
@@ -563,12 +564,6 @@ print_header_bin(int argc, char *const argv[])
 		char argv[MAX_LEN_STR];
 	} header;
 
-	/* save BUF_SIZE */
-	int buf_size = BUF_SIZE;
-	if (1 != fwrite(&buf_size, sizeof(int), 1, OutputFile)) {
-		return -1;
-	}
-
 	int data_size = 0;
 	int next_size = 0;
 
@@ -582,6 +577,28 @@ print_header_bin(int argc, char *const argv[])
 
 	header.argc = argc;
 	data_size += offsetof(struct header_s, argv);
+
+	char cwd[PATH_MAX];
+	if (getcwd(cwd, PATH_MAX) == NULL) {
+		return -1;
+	}
+
+	/* save BUF_SIZE */
+	int buf_size = BUF_SIZE;
+	if (1 != fwrite(&buf_size, sizeof(int), 1, OutputFile)) {
+		return -1;
+	}
+
+	/* save CWD's size */
+	buf_size = strlen(cwd);
+	if (1 != fwrite(&buf_size, sizeof(int), 1, OutputFile)) {
+		return -1;
+	}
+
+	/* save CWD */
+	if (1 != fwrite(cwd, buf_size, 1, OutputFile)) {
+		return -1;
+	}
 
 	/* save header's size */
 	if (1 != fwrite(&data_size, sizeof(int), 1, OutputFile)) {

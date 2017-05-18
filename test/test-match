@@ -95,7 +95,7 @@ echo "$ $TEST_DIR/convert_bin2txt.py -s syscalls_table.dat -b $OUTBIN > $OUT"
 $TEST_DIR/convert_bin2txt.py -s syscalls_table.dat -b $OUTBIN > $OUT
 
 set +e
-grep --text -v -e "PID_TID" -e "$OUTBIN" $OUT > $OUT_BARE
+grep --text -v -e "PID_TID" -e "Command line:" -e "Current working directory:" $OUT > $OUT_BARE
 set -e
 
 [ $(cat $OUT_BARE | wc -l) -eq 0 ] \
