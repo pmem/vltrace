@@ -545,7 +545,7 @@ attach_signals_handlers(void)
 }
 
 /*
- * Setup OutputFile stream
+ * setup_out_lf -- setup OutputFile stream
  */
 void
 setup_out_lf(void)
@@ -554,22 +554,17 @@ setup_out_lf(void)
 
 	if (NULL == Args.output_name) {
 		OutputFile = stdout;
-
 		goto setup_buffer;
 	}
 
 	OutputFile = fopen(Args.output_name, "w");
-
 	if (NULL != OutputFile)
 		goto setup_buffer;
 
 	err_no = errno;
-
-	fprintf(stderr, "ERROR: "
-		"Failed to open '%s' for appending: '%m'\n",
-		Args.output_name);
-
+	ERROR("Failed to open '%s' for appending: '%m'", Args.output_name);
 	errno = err_no;
+
 	return;
 
 setup_buffer:
