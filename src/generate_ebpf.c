@@ -214,9 +214,9 @@ generate_ebpf()
 	} else if (!strcasecmp(Args.expr, "kp-all")) {
 		ret = generate_ebpf_kp_mask(ts, 0);
 	} else if (!strcasecmp(Args.expr, "kp-file")) {
-		ret = generate_ebpf_kp_mask(ts, EM_file);
+		ret = generate_ebpf_kp_mask(ts, EM_str_1);
 	} else if (!strcasecmp(Args.expr, "kp-desc")) {
-		ret = generate_ebpf_kp_mask(ts, EM_desc);
+		ret = generate_ebpf_kp_mask(ts, EM_fd_1);
 	} else if (!strcasecmp(Args.expr, "kp-fileio")) {
 		ret = generate_ebpf_kp_mask(ts, EM_str_1 | EM_str_2 | EM_fd_1);
 	} else {
