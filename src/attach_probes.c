@@ -232,9 +232,9 @@ attach_probes(struct bpf_ctx *b)
 	} else if (!strcasecmp(Args.expr, "kp-all")) {
 		return attach_kp_mask(b, attach_single_sc, 0);
 	} else if (!strcasecmp(Args.expr, "kp-file")) {
-		return attach_kp_mask(b, attach_single_sc, EM_file);
+		return attach_kp_mask(b, attach_single_sc, EM_str_1);
 	} else if (!strcasecmp(Args.expr, "kp-desc")) {
-		return attach_kp_mask(b, attach_single_sc, EM_desc);
+		return attach_kp_mask(b, attach_single_sc, EM_fd_1);
 	} else if (!strcasecmp(Args.expr, "kp-fileio")) {
 		return attach_kp_mask(b, attach_single_sc,
 					EM_str_1 | EM_str_2 | EM_fd_1);

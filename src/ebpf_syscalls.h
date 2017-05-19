@@ -94,10 +94,6 @@ enum masks_t {
 	/* syscall should be traced in 'fileio' mode only */
 	EM_fileio = 1 << 16,
 
-	/* syscall accepts fd as a first arg */
-	EM_desc = EM_fd_1,
-	/* syscall accepts fs path as a first arg */
-	EM_file = EM_str_1,
 	/* syscall accepts dir fd as a first arg and path as a second */
 	EM_fileat = EM_fd_1 | EM_str_2,
 	/* syscall has fs paths as first and second Args. rename() */
