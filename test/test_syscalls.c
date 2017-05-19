@@ -58,21 +58,35 @@
 #include <sys/select.h>
 #include <sys/swap.h>
 
-#define PATTERN_START	0x12345678
-#define PATTERN_END	0x87654321
-#define BUF_LEN		0x100
+#define PATTERN_START		0x12345678
+#define PATTERN_END		0x87654321
+#define BUF_LEN			0x100
 
-#define MARK_START()	close(PATTERN_START)
-#define MARK_END()	close(PATTERN_END)
+#define MARK_START()		close(PATTERN_START)
+#define MARK_END()		close(PATTERN_END)
 
-#define FILE_EXIST	"/etc/fstab"
-#define FILE_CREATE	"/tmp/tmp-vltrace"
+#define FILE_EXIST		"/etc/fstab"
+#define FILE_CREATE		"/tmp/tmp-vltrace"
 
 #define NON_EXIST_PATH_1	"111_non_exist"
 #define NON_EXIST_PATH_2	"222_non_exist"
 
 /* used to test unsupported flags (almost all bits are set) */
 #define FLAGS_SET		0x0FFFFFFFFFFFFFFF
+
+int counter;
+
+/*
+ * s -- sleep a while
+ */
+static void
+s()
+{
+#define NSLEEP 1000000
+	for(int i = 0; i < NSLEEP; i++)
+		counter += rand();
+#undef NSLEEP
+}
 
 /*
  * test_basic_syscalls -- test basic syscalls
@@ -87,34 +101,55 @@ test_basic_syscalls(void)
 
 	/* PART #1 - real arguments */
 
+s();
 	fd = open(FILE_EXIST, O_RDONLY);
+s();
 	close(fd);
 
+s();
 	fd = open(FILE_CREATE, O_RDWR | O_CREAT, 0666);
+s();
 	write(fd, buffer, BUF_LEN);
+s();
 	lseek(fd, 0, SEEK_SET);
+s();
 	read(fd, buffer, BUF_LEN);
+s();
 	fstat(fd, &buf);
+s();
 	close(fd);
+s();
 	unlink(FILE_CREATE);
 
+s();
 	execve(FILE_CREATE, (char * const*)0x123456, (char * const*)0x654321);
 
+s();
 	stat(FILE_EXIST, &buf);
+s();
 	lstat(FILE_EXIST, &buf);
 
+s();
 	uname(&name);
 
+s();
 	syscall(SYS_getpid); /* getpid */
+s();
 	syscall(SYS_gettid); /* gettid */
 
 	/* PART #2 - test arguments */
 
+s();
 	write(0x101, buffer, 1);
+s();
 	read (0x102, buffer, 2);
+s();
 	lseek(0x103, 3, SEEK_END);
+s();
 	fstat(0x104, &buf);
+s();
 	syscall(SYS_futex, 1, FUTEX_WAKE_OP, 3, 4, 5, FLAGS_SET); /* futex */
+s();
 }
 
 /*
@@ -123,35 +158,51 @@ test_basic_syscalls(void)
 static void
 test_unsupported_syscalls(void)
 {
+s();
 	chroot(NON_EXIST_PATH_1);
 
 	/* fcntl - unsupported flags */
+s();
 	syscall(SYS_fcntl, 0x104, FLAGS_SET, FLAGS_SET, 0x105, 0x106, 0x107);
 
+s();
 	flock(0x108, 0x109);
 
+s();
 	setsockopt(0x101, 0x102, 0x103, (void *)0x104, (socklen_t)0x105);
+s();
 	getsockopt(0x106, 0x107, 0x108, (void *)0x109, (socklen_t *)0x110);
-
+s();
 	struct sockaddr addr;
 	socklen_t addrlen = sizeof(addr);
 	getsockname(0x101, &addr, &addrlen);
-
+s();
 	inotify_add_watch(0x104, NON_EXIST_PATH_1, 0x105);
+s();
 	inotify_rm_watch(0x106, 0x107);
 
+s();
 	syscall(SYS_io_cancel, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
+s();
 	syscall(SYS_io_destroy, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
+s();
 	syscall(SYS_io_getevents, 0x103, 0x104, 0x105, 0x106, 0x107, 0x108);
+s();
 	syscall(SYS_io_setup, 0x104, 0x105, 0x106, 0x107, 0x108, 0x109);
+s();
 	syscall(SYS_io_submit, 0x105, 0x106, 0x107, 0x108, 0x109, 0x110);
 
+s();
 	syscall(SYS_ioctl, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
+s();
 	mknod(FILE_EXIST, 0x101, 0x102);
+s();
 	mknodat(0x103, FILE_EXIST, 0x104, 0x105);
 
+s();
 	mmap((void *)0x101, 0x102, 0x103, 0xFFFF, 0x105, 0x106);
+s();
 	munmap((void *)0x102, 0x103);
 
 	struct timeval time1;
@@ -159,50 +210,76 @@ test_unsupported_syscalls(void)
 	memset(&time1, 0, sizeof(time1));
 	memset(&time2, 0, sizeof(time2));
 
+s();
 	select(0, (fd_set *)0x104, (fd_set *)0x105, (fd_set *)0x106, &time1);
+s();
 	pselect(0, (fd_set *)0x105, (fd_set *)0x106, (fd_set *)0x107, &time2,
 		(const sigset_t *)0x108);
 
+s();
 	swapon(NON_EXIST_PATH_1, 0x101);
+s();
 	swapoff(NON_EXIST_PATH_2);
 
+s();
 	syscall(SYS_poll, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
 
+s();
 	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3", 0x101, (void *)0x102);
+s();
 	umount(NON_EXIST_PATH_1);
+s();
 	umount2(NON_EXIST_PATH_2, 0x123);
 
+s();
 	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
 		 (const void *)0x101, 0x102, 0x103);
+s();
 	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
 		  (const void *)0x104, 0x105, 0x106);
+s();
 	fsetxattr(0x107, NON_EXIST_PATH_2,
 		  (const void *)0x108, 0x109, 0x110);
 
+s();
 	getxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, (void *)0x101, 0x102);
+s();
 	lgetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, (void *)0x103, 0x104);
+s();
 	fgetxattr(0x105, NON_EXIST_PATH_2, (void *)0x106, 0x107);
 
+s();
 	listxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, 0x101);
+s();
 	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x102);
+s();
 	flistxattr(0x103, NON_EXIST_PATH_2, 0x104);
 
+s();
 	removexattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
+s();
 	lremovexattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1);
+s();
 	fremovexattr(0x101, NON_EXIST_PATH_2);
 
+s();
 	syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
+s();
 	epoll_ctl(0x101, 0x102, 0x103, (struct epoll_event *)0x104);
+s();
 	epoll_wait(0x102, (struct epoll_event *)0x103, 0x104, 0x105);
+s();
 	epoll_pwait(0x103, (struct epoll_event *)0x104, 0x105, 0x106,
 			(const sigset_t *)0x107);
 
 	/* open - unsupported flags */
+s();
 	syscall(SYS_open, NON_EXIST_PATH_2, FLAGS_SET, FLAGS_SET, FLAGS_SET,
 		FLAGS_SET, FLAGS_SET);
 
 	/* clone - unsupported flags */
+s();
 	syscall(SYS_clone, FLAGS_SET, FLAGS_SET, FLAGS_SET, FLAGS_SET,
 		FLAGS_SET, FLAGS_SET);
 
@@ -216,41 +293,53 @@ static void
 test_strings(void)
 {
 	/* string args: 1 (open) */
+s();
 	syscall(SYS_open, NON_EXIST_PATH_1, 0x102, 0x103, 0x104, 0x105, 0x106);
 
 	/* string args: 2 (openat) */
+s();
 	syscall(SYS_openat, 0x101, NON_EXIST_PATH_2, 0x103,
 		0x104, 0x105, 0x106);
 
 	/* string args: 1 2 (rename) */
+s();
 	rename(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
 
 	/* string args: 1 2 (llistxattr) */
+s();
 	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x103);
 
 	/* string args: 1 3 (symlinkat) */
+s();
 	syscall(SYS_symlinkat, NON_EXIST_PATH_1, 0x102, NON_EXIST_PATH_2);
 
 	/* string args: 2 4 (renameat) */
+s();
 	syscall(SYS_renameat, 0x101, NON_EXIST_PATH_1, 0x103, NON_EXIST_PATH_2);
 
 	/* string args: 1 2 3 (mount) */
+s();
 	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3", 0x101, (void *)0x102);
 
 	/* string args: 1 2 3 (request_key) */
+s();
 	syscall(SYS_request_key, "string1_type", "string2_description",
 		"string3_callout_info", 0x104);
 
 	/* string args: 3 (init_module) */
+s();
 	syscall(SYS_init_module, 0x101, 0x102, NON_EXIST_PATH_1);
 
 	/* string args: 4 (kexec_file_load) */
+s();
 	syscall(SYS_kexec_file_load, 0x101, 0x102, 0x103, NON_EXIST_PATH_2,
 		0x105);
 
 	/* string args: 5 (fanotify_mark) */
+s();
 	syscall(SYS_fanotify_mark, 0x101, 0x102, 0x103, 0x104,
 		NON_EXIST_PATH_1);
+s();
 }
 
 /* testing signals */
@@ -339,9 +428,12 @@ static void test_4(void)
 	 * test if other syscalls are correctly detected,
 	 * when vfork is present
 	 */
+s();
 	syscall(SYS_open, NON_EXIST_PATH_1, 0x101, 0x102, 0x103, 0x104, 0x105);
+s();
 	syscall(SYS_close, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
+s();
 	if (vfork() == 0) { /* vfork - handle child */
 		execve(NON_EXIST_PATH_1, (char * const*)0x123456,
 		       (char * const*)0x654321);
@@ -352,8 +444,11 @@ static void test_4(void)
 	 * test if other syscalls are correctly detected,
 	 * when vfork is present
 	 */
+s();
 	syscall(SYS_open, NON_EXIST_PATH_2, 0x102, 0x103, 0x104, 0x105, 0x106);
+s();
 	syscall(SYS_close, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
+s();
 
 	MARK_END();
 }
