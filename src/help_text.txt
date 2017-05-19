@@ -40,27 +40,42 @@ Tracing:
     -f, --full-follow-fork
         Follow new processes created with fork()/vfork()/clone() syscall as
         regular strace does.
-    -ff, --full-follow-fork=f
-        Same as above, but put logs for each process in separate file with
-        name <file>.pid
-        Implementation is not finished and is postponned.
-    -fff, --full-follow-fork=ff
-        Same as above, but put logs for each thread in separate file with
-        name <file>.tid.pid
-        Implementation is not finished and is postponned.
-    -n, --filenames <mode>
-        Mode of fetching filenames:
-        - 'fast' - everything what we could not fit into single packet will
-            be truncated.
-        - 'name_max' - fetch-up STR_MAX bytes of name. Every name will be sent
-            via separate packet. Processing of that packets is controlled by
-            output log format
-        - 'number' - fetch-up 'number * STR_MAX' bytes of name. Every part of
-            name will be sent via separate packet. Processing of that packets
-            is controlled by output log format. Minimal accepted value: 1.
-            Implementation is not finished and is postponned.
-        - 'full' - will be implemented as soon as this issue will be fixed:
-              https://github.com/iovisor/bcc/issues/900
+
+    -s, --string-args <length>
+	Defines the maximum possible length of string arguments read by vltrace.
+	eBPF virtual machine is extremely limited in available memory.
+        Also currently there is no way to calculate the length of a string argument.
+        For this reason	there are four modes of fetching such arguments
+        chosen depending on value of 'length':
+
+	 - 'fast'   - for 'length' <= 126:
+
+              1 packet is generated per each syscall, maximum length of a string
+              depends on number of string arguments in the syscall:
+              - 1 string argument  = 382,
+              - 2 string arguments = 190,
+              - 3 string arguments = 126,
+              This is the fastest mode.
+
+	 - 'packet' - for 'length' <= 382:
+
+              1 packet is generated per each string argument,
+              maximum length of a string is 382.
+
+	 - 'const'  - for 'length' > 382 and kernel version < 4.11:
+
+              Constant number N of packets is generated per each string argument,
+              counted depending on value of 'length'.
+              Maximum length of a string is the smallest value of (N * 383 - 1)
+              that is greater or equal to 'length'.
+
+	 - 'full'   - for 'length' > 382 and kernel version >= 4.11:
+
+              Variable number N of packets is generated per each string argument,
+              depending on the actual length of each string argument.
+              Maximum length of a string is the smallest value of (N * 383 - 1)
+              that is greater or equal to 'length'.
+
         Default: fast
 
 Miscellaneous:
