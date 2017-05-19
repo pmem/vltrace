@@ -148,8 +148,6 @@ def print_string(n_str, str_fini, nstrargs, bdata, packet):
 
     str_will_be_continued = (packet >> 7) & 0x1 # bit 7 (string will be continued)
 
-    n_str += 1
-
     if (packet):
         max_len = STR_MAX_1
         string = bdata
@@ -158,6 +156,7 @@ def print_string(n_str, str_fini, nstrargs, bdata, packet):
         string = bdata
     elif (nstrargs == 2):
         max_len = STR_MAX_2
+        n_str += 1
         if (n_str == 1):
             string = bdata[0:BUF_SIZE_2]
         elif (n_str == 2):
@@ -166,6 +165,7 @@ def print_string(n_str, str_fini, nstrargs, bdata, packet):
             raise
     elif (nstrargs == 3):
         max_len = STR_MAX_3
+        n_str += 1
         if (n_str == 1):
             string = bdata[0:BUF_SIZE_3]
         elif (n_str == 2):
