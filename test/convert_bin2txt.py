@@ -36,11 +36,8 @@ import struct
 
 BUF_SIZE = 0    # size of buffer for string arguments
 CWD = ""        # current working directory
-Str_fini = 1    # printing last string was finished
-N_str = 0       # counter of string arguments
 
 Arg_str_mask = (1, 2, 4, 8, 16, 32)
-Time_start = 0
 
 class EndOfFile(Exception):
     def __init__(self, val):
@@ -126,18 +123,16 @@ def read_log_entry(fh, sized):
 
 def is_string(n, mask):
 
-    global Arg_str_mask
-
     if (mask & Arg_str_mask[n] == Arg_str_mask[n]):
         return 1
     else:
         return 0
 
 ###############################################################################
-# print_string -- print string argument
+# get_string -- print string argument
 ###############################################################################
 
-def print_string(n_str, str_fini, nstrargs, bdata, packet):
+def get_string(n_str, str_fini, nstrargs, bdata, packet):
 
     BUF_SIZE_2 = int(BUF_SIZE / 2)
     BUF_SIZE_3 = int(BUF_SIZE / 3)
@@ -145,8 +140,6 @@ def print_string(n_str, str_fini, nstrargs, bdata, packet):
     STR_MAX_1  = BUF_SIZE - 2
     STR_MAX_2  = BUF_SIZE_2 - 2
     STR_MAX_3  = BUF_SIZE_3 - 2
-
-    str_will_be_continued = (packet >> 7) & 0x1 # bit 7 (string will be continued)
 
     if (packet):
         max_len = STR_MAX_1
@@ -178,46 +171,54 @@ def print_string(n_str, str_fini, nstrargs, bdata, packet):
         print("\n\nERROR: unsupported number of string arguments:", nstrargs)
         raise
 
-    string = str(string.decode(errors="ignore"))
-    string = string.split('\0')[0]
+    str_p = str(string.decode(errors="ignore"))
+    str_p = str_p.split('\0')[0]
 
-    length = len(string)
-    # check if string is truncated
-    if (length == (max_len + 1)):
-        if (str_will_be_continued == 0):
-            # print warning that string is truncated
-            print("[WARNING: string truncated]", end='')
+    # check if string ended
+    if (len(str_p) == (max_len + 1)):
+        # string did not ended
         str_fini = 0
+
+        str_will_be_continued = (packet >> 7) & 0x1  # bit 7 (string will be continued)
+        if (str_will_be_continued == 0):
+            # error: string is truncated
+            print()
+            print("ERROR: string is truncated")
+            raise
     else:
-        str_fini = 1
+        # string ended
+        str_fini = -1
 
-    print(string, end='')
-
-    return (n_str , str_fini)
+    return (str_p, n_str , str_fini)
 
 ###############################################################################
 # print_arg -- print syscall's arguments
 ###############################################################################
 
-def print_arg(n, args, mask, n_str, str_fini, nstrargs, bdata, packet):
+def print_arg(n, args, mask, n_str, str_fini, nstrargs, bdata, packet, string):
 
-    if (is_string(n, mask) == 1):
-        n_str, str_fini = print_string(n_str, str_fini, nstrargs, bdata, packet)
-    else:
+    if (is_string(n, mask) == 0):
         print("{0:016X}".format(args[n]), end='')
+    else:
+        str_p, n_str, str_fini = get_string(n_str, str_fini, nstrargs, bdata, packet)
 
-    return (n_str , str_fini)
+        string += str_p;
+        if (str_fini and string != ""):
+            print(string, end='')
+            string = ""
+
+    return (string, n_str , str_fini)
 
 ###############################################################################
 # process_log_kprobe_entry - process kprobe entry log
 ###############################################################################
 
-def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
+def process_log_kprobe_entry(in_data, out_data):
 
     res_str = "---------------- ----------------"
-    global Time_start
-    global Str_fini
-    global N_str
+
+    bdata, sc_table = in_data
+    time_start, string, n_str, str_fini = out_data
 
     fmt_entry = 'qQQq'
     size_fmt_entry = struct.calcsize(fmt_entry)
@@ -229,8 +230,8 @@ def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
         num, num_str, pname, name, length, args_qty, masks, at, nstr, pos, padding = sc_table[sc_id]
         name = str(name.decode(errors="ignore"))
 
-    if (Time_start == 0):
-        Time_start = time
+    if (time_start == 0):
+        time_start = time
 
     arg_begin = 0
     arg_end = 7
@@ -243,37 +244,40 @@ def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
 
     # is it a continuation of a string ?
     if (arg_begin == arg_end):
-        if (Str_fini == 1):
-            return
+        if (str_fini):
+            return (time_start, string, n_str, str_fini)
         fmt_args = 'qqqqqq'
         size_fmt_args = struct.calcsize(fmt_args)
         if (len(bdata) <= size_fmt_args):
-            return
+            return (time_start, string, n_str, str_fini)
         aux_str = bdata[size_fmt_args:]
 
-        string = str(aux_str.decode(errors="ignore"))
-        string = string.split('\0')[0]
+        str_p = str(aux_str.decode(errors="ignore"))
+        str_p = str_p.split('\0')[0]
+
+        string += str_p
 
         max_len = BUF_SIZE - 2
-        length = len(string)
+        if (len(str_p) < max_len):
+            # string is completed
+            print(string, end='')
+            str_fini = -1
+            string = ""
 
-        print(string, end='')
-        if (length < max_len):
-            Str_fini = 1
-        return
+        return (time_start, string, n_str, str_fini)
 
     if (arg_begin == 0):
-        dtime = time - Time_start
+        dtime = time - time_start
         print("{0:016X} {1:016X} {2:s} {3:s}".format(dtime, pid, res_str, name[4:length]), end='')
 
     # is it a continuation of last argument (full name mode)?
     if (arg_is_cont):
         # it is a continuation of last argument
-        if (Str_fini):
+        if (str_fini):
             # printing string was already finished, so skip it
             arg_begin += 1
             arg_is_cont = 0
-            Str_fini = 0
+            str_fini = 0
     else:
         # arg_begin argument was printed in the previous packet
         arg_begin += 1
@@ -293,28 +297,31 @@ def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
 
     if (len(data2) < size_fmt_args):
         print()
-        return
+        return (time_start, string, n_str, str_fini)
+
     args = struct.unpack(fmt_args, data2)
 
     for n in range((arg_begin - 1), arg_end):
-        if ((n > arg_begin - 1) or (arg_is_cont == 0) or Str_fini):
+        if ((n > arg_begin - 1) or (arg_is_cont == 0) or str_fini):
             print(" ", end='')
-        N_str, Str_fini = print_arg(n, args, masks, N_str, Str_fini, nstr, bdata, packet)
+        string, n_str, str_fini = print_arg(n, args, masks, n_str, str_fini, nstr, bdata, packet, string)
 
     # should we print EOL ?
     if (print_eol):
-        N_str = 0 # reset counter of string arguments
-        Str_fini = 1
+        n_str = 0 # reset counter of string arguments
+        str_fini = -1
         print()
 
+    return (time_start, string, n_str, str_fini)
 
 ###############################################################################
 # process_log_exit - process kprobe exit or raw tracepoint sys_exit log
 ###############################################################################
 
-def process_log_exit(i, etype, bdata, sized, sc_table):
+def process_log_exit(in_data, out_data):
 
-    global Time_start
+    bdata, sc_table = in_data
+    time_start, string, n_str, str_fini = out_data
 
     fmt_exit = 'QQQq'
     size_fmt_exit = struct.calcsize(fmt_exit)
@@ -327,10 +334,10 @@ def process_log_exit(i, etype, bdata, sized, sc_table):
         name = str(name.decode(errors="ignore"))
         name = name.split('\0')[0]
 
-    if (Time_start > 0):
-        dtime = time - Time_start
+    if (time_start > 0):
+        dtime = time - time_start
     else:
-        Time_start = time
+        time_start = time
         dtime = 0;
 
     # split return value into result and errno
@@ -346,25 +353,30 @@ def process_log_exit(i, etype, bdata, sized, sc_table):
     else:
         print("{0:016X} {1:016X} {2:016X} {3:016X} sys_exit {4:016X}".format(dtime, pid, err, res, id))
 
+    return (time_start, string, n_str, str_fini)
+
 ###############################################################################
 # process_log_entry - process next log entry
 ###############################################################################
 
-def process_log_entry(i, etype, bdata, sized, sc_table):
+def process_log_entry(in_data, out_data):
+
+    etype, bdata, sc_table = in_data
+    in_data = (bdata, sc_table)
 
     if (etype == 0):
         # kprobe entry handler
-        process_log_kprobe_entry(i, etype, bdata, sized, sc_table)
+        out_data = process_log_kprobe_entry(in_data, out_data)
 
     elif ((etype == 1) or (etype == 3)):
         # kprobe exit handler or raw tracepoint sys_exit
-        process_log_exit(i, etype, bdata, sized, sc_table)
+        out_data = process_log_exit(in_data, out_data)
 
     else:
         print("Error: unknown even type:", etype, file=stderr)
         raise
 
-    return
+    return out_data
 
 ###############################################################################
 # convert_bin2txt - convert binary log to text
@@ -374,6 +386,13 @@ def convert_bin2txt(path_to_trace_log, sc_table):
 
     global BUF_SIZE
     global CWD
+
+    time_start = 0
+    string = ""
+    str_fini = -1  # if != 0 then printing last string was finished and if >0 then it is saved in AllStrings[str_fini - 1]
+    n_str = 0  # counter of string arguments
+
+    out_data = (time_start, string, n_str, str_fini)
 
     sizei = struct.calcsize('i')
     sizeI = struct.calcsize('I')
@@ -400,7 +419,6 @@ def convert_bin2txt(path_to_trace_log, sc_table):
     print("Command line:", argv)
 
 # read data
-    i = 1
     while True:
         try:
             # read size of data
@@ -411,9 +429,10 @@ def convert_bin2txt(path_to_trace_log, sc_table):
             sized -= sizeI
 
             # read and process rest of data
-            bentry = read_log_entry(fh, sized)
-            process_log_entry(i, etype, bentry, sized, sc_table)
-            i += 1
+            bdata = read_log_entry(fh, sized)
+
+            in_data = (etype, bdata, sc_table)
+            out_data = process_log_entry(in_data, out_data)
 
         except EndOfFile as err:
             if (err.val > 0):
