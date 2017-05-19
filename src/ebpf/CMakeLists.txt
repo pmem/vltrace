@@ -85,6 +85,6 @@ set_target_properties(ebpf PROPERTIES
 # XXX libbcc expects multi-treading safety. Currently it's required for
 # print_event_cb.o only, although we will apply it for overall application.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -D_GNU_SOURCE")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wextra")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
