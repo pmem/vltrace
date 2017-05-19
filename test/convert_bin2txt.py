@@ -121,18 +121,6 @@ def read_log_entry(fh, sized):
     return bdata
 
 ###############################################################################
-# get_n_strs -- get number of string arguments
-###############################################################################
-
-def get_n_strs(mask):
-
-    nstrargs = 0
-    for n in range(0, 6):
-        if (mask & Arg_str_mask[n] == Arg_str_mask[n]):
-            nstrargs += 1
-    return nstrargs
-
-###############################################################################
 # is_string -- checks if the argument is a string
 ###############################################################################
 
@@ -307,12 +295,11 @@ def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
         print()
         return
     args = struct.unpack(fmt_args, data2)
-    nstrargs = get_n_strs(masks)
 
     for n in range((arg_begin - 1), arg_end):
         if ((n > arg_begin - 1) or (arg_is_cont == 0) or Str_fini):
             print(" ", end='')
-        N_str, Str_fini = print_arg(n, args, masks, N_str, Str_fini, nstrargs, bdata, packet)
+        N_str, Str_fini = print_arg(n, args, masks, N_str, Str_fini, nstr, bdata, packet)
 
     # should we print EOL ?
     if (print_eol):
