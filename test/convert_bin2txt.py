@@ -255,7 +255,6 @@ def process_log_kprobe_entry(i, etype, bdata, sized, sc_table):
 
     # is it a continuation of a string ?
     if (arg_begin == arg_end):
-        assert(arg_is_cont == 1)
         if (Str_fini == 1):
             return
         fmt_args = 'qqqqqq'
@@ -375,8 +374,8 @@ def process_log_entry(i, etype, bdata, sized, sc_table):
         process_log_exit(i, etype, bdata, sized, sc_table)
 
     else:
-        print("Error: unknown even type", file=stderr)
-        raise NotImplementedError
+        print("Error: unknown even type:", etype, file=stderr)
+        raise
 
     return
 
