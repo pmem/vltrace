@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -71,6 +72,7 @@
 struct cl_options Args;		/* command-line arguments */
 FILE *OutputFile;		/* output file */
 enum out_format OutputFormat;	/* format of output */
+pthread_spinlock_t OutputLock;	/* spin lock for printing output logs */
 
 int OutputError;		/* I/O error in perf callback occured */
 int AbortTracing;		/* terminating signal received */
@@ -120,6 +122,8 @@ main(const int argc, char *const argv[])
 	struct perf_reader **readers;
 	int tracing = TRACING_ALL; /* what are we tracing ? */
 	int st_optind;
+
+	pthread_spin_init(&OutputLock, PTHREAD_PROCESS_SHARED);
 
 	/* default values */
 	Args.pid = -1;
@@ -322,6 +326,7 @@ main(const int argc, char *const argv[])
 	free(readers);
 	detach_all(bpf);
 	free(bpf);
+	pthread_spin_destroy(&OutputLock);
 	return EXIT_SUCCESS;
 
 error_detach:
@@ -333,5 +338,6 @@ error_kill:
 		/* kill the started child */
 		kill(PidToBeKilled, SIGKILL);
 	}
+	pthread_spin_destroy(&OutputLock);
 	return EXIT_FAILURE;
 }

@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <pthread.h>
 #include <sys/utsname.h>
 #include <linux/limits.h>
 
@@ -530,6 +531,8 @@ print_event_text(void *cb_cookie, void *data, int size)
 
 	(void) cb_cookie;
 
+	pthread_spin_lock(&OutputLock);
+
 	switch (*type) {
 	case E_KP_ENTRY:
 		print_event_text_kp_entry(OutputFile, data, size);
@@ -546,6 +549,9 @@ print_event_text(void *cb_cookie, void *data, int size)
 		fwrite("\n", 1, 1, OutputFile);
 		break;
 	}
+
+	pthread_spin_unlock(&OutputLock);
+
 #undef STR_LEN
 }
 
@@ -621,6 +627,8 @@ print_event_bin(void *cb_cookie, void *data, int size)
 {
 	(void) cb_cookie;
 
+	pthread_spin_lock(&OutputLock);
+
 	if (1 != fwrite(&size, sizeof(int), 1, OutputFile)) {
 		OutputError = 1;
 	}
@@ -628,6 +636,8 @@ print_event_bin(void *cb_cookie, void *data, int size)
 	if (1 != fwrite(data, (size_t)size, 1, OutputFile)) {
 		OutputError = 1;
 	}
+
+	pthread_spin_unlock(&OutputLock);
 }
 
 /*

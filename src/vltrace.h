@@ -140,5 +140,6 @@ extern pid_t PidToBeKilled;
 extern FILE *OutputFile;
 /* Output logfile format */
 extern enum out_format OutputFormat;
+extern pthread_spinlock_t OutputLock;
 
 #endif /* MAIN_H */
