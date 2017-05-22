@@ -226,9 +226,12 @@ def process_log_kprobe_entry(in_data, out_data):
     bdata = bdata[size_fmt_entry:]
 
     packet, pid, time, sc_id = struct.unpack(fmt_entry, data1)
-    if (sc_id >= 0 and sc_id < len(sc_table)):
-        num, num_str, pname, name, length, args_qty, masks, at, nstr, pos, padding = sc_table[sc_id]
-        name = str(name.decode(errors="ignore"))
+    if (sc_id < 0 or sc_id >= len(sc_table)):
+        print("Error: syscall number out of bounds:", sc_id, file=stderr)
+        raise
+
+    num, num_str, pname, name, length, args_qty, masks, at, nstr, pos, padding = sc_table[sc_id]
+    name = str(name.decode(errors="ignore"))
 
     if (time_start == 0):
         time_start = time
