@@ -53,6 +53,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	} u;
 
 	u.ev.type = E_KP_ENTRY;
+	u.ev.size = _pad_size;
 	u.ev.start_ts_nsec = bpf_ktime_get_ns();
 
 	u.ev.sc_id = SYSCALL_NR; /* SysCall ID */
@@ -101,6 +102,7 @@ kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	PID_CHECK_HOOK
 
 	ev.type = E_KP_EXIT;
+	ev.size = sizeof(ev);
 	ev.pid_tid = pid_tid;
 	ev.finish_ts_nsec = bpf_ktime_get_ns();
 	ev.sc_id = SYSCALL_NR; /* SysCall ID */

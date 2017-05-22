@@ -51,6 +51,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 #undef  TRACE_IN_SYS_EXIT
 
 	ev.type = E_KP_ENTRY;
+	ev.size = offsetof(struct data_entry_s, aux_str);
 	ev.start_ts_nsec = bpf_ktime_get_ns();
 
 	ev.packet_type = 0; /* No additional packets */
@@ -81,6 +82,7 @@ kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	PID_CHECK_HOOK
 
 	ev.type = E_KP_EXIT;
+	ev.size = sizeof(ev);
 	ev.pid_tid = pid_tid;
 	ev.finish_ts_nsec = bpf_ktime_get_ns();
 	ev.sc_id = SYSCALL_NR; /* SysCall ID */

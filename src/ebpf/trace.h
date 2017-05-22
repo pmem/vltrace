@@ -48,6 +48,7 @@
 #define STR_MAX_2	((BUF_SIZE / 2) - 2)
 #define STR_MAX_3	((BUF_SIZE / 3) - 2)
 
+/* types of data packets */
 enum {
 	E_KP_ENTRY,	/* entry of KProbe */
 	E_KP_EXIT,	/* exit  of KProbe */
@@ -56,7 +57,8 @@ enum {
 };
 
 struct data_entry_s {
-	uint64_t type; /* E_KP_ENTRY or E_KP_EXIT or E_TP_EXIT */
+	uint32_t size; /* size of the rest of data (except this field) */
+	uint32_t type; /* type of data packets */
 
 	/*
 	 * This field describes a series of packets for every syscall.
@@ -92,30 +94,18 @@ struct data_entry_s {
 		int64_t sc_id;
 	};
 
-	union {
-		/* Body of first packet */
-		struct {
-			int64_t args[6];
+	/* arguments of the syscall */
+	struct {
+		int64_t args[6];
 
-			/*
-			 * Body of string argument. The content and
-			 *    meaning of argument is defined by
-			 *    syscall's number in the sc_id field.
-			 */
-			char aux_str[1];	/* BUF_SIZE */
-		};
-
-		/*
-		 * Body of string argument. The content and meaning of argument
-		 *    is defined by syscall's number (in the first packet) in
-		 *    the sc_id field.
-		 */
-		char str[1];	/* BUF_SIZE */
+		/* buffer for string arguments (of BUF_SIZE) */
+		char aux_str[1];
 	};
 };
 
 struct data_exit_s {
-	uint64_t type;
+	uint32_t size; /* size of the rest of data (except this field) */
+	uint32_t type; /* type of data packets */
 	uint64_t pid_tid;
 	uint64_t finish_ts_nsec;
 	int64_t sc_id;

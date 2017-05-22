@@ -56,6 +56,7 @@ tracepoint__sys_exit(struct tracepoint__raw_syscalls__sys_exit *args)
 	PID_CHECK_HOOK
 
 	tp.type = E_TP_EXIT;
+	tp.size = sizeof(tp);
 	tp.pid_tid = pid_tid;
 	tp.finish_ts_nsec = bpf_ktime_get_ns();
 	tp.sc_id = args->id;

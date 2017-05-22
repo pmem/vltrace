@@ -526,7 +526,8 @@ print_event_text(void *cb_cookie, void *data, int size)
 {
 #define STR_LEN 30
 	const char *str = "ERROR: unknown type of event: ";
-	uint32_t *type = data;
+	uint32_t *size_s = data;
+	uint32_t *type = size_s + 1;
 
 	(void) cb_cookie;
 
@@ -620,10 +621,6 @@ static void
 print_event_bin(void *cb_cookie, void *data, int size)
 {
 	(void) cb_cookie;
-
-	if (1 != fwrite(&size, sizeof(int), 1, OutputFile)) {
-		OutputError = 1;
-	}
 
 	if (1 != fwrite(data, (size_t)size, 1, OutputFile)) {
 		OutputError = 1;

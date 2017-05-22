@@ -110,10 +110,10 @@ def read_syscalls_table(path_to_syscalls_table_dat):
 # read_log_entry - read next log entry
 ###############################################################################
 
-def read_log_entry(fh, sized):
+def read_log_entry(fh, data_size):
 
-    bdata = fh.read(sized)
-    if (len(bdata) < sized):
+    bdata = fh.read(data_size)
+    if (len(bdata) < data_size):
         raise EndOfFile(len(bdata))
     return bdata
 
@@ -323,7 +323,7 @@ def process_log_exit(in_data, out_data):
     bdata, sc_table = in_data
     time_start, string, n_str, str_fini = out_data
 
-    fmt_exit = 'QQQq'
+    fmt_exit = 'QQqq'
     size_fmt_exit = struct.calcsize(fmt_exit)
     bdata = bdata[0 : size_fmt_exit]
 
@@ -395,7 +395,7 @@ def convert_bin2txt(path_to_trace_log, sc_table):
     out_data = (time_start, string, n_str, str_fini)
 
     sizei = struct.calcsize('i')
-    sizeQ = struct.calcsize('Q')
+    sizeI = struct.calcsize('I')
 
     fh = open_file(path_to_trace_log, 'rb')
 
@@ -422,14 +422,14 @@ def convert_bin2txt(path_to_trace_log, sc_table):
     while True:
         try:
             # read size of data
-            sized, = read_data(fh, sizei, 'i')
+            data_size, = read_data(fh, sizeI, 'I')
 
             # read type of log entry
-            etype, = read_data(fh, sizeQ, 'Q')
-            sized -= sizeQ
+            etype, = read_data(fh, sizeI, 'I')
+            data_size -= sizeI
 
             # read and process rest of data
-            bdata = read_log_entry(fh, sized)
+            bdata = read_log_entry(fh, data_size)
 
             in_data = (etype, bdata, sc_table)
             out_data = process_log_entry(in_data, out_data)
