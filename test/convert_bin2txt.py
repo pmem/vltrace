@@ -88,7 +88,7 @@ def read_syscalls_table(path_to_syscalls_table_dat):
         print("Error: wrong format of syscalls table file:", path_to_syscalls_table_dat, file=stderr)
         print("       format size : ", size_fmt, file=stderr)
         print("       data size   : ", size_check, file=stderr)
-        raise
+        exit(-1)
 
     while True:
         try:
@@ -155,7 +155,7 @@ def get_string(n_str, str_fini, nstrargs, bdata, packet):
         elif (n_str == 2):
             string = bdata[BUF_SIZE_2: 2 * BUF_SIZE_2]
         else:
-            raise
+            assert(n_str <= 2)
     elif (nstrargs == 3):
         max_len = STR_MAX_3
         n_str += 1
@@ -166,10 +166,10 @@ def get_string(n_str, str_fini, nstrargs, bdata, packet):
         elif (n_str == 3):
             string = bdata[2 * BUF_SIZE_3: 3 * BUF_SIZE_3]
         else:
-            raise
+            assert(n_str <= 3)
     else:
         print("\n\nERROR: unsupported number of string arguments:", nstrargs)
-        raise
+        assert (nstrargs <= 3)
 
     str_p = str(string.decode(errors="ignore"))
     str_p = str_p.split('\0')[0]
@@ -184,7 +184,7 @@ def get_string(n_str, str_fini, nstrargs, bdata, packet):
             # error: string is truncated
             print()
             print("ERROR: string is truncated")
-            raise
+            exit(-1)
     else:
         # string ended
         str_fini = -1
@@ -228,7 +228,7 @@ def process_log_kprobe_entry(in_data, out_data):
     packet, pid, time, sc_id = struct.unpack(fmt_entry, data1)
     if (sc_id < 0 or sc_id >= len(sc_table)):
         print("Error: syscall number out of bounds:", sc_id, file=stderr)
-        raise
+        exit(-1)
 
     num, num_str, pname, name, length, args_qty, masks, at, nstr, pos, padding = sc_table[sc_id]
     name = str(name.decode(errors="ignore"))
@@ -377,7 +377,7 @@ def process_log_entry(in_data, out_data):
 
     else:
         print("Error: unknown even type:", etype, file=stderr)
-        raise
+        exit(-1)
 
     return out_data
 
