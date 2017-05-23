@@ -34,6 +34,7 @@ from sys import exc_info, stderr
 import argparse
 import struct
 
+Time_start = 0  # '0' time
 BUF_SIZE = 0    # size of buffer for string arguments
 CWD = ""        # current working directory
 
@@ -216,9 +217,10 @@ def print_arg(n, args, mask, n_str, str_fini, nstrargs, bdata, packet, string):
 def process_log_kprobe_entry(in_data, out_data):
 
     res_str = "---------------- ----------------"
+    global Time_start
 
     bdata, sc_table = in_data
-    time_start, string, n_str, str_fini = out_data
+    string, n_str, str_fini = out_data
 
     fmt_entry = 'qQQq'
     size_fmt_entry = struct.calcsize(fmt_entry)
@@ -233,9 +235,6 @@ def process_log_kprobe_entry(in_data, out_data):
     num, num_str, pname, name, length, args_qty, masks, at, nstr, pos, padding = sc_table[sc_id]
     name = str(name.decode(errors="ignore"))
 
-    if (time_start == 0):
-        time_start = time
-
     arg_begin = 0
     arg_end = 7
     arg_is_cont = 0
@@ -248,11 +247,11 @@ def process_log_kprobe_entry(in_data, out_data):
     # is it a continuation of a string ?
     if (arg_begin == arg_end):
         if (str_fini):
-            return (time_start, string, n_str, str_fini)
+            return (string, n_str, str_fini)
         fmt_args = 'qqqqqq'
         size_fmt_args = struct.calcsize(fmt_args)
         if (len(bdata) <= size_fmt_args):
-            return (time_start, string, n_str, str_fini)
+            return (string, n_str, str_fini)
         aux_str = bdata[size_fmt_args:]
 
         str_p = str(aux_str.decode(errors="ignore"))
@@ -267,10 +266,14 @@ def process_log_kprobe_entry(in_data, out_data):
             str_fini = -1
             string = ""
 
-        return (time_start, string, n_str, str_fini)
+        return (string, n_str, str_fini)
 
     if (arg_begin == 0):
-        dtime = time - time_start
+        if (Time_start):
+            dtime = time - Time_start
+        else:
+            Time_start = time
+            dtime = 0
         print("{0:016X} {1:016X} {2:s} {3:s}".format(dtime, pid, res_str, name[4:length]), end='')
 
     # is it a continuation of last argument (full name mode)?
@@ -300,7 +303,7 @@ def process_log_kprobe_entry(in_data, out_data):
 
     if (len(data2) < size_fmt_args):
         print()
-        return (time_start, string, n_str, str_fini)
+        return (string, n_str, str_fini)
 
     args = struct.unpack(fmt_args, data2)
 
@@ -314,7 +317,7 @@ def process_log_kprobe_entry(in_data, out_data):
         str_fini = -1
         print()
 
-    return (time_start, string, n_str, str_fini)
+    return (string, n_str, str_fini)
 
 ###############################################################################
 # process_log_exit - process kprobe exit or raw tracepoint sys_exit log
@@ -322,8 +325,9 @@ def process_log_kprobe_entry(in_data, out_data):
 
 def process_log_exit(in_data, out_data):
 
+    global Time_start
     bdata, sc_table = in_data
-    time_start, string, n_str, str_fini = out_data
+    string, n_str, str_fini = out_data
 
     fmt_exit = 'QQqq'
     size_fmt_exit = struct.calcsize(fmt_exit)
@@ -336,11 +340,11 @@ def process_log_exit(in_data, out_data):
         name = str(name.decode(errors="ignore"))
         name = name.split('\0')[0]
 
-    if (time_start > 0):
-        dtime = time - time_start
+    if (Time_start):
+        dtime = time - Time_start
     else:
-        time_start = time
-        dtime = 0;
+        Time_start = time
+        dtime = 0
 
     # split return value into result and errno
     if (retval >= 0):
@@ -355,7 +359,7 @@ def process_log_exit(in_data, out_data):
     else:
         print("{0:016X} {1:016X} {2:016X} {3:016X} sys_exit {4:016X}".format(dtime, pid, err, res, id))
 
-    return (time_start, string, n_str, str_fini)
+    return (string, n_str, str_fini)
 
 ###############################################################################
 # process_log_entry - process next log entry
@@ -389,12 +393,11 @@ def convert_bin2txt(path_to_trace_log, sc_table):
     global BUF_SIZE
     global CWD
 
-    time_start = 0
     string = ""
     str_fini = -1  # if != 0 then printing last string was finished and if >0 then it is saved in AllStrings[str_fini - 1]
     n_str = 0  # counter of string arguments
 
-    out_data = (time_start, string, n_str, str_fini)
+    out_data = (string, n_str, str_fini)
 
     sizei = struct.calcsize('i')
     sizeI = struct.calcsize('I')
