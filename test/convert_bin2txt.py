@@ -275,7 +275,7 @@ def process_log_kprobe_entry(in_data, out_data):
 
     # is it a continuation of last argument (full name mode)?
     if (arg_is_cont):
-        # it is a continuation of last argument
+        # it is a continuation of the last string argument
         if (str_fini):
             # printing string was already finished, so skip it
             arg_begin += 1
@@ -285,13 +285,13 @@ def process_log_kprobe_entry(in_data, out_data):
         # arg_begin argument was printed in the previous packet
         arg_begin += 1
 
-    # should we print EOL ?
+    # is it the last packet of this syscall (end of syscall) ?
     if (arg_end == 7):
-        print_eol = 1
-        # and set the true value of the last argument
+        end_of_syscall = 1
+        # and set the true number of the last argument
         arg_end = args_qty
     else:
-        print_eol = 0
+        end_of_syscall = 0
 
     fmt_args = 'QQQQQQ'
     size_fmt_args = struct.calcsize(fmt_args)
@@ -309,8 +309,7 @@ def process_log_kprobe_entry(in_data, out_data):
             print(" ", end='')
         string, n_str, str_fini = print_arg(n, args, masks, n_str, str_fini, nstr, bdata, packet, string)
 
-    # should we print EOL ?
-    if (print_eol):
+    if (end_of_syscall):
         n_str = 0 # reset counter of string arguments
         str_fini = -1
         print()
@@ -464,4 +463,4 @@ def main():
     convert_bin2txt(args.binlog, sc_table)
 
 if __name__ == "__main__":
-        main()
+    main()
