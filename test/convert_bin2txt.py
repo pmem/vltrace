@@ -180,7 +180,7 @@ def get_string(n_str, str_fini, nstrargs, bdata, packet):
         # string did not ended
         str_fini = 0
 
-        str_will_be_continued = (packet >> 7) & 0x1  # bit 7 (string will be continued)
+        str_will_be_continued = (packet >> 6) & 0x1  # bit 6 (string will be continued)
         if (str_will_be_continued == 0):
             # error: string is truncated
             print()
@@ -219,15 +219,15 @@ def process_log_kprobe_entry(in_data, out_data):
     res_str = "---------------- ----------------"
     global Time_start
 
-    bdata, sc_table = in_data
+    packet_type, bdata, sc_table = in_data
     string, n_str, str_fini = out_data
 
-    fmt_entry = 'qQQq'
+    fmt_entry = 'QQQ'
     size_fmt_entry = struct.calcsize(fmt_entry)
     data1 = bdata[0 : size_fmt_entry]
     bdata = bdata[size_fmt_entry:]
 
-    packet, pid, time, sc_id = struct.unpack(fmt_entry, data1)
+    pid, sc_id, time = struct.unpack(fmt_entry, data1)
     if (sc_id < 0 or sc_id >= len(sc_table)):
         print("Error: syscall number out of bounds:", sc_id, file=stderr)
         exit(-1)
@@ -239,10 +239,11 @@ def process_log_kprobe_entry(in_data, out_data):
     arg_end = 7
     arg_is_cont = 0
 
+    packet = packet_type >> 2
     if (packet):
         arg_begin   =  packet & 0x7	      # bits 0-2
         arg_end     = (packet >> 3) & 0x7 # bits 3-5
-        arg_is_cont = (packet >> 6) & 0x1 # bit 6 (is a continuation)
+        arg_is_cont = (packet >> 7) & 0x1 # bit 7 (is a continuation)
 
     # is it a continuation of a string ?
     if (arg_begin == arg_end):
@@ -326,14 +327,14 @@ def process_log_kprobe_entry(in_data, out_data):
 def process_log_exit(in_data, out_data):
 
     global Time_start
-    bdata, sc_table = in_data
+    packet_type, bdata, sc_table = in_data
     string, n_str, str_fini = out_data
 
-    fmt_exit = 'QQqq'
+    fmt_exit = 'QQQq'
     size_fmt_exit = struct.calcsize(fmt_exit)
     bdata = bdata[0 : size_fmt_exit]
 
-    pid, time, id, retval = struct.unpack(fmt_exit, bdata)
+    pid, id, time, retval = struct.unpack(fmt_exit, bdata)
 
     if (id >= 0 and id < len(sc_table)):
         num, num_str, pname, name, length, qty, masks, at, nstr, pos, padding = sc_table[id]
@@ -368,7 +369,8 @@ def process_log_exit(in_data, out_data):
 def process_log_entry(in_data, out_data):
 
     etype, bdata, sc_table = in_data
-    in_data = (bdata, sc_table)
+
+    etype &= 0x03
 
     if (etype == 0):
         # kprobe entry handler

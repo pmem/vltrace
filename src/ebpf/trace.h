@@ -49,66 +49,62 @@
 #define STR_MAX_3	((BUF_SIZE / 3) - 2)
 
 /* types of data packets */
-enum {
-	E_KP_ENTRY,	/* entry of KProbe */
-	E_KP_EXIT,	/* exit  of KProbe */
-	E_TP_ENTRY,	/* entry of TracePoint */
-	E_TP_EXIT,	/* exit  of TracePoint */
+enum data_packet_types {
+	E_KP_ENTRY = 0,	/* entry of KProbe */
+	E_KP_EXIT  = 1,	/* exit  of KProbe */
+	E_TP_ENTRY = 2,	/* entry of TracePoint */
+	E_TP_EXIT  = 3,	/* exit  of TracePoint */
 };
 
 struct data_entry_s {
-	uint32_t size; /* size of the rest of data (except this field) */
-	uint32_t type; /* type of data packets */
+	/* size of the rest of data (except this field) */
+	uint32_t size;
 
 	/*
-	 * This field describes a series of packets for every syscall.
+	 * bits 0-1   type of data packet (enum data_packet_types)
 	 *
-	 * It is needed because stack size is limited to 512 bytes and used part
-	 * of the stack is initialized with zero on every call of syscall handlers.
-	 *
-	 * the value equal to 0 means that this is "single-packet" syscall
-	 *    and there will be no additional packets sent.
-	 * the value bigger than 0 means that this is a first packet and there
-	 *    will be sent 'packet_type' more additional packets.
-	 * the value less than 0 means that this is additional packet with
-	 *   serial number 'packet_type'.
-	 *
-	 * Content of additional packets is defined by syscall number in
-	 *    first packet.
+	 * bits 2-31  describe a series of packets for every syscall:
+	 *      2-4   number of the first saved argument in the packet
+	 *      5-7   number of the last saved argument in the packet
+	 *      8     the syscall is not finished and will be continued -
+	 *            - next packets will be sent
+	 *      9     the syscall has not finished and this is a continuation
 	 */
-	int64_t packet_type;
+	uint32_t packet_type;
 
-	/*
-	 * Syscall's signature. All packets with the same signature belong to one
-	 *    syscall. We need two time stamps here, because syscalls can nest
-	 *    from one pid_tid by calling syscall from signal handler, before
-	 *    syscall called from main context has returned.
-	 */
-	struct {
-		uint64_t pid_tid;
+	/* PID and TID */
+	uint64_t pid_tid;
 
-		/* timestamp */
-		uint64_t start_ts_nsec;
+	/* syscall's ID (number) */
+	uint64_t sc_id;
 
-		/* value -1 means "header" */
-		int64_t sc_id;
-	};
+	/* timestamp */
+	uint64_t start_ts_nsec;
 
 	/* arguments of the syscall */
-	struct {
-		int64_t args[6];
+	int64_t args[6];
 
-		/* buffer for string arguments (of BUF_SIZE) */
-		char aux_str[1];
-	};
+	/* buffer for string arguments (of BUF_SIZE) */
+	char aux_str[1];
 };
 
 struct data_exit_s {
-	uint32_t size; /* size of the rest of data (except this field) */
-	uint32_t type; /* type of data packets */
+	/* size of the rest of data (except this field) */
+	uint32_t size;
+
+	/* type of data packet (enum data_packet_types) */
+	uint32_t packet_type;
+
+	/* PID and TID */
 	uint64_t pid_tid;
+
+	/* syscall's ID (number) */
+	uint64_t sc_id;
+
+	/* timestamp */
 	uint64_t finish_ts_nsec;
-	int64_t sc_id;
+
+	/* return value */
 	int64_t ret;
 };
 
