@@ -134,7 +134,7 @@ main(const int argc, char *const argv[])
 	Args.out_buf_size = OUT_BUF_SIZE;
 
 	/* enlarge ring buffers	- XXX set using command-line options */
-	Args.strace_reader_page_cnt = STRACE_READER_PAGE_CNT_DEFAULT;
+	Args.strace_reader_page_cnt = VLTRACE_READER_PAGE_CNT_DEFAULT;
 
 	/* parse command-line options */
 	st_optind = cl_parser(&Args, argc, argv);

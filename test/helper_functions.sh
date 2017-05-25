@@ -51,7 +51,7 @@ function require_superuser() {
 function save_logs() {
 	FILE_MASK=$1
 	NAME_PATTERN=$2
-	if [ "${STRACE_EBPF_TEST_SAVE_LOGS}" ]; then
+	if [ "${VLTRACE_TEST_SAVE_LOGS}" ]; then
 		DIR_NAME="logs-${NAME_PATTERN}-$(date +%F_%T_%N)-$$"
 		mkdir $DIR_NAME
 		cp $FILE_MASK $DIR_NAME/

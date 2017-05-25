@@ -34,8 +34,8 @@
  * bpf_ctx.h -- Key bpf_ctx structure and related functions
  */
 
-#ifndef STRACE_BPF_H
-#define STRACE_BPF_H
+#ifndef VLTRACE_H
+#define VLTRACE_H
 
 #include <stdint.h>
 #include <unistd.h>
@@ -91,4 +91,4 @@ int load_fn_and_attach_to_tp(struct bpf_ctx *sbcp,
 
 void detach_all(struct bpf_ctx *b);
 
-#endif /* STRACE_BPF_H */
+#endif /* VLTRACE_H */

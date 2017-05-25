@@ -33,12 +33,12 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-result")
 add_executable(test_syscalls test_syscalls.c)
 
 # check if the running kernel meets version requirements
-execute_process(COMMAND utils/check-kernel.sh ${STRACE_EBPF_MINIMUM_KERNEL_VERSION}
+execute_process(COMMAND utils/check-kernel.sh ${VLTRACE_MINIMUM_KERNEL_VERSION}
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-		RESULT_VARIABLE STRACE_EBPF_KERNEL_OK)
+		RESULT_VARIABLE VLTRACE_KERNEL_OK)
 
-if (NOT ${STRACE_EBPF_KERNEL_OK} EQUAL 0)
-        message( WARNING "Tests skipped (required kernel >= ${STRACE_EBPF_MINIMUM_KERNEL_VERSION})" )
+if (NOT ${VLTRACE_KERNEL_OK} EQUAL 0)
+        message( WARNING "Tests skipped (required kernel >= ${VLTRACE_MINIMUM_KERNEL_VERSION})" )
 else ()
 
 	# running kernel meets version requirements, so we can add tests

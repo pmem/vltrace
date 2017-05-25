@@ -34,10 +34,10 @@
 # test/test-match -- test for vltrace using match and *.match files
 #
 
-STRACE_EBPF=../src/vltrace
+VLTRACE=../src/vltrace
 
-[ ! -x $STRACE_EBPF ] \
-	&& echo "Error: executable file '$STRACE_EBPF' does not exist" \
+[ ! -x $VLTRACE ] \
+	&& echo "Error: executable file '$VLTRACE' does not exist" \
 	&& exit 1
 
 # follow-fork option
@@ -58,8 +58,8 @@ TEST_FILE=$1
 TEST_NUM=$2
 MAX_STR_LEN=$3
 
-OPT_STRACE_EBPF="-l bin -t -e all -r -s $MAX_STR_LEN"
-RUN_STRACE="ulimit -l 10240 && ulimit -n 10240 && $STRACE_EBPF $OPT_STRACE_EBPF"
+OPT_VLTRACE="-l bin -t -e all -r -s $MAX_STR_LEN"
+RUN_VLTRACE="ulimit -l 10240 && ulimit -n 10240 && $VLTRACE $OPT_VLTRACE"
 
 if [ ! -x $TEST_FILE ]; then
 	echo "Error: executable file '$TEST_FILE' does not exist"
@@ -88,8 +88,8 @@ require_superuser
 # remove all logs of the current test
 rm -f *-$TEST_NUM.log
 
-echo "$ sudo bash -c \"$RUN_STRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM\""
-sudo bash -c "$RUN_STRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM"
+echo "$ sudo bash -c \"$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM\""
+sudo bash -c "$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM"
 
 set +e
 echo "$ $TEST_DIR/convert_bin2txt.py -s syscalls_table.dat -b $OUTBIN > $OUT"

@@ -103,18 +103,18 @@ for release in Debug Release; do
 	elif [ $ACT_KV -ge 404 ]; then
 		echo "Notice: running basic tests available for kernels >= 4.4"
 		echo
-		STRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t -e kp-all"
+		VLTRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t -e kp-all"
 
-		echo "$ sudo bash -c \"$STRACE -s 126  date\""
-		sudo bash -c "$STRACE -s 126  date"
+		echo "$ sudo bash -c \"$VLTRACE -s 126  date\""
+		sudo bash -c "$VLTRACE -s 126  date"
 		echo
 
-		echo "$ sudo bash -c \"$STRACE -s 382  date\""
-		sudo bash -c "$STRACE -s 382  date"
+		echo "$ sudo bash -c \"$VLTRACE -s 382  date\""
+		sudo bash -c "$VLTRACE -s 382  date"
 		echo
 
-		echo "$ sudo bash -c \"$STRACE -s 4096 date\""
-		sudo bash -c "$STRACE -s 4096 date"
+		echo "$ sudo bash -c \"$VLTRACE -s 4096 date\""
+		sudo bash -c "$VLTRACE -s 4096 date"
 		echo
 	else
 		echo "Notice: skipping tests (too old kernel: required >= $V_REQ, actual = $V_ACT)"
