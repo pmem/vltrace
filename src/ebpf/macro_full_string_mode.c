@@ -38,11 +38,14 @@
 /* BEGIN */
 	if (!end_bpf_read) {
 		src += length;
-		if ((br = bpf_probe_read_str(dest, length, (void *)src)) > 0) {
-			events.perf_submit(ctx, &u.ev, _pad_size);
-		}
-		if (br < length) {
+		if (bpf_probe_read_str(dest, length, (void *)src) < length) {
+			/*
+			 * String is completed and will be sent
+			 * in the last packet.
+			 */
 			end_bpf_read = 1;
+		} else {
+			events.perf_submit(ctx, &u.ev, _pad_size);
 		}
 	}
 /* END */

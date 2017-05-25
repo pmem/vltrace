@@ -73,46 +73,60 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	unsigned length = BUF_SIZE - 1;
 	memset(dest, 0, BUF_SIZE);
 
-	/* from the beginning (0) to 1st string - contains 1st string */
-	u.ev.packet_type = E_KP_ENTRY | (0 << 2) + ((STR1 + 1) << 5) +
-				(1 << 8); /* will be continued */
-	if (bpf_probe_read(dest, length, (void *)src) == 0) {
-		events.perf_submit(ctx, &u.ev, _pad_size);
-	} else {
+	if (bpf_probe_read(dest, length, (void *)src)) {
+		/* string is completed */
 		error_bpf_read = 1;
+		/* from the beginning (0) to the end (7) - contains 1st string */
+		u.ev.packet_type = E_KP_ENTRY |
+				   (0 << 2) +
+				   (7 << 5);
+	} else {
+		/* string is not completed */
+		error_bpf_read = 0;
+		/* from the beginning (0) to 1st string - contains 1st string */
+		u.ev.packet_type = E_KP_ENTRY |
+				   (0 << 2) +
+				   ((STR1 + 1) << 5) +
+				   (1 << 8); /* will be continued */
 	}
 
-	/* only 1st string argument */
-	u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + ((STR1 + 1) << 5) +
-				(1 << 9) + /* it is a continuation */
-				(1 << 8);  /* and will be continued */
-
-	/*
-	 * It is a macro for:
-	 *
-	 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-	 *	if (!error_bpf_read) {
-	 *		src += length;
-	 *		if (bpf_probe_read(dest, length, (void *)src) == 0) {
-	 *			events.perf_submit(ctx, &u.ev, _pad_size);
-	 *		} else {
-	 *			error_bpf_read = 1;
-	 *		}
-	 *	}
-	 * }
-	 *
-	 * because no loops can be used here in eBPF code.
-	 */
-	READ_AND_SUBMIT_N_MINUS_2_PACKETS
-
-	/* from 1st string argument to the end (7) - contains 1st string */
-	u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + (7 << 5) +
-				(1 << 9); /* is a continuation */
-	if (!error_bpf_read) {
-		src += length;
-		bpf_probe_read(dest, length, (void *)src);
-	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
+
+	if (!error_bpf_read) {
+		/* only 1st string argument */
+		u.ev.packet_type = E_KP_ENTRY |
+				   ((STR1 + 1) << 2) +
+				   ((STR1 + 1) << 5) +
+				   (1 << 9) + /* it is a continuation */
+				   (1 << 8);  /* and will be continued */
+
+		/*
+		 * It is a macro for:
+		 *
+		 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
+		 *	if (!error_bpf_read) {
+		 *		src += length;
+		 *		if (bpf_probe_read(dest, length, (void *)src) == 0) {
+		 *			events.perf_submit(ctx, &u.ev, _pad_size);
+		 *		} else {
+		 *			error_bpf_read = 1;
+		 *		}
+		 *	}
+		 * }
+		 *
+		 * because no loops can be used here in eBPF code.
+		 */
+		READ_AND_SUBMIT_N_MINUS_2_PACKETS
+
+		/* from 1st string argument to the end (7) - contains 1st string */
+		u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + (7 << 5) +
+					(1 << 9); /* is a continuation */
+		if (!error_bpf_read) {
+			src += length;
+			bpf_probe_read(dest, length, (void *)src);
+		}
+		events.perf_submit(ctx, &u.ev, _pad_size);
+	}
 
 	return 0;
 };
