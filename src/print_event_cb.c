@@ -208,7 +208,7 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 
 	unsigned nstrings = Syscall_array[event->sc_id].nstrings;
 
-	if (event->packet_type != 0) {
+	if (event->packet_type >> 2) {
 		max_len = STR_MAX_1;
 		str = event->aux_str;
 	} else {
@@ -264,9 +264,9 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 	/* check if string is truncated */
 	if (len == (max_len + 1)) {
 		int str_will_be_continued = 0;
-		if (event->packet_type) {
-			/* bit 7 of packet_type = string will be continued */
-			str_will_be_continued = (event->packet_type >> 7) & 0x1;
+		if (event->packet_type >> 2) {
+			/* bit 8 of type = string will be continued */
+			str_will_be_continued = (event->packet_type >> 8) & 0x1;
 		}
 		if (!str_will_be_continued) {
 			/* print warning that string is truncated */
@@ -348,11 +348,11 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 	int arg_cont = 0;
 
 	/* multi-packet: read arg_begin and arg_end */
-	unsigned packets = event->packet_type;
+	unsigned packets = event->packet_type >> 2;
 	if (packets) {
 		arg_begin = packets & 0x7;	 /* bits 0-2 */
 		arg_end =  (packets >> 3) & 0x7; /* bits 3-5 */
-		arg_cont = (packets >> 6) & 0x1; /* bit 6 (is a continuation) */
+		arg_cont = (packets >> 7) & 0x1; /* bit 7 (is a continuation) */
 	}
 
 	/* is it a continuation of a string ? */
@@ -508,7 +508,7 @@ print_event_text_tp_exit(FILE *f, void *data, int size)
 	fprint_i64(f, (uint64_t)res);
 	fwrite_out_lf_fld_sep(f);
 
-	if (event->sc_id >= 0 && event->sc_id < SC_TBL_SIZE) {
+	if (event->sc_id < SC_TBL_SIZE) {
 		fwrite_sc_name(f, event->sc_id);
 	} else {
 		fwrite(str_sys_exit, len_sys_exit, 1, f);
@@ -527,11 +527,12 @@ print_event_text(void *cb_cookie, void *data, int size)
 #define STR_LEN 30
 	const char *str = "ERROR: unknown type of event: ";
 	uint32_t *size_s = data;
-	uint32_t *type = size_s + 1;
+	uint32_t *packet_type = size_s + 1;
+	uint32_t type = *packet_type & 0x03; /* bits 0-1 */
 
 	(void) cb_cookie;
 
-	switch (*type) {
+	switch (type) {
 	case E_KP_ENTRY:
 		print_event_text_kp_entry(OutputFile, data, size);
 		break;
@@ -543,7 +544,7 @@ print_event_text(void *cb_cookie, void *data, int size)
 		break;
 	default:
 		fwrite(str, STR_LEN, 1, OutputFile);
-		fprint_i64(OutputFile, *type);
+		fprint_i64(OutputFile, type);
 		fwrite("\n", 1, 1, OutputFile);
 		break;
 	}

@@ -52,7 +52,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		char _pad[_pad_size];
 	} u;
 
-	u.ev.type = E_KP_ENTRY;
+	u.ev.packet_type = E_KP_ENTRY;
 	u.ev.size = _pad_size;
 	u.ev.start_ts_nsec = bpf_ktime_get_ns();
 
@@ -76,8 +76,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	int length = BUF_SIZE; /* bpf_probe_read_str is null-terminated */
 
 	/* from the beginning (0) to 1st string - contains 1st string */
-	u.ev.packet_type = (0) + ((STR1 + 1) << 3) +
-				(1 << 7); /* will be continued */
+	u.ev.packet_type = E_KP_ENTRY | (0 << 2) + ((STR1 + 1) << 5) +
+				(1 << 8); /* will be continued */
 	if ((br = bpf_probe_read_str(dest, length, (void *)src)) > 0) {
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
@@ -86,9 +86,9 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	}
 
 	/* only 1st string argument */
-	u.ev.packet_type = (STR1 + 1) + ((STR1 + 1) << 3) +
-				(1 << 6) + /* it is a continuation */
-				(1 << 7);  /* and will be continued */
+	u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + ((STR1 + 1) << 5) +
+				(1 << 9) + /* it is a continuation */
+				(1 << 8);  /* and will be continued */
 
 	/*
 	 * It is a macro for:
@@ -111,8 +111,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	READ_AND_SUBMIT_N_MINUS_2_PACKETS
 
 	/* from 1st string argument to the end (7) - contains 1st string */
-	u.ev.packet_type = (STR1 + 1) + (7 << 3) +
-				(1 << 6); /* is a continuation */
+	u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + (7 << 5) +
+				(1 << 9); /* is a continuation */
 	if (!end_bpf_read) {
 		src += length;
 		bpf_probe_read_str(dest, length, (void *)src);
@@ -134,7 +134,7 @@ kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	PID_CHECK_HOOK
 
-	ev.type = E_KP_EXIT;
+	ev.packet_type = E_KP_EXIT;
 	ev.size = sizeof(ev);
 	ev.pid_tid = pid_tid;
 	ev.finish_ts_nsec = bpf_ktime_get_ns();
