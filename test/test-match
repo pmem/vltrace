@@ -91,10 +91,14 @@ rm -f *-$TEST_NUM.log
 echo "$ sudo bash -c \"$RUN_STRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM\""
 sudo bash -c "$RUN_STRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM"
 
+set +e
 echo "$ $TEST_DIR/convert_bin2txt.py -s syscalls_table.dat -b $OUTBIN > $OUT"
 $TEST_DIR/convert_bin2txt.py -s syscalls_table.dat -b $OUTBIN > $OUT
+RV=$?
+[ $RV -ne 0 ] \
+	&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \
+	&& exit $RV
 
-set +e
 grep --text -e "^0" $OUT > $OUT_BARE
 set -e
 
