@@ -37,7 +37,7 @@
 
 /* BEGIN */
 	if (!end_bpf_read) {
-		src += length;
+		src += length - 1; /* bpf_probe_read_str is null-terminated */
 		if (bpf_probe_read_str(dest, length, (void *)src) < length) {
 			/*
 			 * String is completed and will be sent

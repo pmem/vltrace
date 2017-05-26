@@ -130,7 +130,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 				   (STR2 << 5) +
 				   (1 << 9); /* is a continuation */
 		if (!end_bpf_read) {
-			src += length;
+			/* bpf_probe_read_str is null-terminated */
+			src += length - 1;
 			bpf_probe_read_str(dest, length, (void *)src);
 		}
 		events.perf_submit(ctx, &u.ev, _pad_size);
@@ -193,7 +194,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 					(7 << 5) +
 					(1 << 9); /* is a continuation */
 		if (!end_bpf_read) {
-			src += length;
+			/* bpf_probe_read_str is null-terminated */
+			src += length - 1;
 			bpf_probe_read_str(dest, length, (void *)src);
 		}
 		events.perf_submit(ctx, &u.ev, _pad_size);
