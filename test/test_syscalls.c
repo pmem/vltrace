@@ -74,6 +74,62 @@
 /* used to test unsupported flags (almost all bits are set) */
 #define FLAGS_SET		0x0FFFFFFFFFFFFFFF
 
+#define STRING_10		"1234567890"
+#define STRING_30 		STRING_10 STRING_10 STRING_10
+#define STRING_60 		STRING_30 STRING_30
+#define STRING_120		STRING_60 STRING_60
+#define STRING_420		STRING_120 STRING_120 STRING_120 STRING_60
+#define STRING_840		STRING_420 STRING_420
+#define STRING_1260		STRING_420 STRING_420 STRING_420
+
+#define STRING_126_1		"START_111_"STRING_10"_111_END"
+#define STRING_126_2		"START_222_"STRING_10"_222_END"
+#define STRING_126_3		"START_333_"STRING_10"_333_END"
+
+#define STRING_382_1		"START_111_"STRING_120"_111_END"
+#define STRING_382_2		"START_222_"STRING_120"_222_END"
+#define STRING_382_3		"START_333_"STRING_120"_333_END"
+
+#define STRING_765_1		"START_111_"STRING_420"_111_END"
+#define STRING_765_2		"START_222_"STRING_420"_222_END"
+#define STRING_765_3		"START_333_"STRING_420"_333_END"
+
+#define STRING_1148_1		"START_111_"STRING_840"_111_END"
+#define STRING_1148_2		"START_222_"STRING_840"_222_END"
+#define STRING_1148_3		"START_333_"STRING_840"_333_END"
+
+#define STRING_1531_1		"START_111_"STRING_1260"_111_END"
+#define STRING_1531_2		"START_222_"STRING_1260"_222_END"
+#define STRING_1531_3		"START_333_"STRING_1260"_333_END"
+
+char *strings[5][3] = {
+	{
+		STRING_126_1,
+		STRING_126_2,
+		STRING_126_3,
+	},
+	{
+		STRING_382_1,
+		STRING_382_2,
+		STRING_382_3,
+	},
+	{
+		STRING_765_1,
+		STRING_765_2,
+		STRING_765_3,
+	},
+	{
+		STRING_1148_1,
+		STRING_1148_2,
+		STRING_1148_3,
+	},
+	{
+		STRING_1531_1,
+		STRING_1531_2,
+		STRING_1531_3,
+	},
+};
+
 int counter;
 
 /*
@@ -290,55 +346,51 @@ s();
  * test_strings -- test syscalls with string arguments
  */
 static void
-test_strings(void)
+test_strings(char *string[3])
 {
 	/* string args: 1 (open) */
 s();
-	syscall(SYS_open, NON_EXIST_PATH_1, 0x102, 0x103, 0x104, 0x105, 0x106);
+	syscall(SYS_open, string[0], 0x102, 0x103, 0x104, 0x105, 0x106);
 
 	/* string args: 2 (openat) */
 s();
-	syscall(SYS_openat, 0x101, NON_EXIST_PATH_2, 0x103,
-		0x104, 0x105, 0x106);
+	syscall(SYS_openat, 0x101, string[1], 0x103, 0x104, 0x105, 0x106);
 
 	/* string args: 1 2 (rename) */
 s();
-	rename(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
+	rename(string[0], string[1]);
 
 	/* string args: 1 2 (llistxattr) */
 s();
-	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x103);
+	llistxattr(string[1], string[0], 0x103);
 
 	/* string args: 1 3 (symlinkat) */
 s();
-	syscall(SYS_symlinkat, NON_EXIST_PATH_1, 0x102, NON_EXIST_PATH_2);
+	syscall(SYS_symlinkat, string[0], 0x102, string[1]);
 
 	/* string args: 2 4 (renameat) */
 s();
-	syscall(SYS_renameat, 0x101, NON_EXIST_PATH_1, 0x103, NON_EXIST_PATH_2);
+	syscall(SYS_renameat, 0x101, string[0], 0x103, string[1]);
 
 	/* string args: 1 2 3 (mount) */
 s();
-	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3", 0x101, (void *)0x102);
+	mount(string[0], string[1], string[2], 0x101, (void *)0x102);
 
 	/* string args: 1 2 3 (request_key) */
 s();
-	syscall(SYS_request_key, "string1_type", "string2_description",
-		"string3_callout_info", 0x104);
+	syscall(SYS_request_key, string[0], string[1], string[2], 0x104);
 
 	/* string args: 3 (init_module) */
 s();
-	syscall(SYS_init_module, 0x101, 0x102, NON_EXIST_PATH_1);
+	syscall(SYS_init_module, 0x101, 0x102, string[0]);
 
 	/* string args: 4 (kexec_file_load) */
 s();
-	syscall(SYS_kexec_file_load, 0x101, 0x102, 0x103, NON_EXIST_PATH_2,
-		0x105);
+	syscall(SYS_kexec_file_load, 0x101, 0x102, 0x103, string[1], 0x105);
 
 	/* string args: 5 (fanotify_mark) */
 s();
-	syscall(SYS_fanotify_mark, 0x101, 0x102, 0x103, 0x104,
-		NON_EXIST_PATH_1);
+	syscall(SYS_fanotify_mark, 0x101, 0x102, 0x103, 0x104, string[0]);
 s();
 }
 
@@ -483,12 +535,52 @@ static void test_7(void)
 }
 
 /*
- * test_8 -- test syscalls with string arguments
+ * test_8 -- test syscalls with string arguments of length < 126
  */
 static void test_8(void)
 {
 	MARK_START();
-	test_strings();
+	test_strings(strings[0]);
+	MARK_END();
+}
+
+/*
+ * test_9 -- test syscalls with string arguments of length < 382
+ */
+static void test_9(void)
+{
+	MARK_START();
+	test_strings(strings[1]);
+	MARK_END();
+}
+
+/*
+ * test_10 -- test syscalls with string arguments of length < 765
+ */
+static void test_10(void)
+{
+	MARK_START();
+	test_strings(strings[2]);
+	MARK_END();
+}
+
+/*
+ * test_11 -- test syscalls with string arguments of length < 1148
+ */
+static void test_11(void)
+{
+	MARK_START();
+	test_strings(strings[3]);
+	MARK_END();
+}
+
+/*
+ * test_12 -- test syscalls with string arguments of length < 1531
+ */
+static void test_12(void)
+{
+	MARK_START();
+	test_strings(strings[4]);
 	MARK_END();
 }
 
@@ -504,7 +596,11 @@ static void (*run_test[])(void) = {
 	test_5,
 	test_6,
 	test_7,
-	test_8
+	test_8,
+	test_9,
+	test_10,
+	test_11,
+	test_12
 };
 
 int

@@ -81,8 +81,16 @@ else ()
 		add_test(NAME "${STR_LEN}-syscall-sigaction"
 			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 7 ${STR_LEN})
 
-		# 9
-		add_test(NAME "${STR_LEN}-syscalls-string-arguments"
-			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 8 ${STR_LEN})
 	endforeach(STR_LEN)
+
+	add_test(NAME "126-syscalls-string-arguments"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 8 126)
+	add_test(NAME "382-syscalls-string-arguments"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 9 382)
+	add_test(NAME "765-syscalls-string-arguments"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 10 765)
+	add_test(NAME "1148-syscalls-string-arguments"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 11 1148)
+	add_test(NAME "1531-syscalls-string-arguments"
+			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 12 1531)
 endif ()
