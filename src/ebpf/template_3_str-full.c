@@ -105,21 +105,9 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 					(1 << 8);  /* and will be continued */
 
 		/*
-		 * It is a macro for:
-		 *
-		 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-		 *	if (!end_bpf_read) {
-		 *		src += length;
-		 *		if ((br = bpf_probe_read_str(dest, length,
-		 *						(void *)src)) > 0) {
-		 *			events.perf_submit(ctx, &u.ev, _pad_size);
-		 *		}
-		 *		if (br < length) {
-		 *			end_bpf_read = 1;
-		 *		}
-		 *	}
-		 * }
-		 *
+		 * It is a macro for sending (Args.n_str_packets-2) packets.
+		 * The code from the file: macro_full_string_mode.c
+		 * will be placed here (Args.n_str_packets-2) times,
 		 * because no loops can be used here in eBPF code.
 		 */
 		READ_AND_SUBMIT_N_MINUS_2_PACKETS
@@ -169,21 +157,9 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 					(1 << 8);  /* and will be continued */
 
 		/*
-		 * It is a macro for:
-		 *
-		 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-		 *	if (!end_bpf_read) {
-		 *		src += length;
-		 *		if ((br = bpf_probe_read_str(dest, length,
-		 *						(void *)src)) > 0) {
-		 *			events.perf_submit(ctx, &u.ev, _pad_size);
-		 *		}
-		 *		if (br < length) {
-		 *			end_bpf_read = 1;
-		 *		}
-		 *	}
-		 * }
-		 *
+		 * It is a macro for sending (Args.n_str_packets-2) packets.
+		 * The code from the file: macro_full_string_mode.c
+		 * will be placed here (Args.n_str_packets-2) times,
 		 * because no loops can be used here in eBPF code.
 		 */
 		READ_AND_SUBMIT_N_MINUS_2_PACKETS
@@ -233,21 +209,9 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 					(1 << 8);  /* and will be continued */
 
 		/*
-		 * It is a macro for:
-		 *
-		 * for (int i = 0; i < Args.n_str_packets - 2; i++) {
-		 *	if (!end_bpf_read) {
-		 *		src += length;
-		 *		if ((br = bpf_probe_read_str(dest, length,
-		 *						(void *)src)) > 0) {
-		 *			events.perf_submit(ctx, &u.ev, _pad_size);
-		 *		}
-		 *		if (br < length) {
-		 *			end_bpf_read = 1;
-		 *		}
-		 *	}
-		 * }
-		 *
+		 * It is a macro for sending (Args.n_str_packets-2) packets.
+		 * The code from the file: macro_full_string_mode.c
+		 * will be placed here (Args.n_str_packets-2) times,
 		 * because no loops can be used here in eBPF code.
 		 */
 		READ_AND_SUBMIT_N_MINUS_2_PACKETS
