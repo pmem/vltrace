@@ -85,7 +85,8 @@ enum masks_t {
 	/* syscall has strings as 1st, 2nd and 3rd args. mount() */
 	EM_str_1_2_3 = EM_str_1 | EM_str_2 | EM_str_3,
 
-	EM_ALL = -1,
+	/* disabled syscall */
+	EM_DISABLED = 1 << 31,
 };
 
 enum {

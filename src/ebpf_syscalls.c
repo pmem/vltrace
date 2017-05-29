@@ -481,7 +481,6 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_geteuid16, SyS_geteuid16, 1),
 	EBPF_SYSCALL(__NR_getgid16, SyS_getgid16, 1),
 	EBPF_SYSCALL(__NR_getegid16, SyS_getegid16, 1),
-	EBPF_SYSCALL(__NR_mmap_pgoff, SyS_mmap_pgoff, 6),
 	EBPF_SYSCALL_DESC(__NR_fadvise64_64, SyS_fadvise64_64, 4),
 	EBPF_SYSCALL_DESC(__NR_llseek, SyS_llseek, 5),
 	EBPF_SYSCALL_DESC(__NR_old_readdir, SyS_old_readdir, 3),
@@ -500,6 +499,9 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_copyarea, SyS_copyarea, 6),
 	EBPF_SYSCALL(__NR_imageblit, SyS_imageblit, 6),
 	EBPF_SYSCALL_FILEAT(__NR_statx, SyS_statx, 5),
+
+	/* mmap_pgoff is a 32-bit-only syscall */
+	EBPF_SYSCALL_FLAGS(__NR_mmap_pgoff, SyS_mmap_pgoff, EM_DISABLED, 6),
 };
 
 /*
@@ -544,6 +546,8 @@ mark_available(const char *sc_name)
 
 		if (strcasecmp(sc_name, Syscall_array[i].handler_name) == 0) {
 			/* found number */
+			if (EM_DISABLED & Syscall_array[i].mask)
+				return;
 			n = i;
 			break;
 		}
