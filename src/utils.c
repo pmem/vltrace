@@ -323,9 +323,6 @@ is_a_sc(const char *const line, const ssize_t size)
 	return true;
 }
 
-const char Debug_tracing[] = DEBUG_TRACING;
-const char Debug_tracing_aff[] = DEBUG_TRACING DT_AFF;
-
 /*
  * get_sc_list -- fetch syscall's list from running kernel
  */
@@ -336,7 +333,7 @@ get_sc_list(FILE *f, template_t template)
 	size_t len = 0;
 	ssize_t read;
 
-	FILE *in = fopen(Debug_tracing_aff, "r");
+	FILE *in = fopen(AVAILABLE_FILTERS, "r");
 
 	if (NULL == in) {
 		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);

@@ -84,10 +84,6 @@ void attach_signals_handlers(void);
 
 void setup_out_lf(void);
 
-#define DEBUG_TRACING "/sys/kernel/debug/tracing"
-#define DT_AFF "/available_filter_functions"
-
-extern const char Debug_tracing[];
-extern const char Debug_tracing_aff[];
+#define AVAILABLE_FILTERS "/sys/kernel/debug/tracing/available_filter_functions"
 
 #endif /* UTILS_H */

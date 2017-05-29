@@ -587,9 +587,9 @@ mark_available_syscalls()
 	ssize_t read;
 	int SyS_sigsuspend = 0;
 
-	FILE *file = fopen(Debug_tracing_aff, "r");
+	FILE *file = fopen(AVAILABLE_FILTERS, "r");
 	if (file == NULL) {
-		ERROR("error opening '%s': %m", Debug_tracing_aff);
+		ERROR("error opening '%s': %m", AVAILABLE_FILTERS);
 		exit(-1);
 	}
 
