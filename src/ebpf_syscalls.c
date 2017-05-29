@@ -91,7 +91,7 @@ char *syscall_names[SC_TBL_SIZE] = {
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.mask = EM_fileat }
+	.mask = EM_fd_1 | EM_str_2 }
 
 #define EBPF_SYSCALL_DESC(nr, sym, aq)    [nr] = {\
 	.num = nr, \
@@ -116,7 +116,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 
 	EBPF_SYSCALL_DESC(__NR_read, SyS_read, 3),
 	EBPF_SYSCALL_DESC(__NR_write, SyS_write, 3),
-	EBPF_SYSCALL_FLAGS(__NR_open, SyS_open, EM_str_1 | EM_rdesc, 3),
+	EBPF_SYSCALL_FLAGS(__NR_open, SyS_open, EM_str_1 | EM_rfd, 3),
 	EBPF_SYSCALL_DESC(__NR_close, SyS_close, 1),
 	EBPF_SYSCALL_FILE(__NR_stat, SyS_stat, 2),
 	EBPF_SYSCALL_FILE(__NR_newstat, SyS_newstat, 2),
@@ -132,7 +132,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_brk, SyS_brk, 1),
 	EBPF_SYSCALL(__NR_rt_sigaction, SyS_rt_sigaction, 4),
 	EBPF_SYSCALL(__NR_rt_sigprocmask, SyS_rt_sigprocmask, 4),
-	EBPF_SYSCALL(__NR_rt_sigreturn, SyS_rt_sigreturn, 6),
+	EBPF_SYSCALL_FLAGS(__NR_rt_sigreturn, SyS_rt_sigreturn, EM_no_ret, 6),
 	EBPF_SYSCALL_DESC(__NR_ioctl, SyS_ioctl, 3),
 	EBPF_SYSCALL_DESC(__NR_pread64, SyS_pread64, 4),
 	EBPF_SYSCALL_DESC(__NR_pwrite64, SyS_pwrite64, 4),
@@ -149,9 +149,9 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_shmget, SyS_shmget, 3),
 	EBPF_SYSCALL(__NR_shmat, SyS_shmat, 3),
 	EBPF_SYSCALL(__NR_shmctl, SyS_shmctl, 3),
-	EBPF_SYSCALL_FLAGS(__NR_dup,  SyS_dup,  EM_fd_1 | EM_rdesc, 1),
-	EBPF_SYSCALL_FLAGS(__NR_dup2, SyS_dup2, EM_fd_1 | EM_rdesc, 2),
-	EBPF_SYSCALL_FLAGS(__NR_dup3, SyS_dup3, EM_fd_1 | EM_rdesc, 3),
+	EBPF_SYSCALL_FLAGS(__NR_dup,  SyS_dup,  EM_fd_1 | EM_rfd, 1),
+	EBPF_SYSCALL_FLAGS(__NR_dup2, SyS_dup2, EM_fd_1 | EM_rfd, 2),
+	EBPF_SYSCALL_FLAGS(__NR_dup3, SyS_dup3, EM_fd_1 | EM_rfd, 3),
 	EBPF_SYSCALL(__NR_pause, SyS_pause, 1),
 	EBPF_SYSCALL(__NR_nanosleep, SyS_nanosleep, 2),
 	EBPF_SYSCALL(__NR_getitimer, SyS_getitimer, 2),
@@ -179,7 +179,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_RPID(__NR_fork, SyS_fork, 0),
 	EBPF_SYSCALL_RPID(__NR_vfork, SyS_vfork, 0),
 	EBPF_SYSCALL_FILE(__NR_execve, SyS_execve, 3),
-	EBPF_SYSCALL(__NR_exit, SyS_exit, 1),
+	EBPF_SYSCALL_FLAGS(__NR_exit, SyS_exit, EM_no_ret, 1),
 	EBPF_SYSCALL(__NR_wait4, SyS_wait4, 4),
 	EBPF_SYSCALL(__NR_kill, SyS_kill, 2),
 	EBPF_SYSCALL(__NR_olduname, SyS_olduname, 1),
@@ -206,7 +206,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_FLAGS(__NR_rename, SyS_rename, EM_str_1_2, 2),
 	EBPF_SYSCALL_FILE(__NR_mkdir, SyS_mkdir, 2),
 	EBPF_SYSCALL_FILE(__NR_rmdir, SyS_rmdir, 1),
-	EBPF_SYSCALL_FLAGS(__NR_creat, SyS_creat, EM_str_1 | EM_rdesc, 2),
+	EBPF_SYSCALL_FLAGS(__NR_creat, SyS_creat, EM_str_1 | EM_rfd, 2),
 	EBPF_SYSCALL_FLAGS(__NR_link, SyS_link, EM_str_1_2, 2),
 	EBPF_SYSCALL_FILE(__NR_unlink, SyS_unlink, 1),
 	EBPF_SYSCALL_FLAGS(__NR_symlink, SyS_symlink, EM_str_1_2, 2),
@@ -347,7 +347,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_clock_gettime, SyS_clock_gettime, 2),
 	EBPF_SYSCALL(__NR_clock_getres, SyS_clock_getres, 2),
 	EBPF_SYSCALL(__NR_clock_nanosleep, SyS_clock_nanosleep, 4),
-	EBPF_SYSCALL(__NR_exit_group, SyS_exit_group, 1),
+	EBPF_SYSCALL_FLAGS(__NR_exit_group, SyS_exit_group, EM_no_ret, 1),
 	EBPF_SYSCALL_DESC(__NR_epoll_wait, SyS_epoll_wait, 4),
 	EBPF_SYSCALL_DESC(__NR_epoll_ctl, SyS_epoll_ctl, 4),
 	EBPF_SYSCALL(__NR_tgkill, SyS_tgkill, 3),
@@ -373,7 +373,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_DESC(__NR_inotify_rm_watch, SyS_inotify_rm_watch, 2),
 	EBPF_SYSCALL(__NR_migrate_pages, SyS_migrate_pages, 4),
 	EBPF_SYSCALL_FLAGS(__NR_openat, SyS_openat,
-				EM_fd_1 | EM_str_2 | EM_rdesc, 4),
+				EM_fd_1 | EM_str_2 | EM_rfd, 4),
 	EBPF_SYSCALL_FILEAT(__NR_mkdirat, SyS_mkdirat, 3),
 	EBPF_SYSCALL_FILEAT(__NR_mknodat, SyS_mknodat, 4),
 	EBPF_SYSCALL_FILEAT(__NR_fchownat, SyS_fchownat, 5),
@@ -421,7 +421,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_prlimit64, SyS_prlimit64, 4),
 	EBPF_SYSCALL_FILEAT(__NR_name_to_handle_at, SyS_name_to_handle_at, 5),
 	EBPF_SYSCALL_FLAGS(__NR_open_by_handle_at, SyS_open_by_handle_at,
-				EM_fd_1 | EM_rdesc, 3),
+				EM_fd_1 | EM_rfd, 3),
 	EBPF_SYSCALL(__NR_clock_adjtime, SyS_clock_adjtime, 2),
 	EBPF_SYSCALL_DESC(__NR_syncfs, SyS_syncfs, 1),
 	EBPF_SYSCALL_DESC(__NR_sendmmsg, SyS_sendmmsg, 4),
@@ -430,7 +430,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_process_vm_readv, SyS_process_vm_readv, 6),
 	EBPF_SYSCALL(__NR_process_vm_writev, SyS_process_vm_writev, 6),
 	EBPF_SYSCALL(__NR_kcmp, SyS_kcmp, 5),
-	EBPF_SYSCALL_FILEAT(__NR_finit_module, SyS_finit_module, 3),
+	EBPF_SYSCALL_DESC(__NR_finit_module, SyS_finit_module, 3),
 	EBPF_SYSCALL(__NR_sched_setattr, SyS_sched_setattr, 3),
 	EBPF_SYSCALL(__NR_sched_getattr, SyS_sched_getattr, 4),
 	EBPF_SYSCALL_FLAGS(__NR_renameat2, SyS_renameat2, EM_str_2_4, 5),

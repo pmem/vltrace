@@ -39,19 +39,6 @@
 
 #include <stdio.h>
 
-enum sc_arg_type {
-	/* Syscall does not have this argument */
-	EAT_absent = 0,
-	/* This argument is a pointer */
-	EAT_pointer,
-	/* This argument is a file descriptor */
-	EAT_file_descriptor,
-	/* This argument is a fs path */
-	EAT_path,
-	/* This argument is generic integer */
-	EAT_int,
-};
-
 enum masks_t {
 	/* syscall has string as a first arg */
 	EM_str_1 = 1 << 0,
@@ -82,20 +69,13 @@ enum masks_t {
 	/* syscall has fd as sixth arg */
 	EM_fd_6 = 1 << 11,
 
-	/* syscall returns a fd */
-	EM_rdesc = 1 << 12,
-	/* syscall returns a pid */
-	EM_rpid = 1 << 13,
-	/* syscall returns a ptr */
-	EM_rptr = 1 << 14,
+	/* syscall does not return */
+	EM_no_ret = 1 << 12,
+	/* syscall returns a file descriptor */
+	EM_rfd = 1 << 13,
+	/* syscall returns a PID */
+	EM_rpid = 1 << 14,
 
-	/* syscall should be traced in 'kern-all' mode only */
-	EM_kern_all = 1 << 15,
-	/* syscall should be traced in 'fileio' mode only */
-	EM_fileio = 1 << 16,
-
-	/* syscall accepts dir fd as a first arg and path as a second */
-	EM_fileat = EM_fd_1 | EM_str_2,
 	/* syscall has fs paths as first and second Args. rename() */
 	EM_str_1_2 = EM_str_1 | EM_str_2,
 	/* syscall has fs paths as first and third Args. linkat() */
