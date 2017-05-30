@@ -99,6 +99,10 @@ RV=$?
 	&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \
 	&& exit $RV
 
+echo "$ grep --text -e "ERROR" -e "rror" -e "arning" $OUT"
+grep --text -e "ERROR" -e "rror" -e "arning" $OUT
+[ $? -eq 0 ] && echo "LOG ($OUT):" && cat $OUT && exit 1
+
 grep --text -e "^0" $OUT > $OUT_BARE
 set -e
 
