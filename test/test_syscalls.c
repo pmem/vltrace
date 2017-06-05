@@ -585,6 +585,26 @@ static void test_12(void)
 }
 
 /*
+ * test_13 -- test syscalls with string arguments of length < 1531
+ *            with single fork
+ */
+static void test_13(void)
+{
+	syscall(SYS_fork);
+	test_12();
+}
+
+/*
+ * test_14 -- test syscalls with string arguments of length < 1531
+ *            with double fork
+ */
+static void test_14(void)
+{
+	syscall(SYS_fork);
+	test_13();
+}
+
+/*
  * run_test -- array of tests
  */
 static void (*run_test[])(void) = {
@@ -600,7 +620,9 @@ static void (*run_test[])(void) = {
 	test_9,
 	test_10,
 	test_11,
-	test_12
+	test_12,
+	test_13,
+	test_14
 };
 
 int

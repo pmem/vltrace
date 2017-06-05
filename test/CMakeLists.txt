@@ -93,4 +93,8 @@ else ()
 			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 11 1148)
 	add_test(NAME "1531-syscalls-string-arguments"
 			COMMAND ${TEST_DIR}/test-match ${TEST_APP} 12 1531)
+	add_test(NAME "1531-syscalls-string-arguments-with-fork"
+			COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 13 1531)
+	add_test(NAME "1531-syscalls-string-arguments-with-double-fork"
+			COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} 14 1531)
 endif ()
