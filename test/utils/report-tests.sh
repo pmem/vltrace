@@ -42,34 +42,32 @@
 	&& OUTPUT="cat $1" \
 	|| OUTPUT="$(dirname $0)/view-tests.sh long $1"
 
-TAB="	"
-
 echo
-ERR=$($OUTPUT | grep '%' | cut -d"$TAB" -f3 | cut -d" " -f1 | sort | uniq)
+ERR=$($OUTPUT | grep '%' | cut -f3 | cut -d" " -f1 | sort | uniq)
 if [ "$ERR" != "" ]; then
 	for e in $ERR; do
 		case $e in
 		missed-entry-syscall:)
-			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
+			SC=$($OUTPUT | grep "$e" | cut -f3 | cut -d" " -f2 | sort | uniq)
 			for s in $SC; do
 				echo "- missed ENTRY probe of syscall: $s"
-				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
+				$OUTPUT | grep "$e $s " | sed "s/\t$e $s\t/\t\t/g"
 				echo
 			done
 			;;
 		missed-exit-syscall:)
-			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
+			SC=$($OUTPUT | grep "$e" | cut -f3 | cut -d" " -f2 | sort | uniq)
 			for s in $SC; do
 				echo "- missed EXIT probe of syscall: $s"
-				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
+				$OUTPUT | grep "$e $s " | sed "s/\t$e $s\t/\t\t/g"
 				echo
 			done
 			;;
 		wrong-arguments:)
-			SC=$($OUTPUT | grep "$e" | cut -d"$TAB" -f3 | cut -d" " -f2 | sort | uniq)
+			SC=$($OUTPUT | grep "$e" | cut -f3 | cut -d" " -f2 | sort | uniq)
 			for s in $SC; do
 				echo "- wrong arguments: $s"
-				$OUTPUT | grep "$e $s" | sed "s/\t$e $s\t/\t\t/g"
+				$OUTPUT | grep "$e $s " | sed "s/\t$e $s\t/\t\t/g"
 				echo
 			done
 			;;
@@ -84,6 +82,14 @@ if [ "$ERR" != "" ]; then
 		unexpected-output)
 			echo "- unexpected output:"
 			$OUTPUT | grep "$e" | sed "s/\t$e\t/\t\t/g"
+			;;
+		bpf_probe_read-error:)
+			SC=$($OUTPUT | grep "$e" | cut -f3 | cut -d" " -f2 | sort | uniq)
+			for s in $SC; do
+				echo "- bpf_probe_read error: $s"
+				$OUTPUT | grep "$e $s " | sed "s/\t$e $s\t/\t\t/g"
+				echo
+			done
 			;;
 		*)
 			echo "Unsupported event: $e"
