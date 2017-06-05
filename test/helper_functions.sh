@@ -166,7 +166,14 @@ function check() {
 				NUM="2" && TYPE="EXIT"
 			fi
 			if [ "$SC_MATCH" == "$SC_ACTUA" -a "$RS_MATCH" == "$RS_ACTUA" ]; then
-				echo "Error 3: wrong arguments of syscall $SC_MATCH"
+				set +e
+				READ_ERROR=$(tail -n2 $MATCH_OUT | head -n1 | grep -e "(bpf_probe_read < 0)")
+				set -e
+				if [ "$READ_ERROR" == "" ]; then
+					echo "Error 3: wrong arguments of syscall $SC_MATCH"
+				else
+					echo "Error 7: bpf_probe_read error (bpf_probe_read < 0) in syscall: $SC_MATCH"
+				fi
 			else
 				echo "Error $NUM: missed $TYPE probe of syscall $SC_MATCH"
 			fi

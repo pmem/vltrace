@@ -70,8 +70,8 @@ for n in $TESTS; do
 				C=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
 				[ $C -lt $MIN ] && continue
 				[ $LONG -eq 0 ] \
-					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e" \
-					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e\t$NAME"
+					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e " \
+					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e \t$NAME"
 			done
 			;;
 		2) # missed exit probe of syscall
@@ -82,8 +82,8 @@ for n in $TESTS; do
 				C=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
 				[ $C -lt $MIN ] && continue
 				[ $LONG -eq 0 ] \
-					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e" \
-					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e\t$NAME"
+					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e " \
+					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e \t$NAME"
 			done
 			;;
 		3) # wrong arguments of syscall
@@ -94,8 +94,8 @@ for n in $TESTS; do
 				C=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
 				[ $C -lt $MIN ] && continue
 				[ $LONG -eq 0 ] \
-					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e" \
-					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e\t$NAME"
+					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e " \
+					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e \t$NAME"
 			done
 			;;
 		4) # missing output
@@ -121,6 +121,18 @@ for n in $TESTS; do
 			[ $LONG -eq 0 ] \
 				&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG" \
 				|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG\t$NAME"
+			;;
+		7) # bpf_probe_read error
+			MSG="bpf_probe_read-error: "
+			FLD=11
+			ERR=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | sort | uniq)
+			for e in $ERR; do
+				C=$(grep "Error $err" ./log${n}.txt | cut -d" " -f$FLD | grep $e | wc -l)
+				[ $C -lt $MIN ] && continue
+				[ $LONG -eq 0 ] \
+					&& echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e " \
+					|| echo -e "   $((100*$C/$A))%\t($C/$A)\t$MSG$e \t$NAME"
+			done
 			;;
 		*) # unknown error
 			echo "UNKNOWN ERROR"
