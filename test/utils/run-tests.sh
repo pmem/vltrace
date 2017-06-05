@@ -35,6 +35,8 @@
 # test/utils/run-tests.sh -- run ctests for vltrace
 #
 
+TEMP_FILE=$(mktemp)
+
 MAX=$1
 if [ "$MAX" == "" ]; then
 	echo "Usage: $0 <number-of-iterations> <tests-to-run>"
@@ -57,10 +59,24 @@ echo
 
 N=1
 while [ $N -le $MAX ]; do
-	echo "--- TEST #$N ---"
+	echo "--- ITERATION #$N ---"
 	for n in $TESTS; do
-		echo "--- TEST #$N ---" >> log${n}.txt
-		ctest -V -I ${n},${n} 2>&1 | tee -a log${n}.txt
+		if [ "$RUN_TEST_EXIT_ON_ERROR" != "1" ]; then
+			echo "--- TEST #$N ---" >> log${n}.txt
+			ctest -V -I ${n},${n} 2>&1 | tee -a log${n}.txt
+		else
+			echo > $TEMP_FILE
+			tailf $TEMP_FILE &
+			echo >> $TEMP_FILE
+			echo "--- TEST #$n ---" >> $TEMP_FILE
+			ctest -V -I ${n},${n} >> $TEMP_FILE 2>&1
+			RV=$?
+			cat $TEMP_FILE >> log${n}.txt
+			rm -f $TEMP_FILE
+			[ $RV -ne 0 ] && exit 1
+		fi
 	done
 	N=$(($N + 1))
 done
+
+rm -f $TEMP_FILE
