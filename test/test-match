@@ -83,13 +83,13 @@ OUT=output-$TEST_NUM.log
 OUT_BARE=output-bare-$TEST_NUM.log
 OUT_SORT=output-sort-$TEST_NUM.log
 
-require_superuser
-
-# remove all logs of the current test
-rm -f *-$TEST_NUM.log
-
-echo "$ sudo bash -c \"$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM\""
-sudo bash -c "$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM"
+if [ "$VLTRACE_SKIP" != "1" ]; then
+	require_superuser
+	# remove all logs of the current test
+	rm -f *-$TEST_NUM.log
+	echo "$ sudo bash -c \"$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM\""
+	sudo bash -c "$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM"
+fi
 
 set +e
 echo "$ $TEST_DIR/convert_bin2txt.py -s syscalls_table.dat -b $OUTBIN > $OUT"
