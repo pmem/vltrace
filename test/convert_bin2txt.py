@@ -1345,26 +1345,34 @@ class AnalyzingTool:
 ###############################################################################
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert tracing logs from binary to text format")
-    parser.add_argument("-t", "--table", required=True, help="path to 'syscalls_table.dat'")
-    parser.add_argument("-b", "--binlog", required=True, help="input file - tracing log in binary format")
-    parser.add_argument("-d", "--debug", action='store_true', required=False, help="debug mode")
-    parser.add_argument("-s", "--script", action='store_true', required=False, help="script mode")
-    parser.add_argument("-a", "--analyze", action='store_true', required=False, help="analyze mode")
-    parser.add_argument("-l", "--log", action='store_true', required=False, help="print log in analyze mode")
-    parser.add_argument("-p", "--pmem", required=False, help="paths to pmem")
-    parser.add_argument("-o", "--fileout", required=False, help="output file - analysis results")
+    parser = argparse.ArgumentParser(
+                        description="Analyze vltrace binary logs and check if all syscalls are supported by pmemfile")
+
+    parser.add_argument("-t", "--table", required=True, help="path to vltrace file 'syscalls_table.dat'")
+    parser.add_argument("-b", "--binlog", required=True, help="input file - vltrace log in binary format")
+
+    parser.add_argument("-c", "--convert", action='store_true', required=False,
+                        help="converter mode - only converts vltrace log from binary to text format")
+
+    parser.add_argument("-p", "--pmem", required=False, help="paths to pmem filesystem")
     parser.add_argument("-m", "--max_packets", required=False, help="maximum number of packets to be read")
+
+    parser.add_argument("-s", "--script", action='store_true', required=False,
+                        help="script mode - do not print progress")
+    parser.add_argument("-l", "--log", action='store_true', required=False, help="print output log in analyze mode")
+    parser.add_argument("-o", "--output", required=False, help="output file")
+    parser.add_argument("-d", "--debug", action='store_true', required=False, help="debug mode")
+
     args = parser.parse_args()
 
-    at = AnalyzingTool(args.fileout, args.max_packets, args.script, args.debug)
+    at = AnalyzingTool(args.output, args.max_packets, args.script, args.debug)
     at.read_syscall_table(args.table)
     at.read_and_parse_data(args.binlog)
 
-    if not args.analyze or args.log:
+    if args.convert or args.log:
         at.print_log()
 
-    if args.analyze:
+    if not args.convert:
         at.count_pids()
         at.match_fd_with_path(args.pmem)
         at.print_unsupported_syscalls()
