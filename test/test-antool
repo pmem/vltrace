@@ -103,8 +103,8 @@ if [ "$VLTRACE_SKIP" != "1" ]; then
 fi
 
 set +e
-echo "$ $TEST_DIR/convert_bin2txt.py -t syscalls_table.dat -b $OUTBIN -a -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT"
-$TEST_DIR/convert_bin2txt.py -t syscalls_table.dat -b $OUTBIN -a -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT
+echo "$ $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT"
+$TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT
 RV=$?
 [ $RV -ne 0 ] \
 	&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \
