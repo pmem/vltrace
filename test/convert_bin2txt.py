@@ -262,7 +262,7 @@ class Syscall:
 
     ###############################################################################
     def __init__(self, pid_tid, sc_id, sc_info, buf_size, debug):
-        self.debug = debug
+        self.debug_mode = debug
         self.state = STATE_INIT
         self.content = CNT_NONE
 
@@ -393,7 +393,7 @@ class Syscall:
 
     ###############################################################################
     def print_debug(self):
-        if not self.debug and not self.truncated:
+        if not self.debug_mode and not self.truncated:
             return
 
         if self.state not in (STATE_IN_ENTRY, STATE_ENTRY_COMPLETED, STATE_COMPLETED):
@@ -419,7 +419,7 @@ class Syscall:
 
     ###############################################################################
     def print(self):
-        if self.debug:
+        if self.debug_mode:
             return
         self.print_always()
 
@@ -648,9 +648,10 @@ class Syscall:
 ###############################################################################
 # noinspection PyTypeChecker
 class ListSyscalls(list):
-    def __init__(self, debug):
+    def __init__(self, script_mode, debug_mode):
         list.__init__(self)
-        self.debug = debug
+        self.script_mode = script_mode
+        self.debug_mode = debug_mode
         self.cwd = ""
         self.time0 = 0
 
@@ -724,9 +725,11 @@ class ListSyscalls(list):
         last_pid = -1
         pid_ind = 0
         length = len(self)
-        print("\nCounting PIDs:")
+        if not self.script_mode:
+            print("\nCounting PIDs:")
         for n in range(len(self)):
-            print("\r{0:d} of {1:d} ({2:d}%)".format(n + 1, length, int((100 * (n + 1)) / length)), end='')
+            if not self.script_mode:
+                print("\r{0:d} of {1:d} ({2:d}%)".format(n + 1, length, int((100 * (n + 1)) / length)), end='')
             pid = self[n].pid_tid >> 32
             if pid != last_pid:
                 last_pid = pid
@@ -737,9 +740,10 @@ class ListSyscalls(list):
                     pid_ind = self.pid_table.index(pid)
             self[n].pid_ind = pid_ind
         self.npids = len(self.pid_table)
-        print(" done.")
+        if not self.script_mode:
+            print(" done.")
 
-        if self.debug:
+        if self.debug_mode:
             for n in range(len(self.pid_table)):
                 print("PID[{0:d}] = {1:016X}".format(n, self.pid_table[n]), file=fhout)
 
@@ -923,10 +927,11 @@ class ListSyscalls(list):
             self.all_fd_tables.append(fd_table)
 
         length = len(self)
-        print("\nAnalyzing:")
+        if not self.script_mode:
+            print("\nAnalyzing:")
 
         for n in range(length):
-            if fhout != stdout:
+            if fhout != stdout and not self.script_mode:
                 print("\r{0:d} of {1:d} ({2:d}%)".format(n + 1, length, int((100 * (n + 1)) / length)), end='')
 
             # syscalls: SyS_open or SyS_creat
@@ -1038,7 +1043,7 @@ class ListSyscalls(list):
 
             self.check_if_supported(n)
 
-        if fhout != stdout:
+        if fhout != stdout and not self.script_mode:
             print(" done.")
 
     def print_local(self, n):
@@ -1112,15 +1117,16 @@ class ListSyscalls(list):
 # AnalyzingTool
 ###############################################################################
 class AnalyzingTool:
-    def __init__(self, fileout, max_packets, debug):
-        self.debug = debug
+    def __init__(self, fileout, max_packets, script_mode, debug_mode):
+        self.script_mode = script_mode
+        self.debug_mode = debug_mode
         self.cwd = ""
         self.syscall_table = []
         self.syscall = []
 
-        self.list_ok = ListSyscalls(debug)
-        self.list_no_exit = ListSyscalls(debug)
-        self.list_in_entry = ListSyscalls(debug)
+        self.list_ok = ListSyscalls(script_mode, debug_mode)
+        self.list_no_exit = ListSyscalls(script_mode,  debug_mode)
+        self.list_in_entry = ListSyscalls(script_mode, debug_mode)
 
         if fileout:
             self.fileout = fileout
@@ -1164,7 +1170,7 @@ class AnalyzingTool:
             return DO_CONTINUE
 
         elif CHECK_SKIP == check:
-            if self.debug:
+            if self.debug_mode:
                 print("Warning: skipping wrong packet type {0:d} of {1:s} ({2:d})"
                       .format(packet_type, self.syscall_table.name(sc_id), sc_id))
             return DO_CONTINUE
@@ -1187,7 +1193,7 @@ class AnalyzingTool:
             self.syscall = self.list_no_exit.search(packet_type, pid_tid, sc_id, name, retval)
             self.list_no_exit.append(old_syscall)
             if self.syscall == -1:
-                if self.debug:
+                if self.debug_mode:
                     print("Notice: CHECK_LOOK_FOR_EXIT: no EXIT found")
                 return DO_REINIT
             return DO_GO_ON
@@ -1232,18 +1238,18 @@ class AnalyzingTool:
         argv = argv.replace('\0', ' ')
         print("Command line:", argv, file=self.fhout)
 
-        if not self.debug:
+        if not self.debug_mode and not self.script_mode:
             print("Reading packets:")
         n = 0
         state = STATE_INIT
         while True:
             try:
-                if not self.debug:
+                if not self.debug_mode and not self.script_mode:
                     print("\r{0:d}".format(n), end=' ')
                 n += 1
 
                 if state == STATE_COMPLETED:
-                    if n > self.max_packets:
+                    if n > self.max_packets and not self.script_mode:
                         print("done (read maximum number of packets: {0:d})".format(n - 1))
                         break
                     state = STATE_INIT
@@ -1255,7 +1261,7 @@ class AnalyzingTool:
                 bdata = read_bdata(fh, data_size)
 
                 if state == STATE_INIT:
-                    self.syscall = Syscall(pid_tid, sc_id, self.syscall_table.get(sc_id), buf_size, self.debug)
+                    self.syscall = Syscall(pid_tid, sc_id, self.syscall_table.get(sc_id), buf_size, self.debug_mode)
 
                 name = self.syscall_table.name(sc_id)
                 retval = self.syscall.get_ret(bdata)
@@ -1265,7 +1271,7 @@ class AnalyzingTool:
                 if result == DO_CONTINUE:
                     continue
                 elif result == DO_REINIT:
-                    self.syscall = Syscall(pid_tid, sc_id, self.syscall_table.get(sc_id), buf_size, self.debug)
+                    self.syscall = Syscall(pid_tid, sc_id, self.syscall_table.get(sc_id), buf_size, self.debug_mode)
 
                 state = self.syscall.add_data(packet_type, bdata, timestamp)
 
@@ -1288,7 +1294,7 @@ class AnalyzingTool:
                 print("Unexpected error:", exc_info()[0], file=stderr)
                 raise
 
-        if not self.debug and n <= self.max_packets:
+        if not self.debug_mode and not self.script_mode and n <= self.max_packets:
             print("\rDone (read {0:d} packets).".format(n))
         fh.close()
 
@@ -1317,9 +1323,10 @@ class AnalyzingTool:
 
 def main():
     parser = argparse.ArgumentParser(description="Convert tracing logs from binary to text format")
-    parser.add_argument("-s", "--table", required=True, help="path to 'syscalls_table.dat'")
+    parser.add_argument("-t", "--table", required=True, help="path to 'syscalls_table.dat'")
     parser.add_argument("-b", "--binlog", required=True, help="input file - tracing log in binary format")
     parser.add_argument("-d", "--debug", action='store_true', required=False, help="debug mode")
+    parser.add_argument("-s", "--script", action='store_true', required=False, help="script mode")
     parser.add_argument("-a", "--analyze", action='store_true', required=False, help="analyze mode")
     parser.add_argument("-l", "--log", action='store_true', required=False, help="print log in analyze mode")
     parser.add_argument("-p", "--pmem", required=False, help="paths to pmem")
@@ -1327,7 +1334,7 @@ def main():
     parser.add_argument("-m", "--max_packets", required=False, help="maximum number of packets to be read")
     args = parser.parse_args()
 
-    at = AnalyzingTool(args.fileout, args.max_packets, args.debug)
+    at = AnalyzingTool(args.fileout, args.max_packets, args.script, args.debug)
     at.read_syscall_table(args.table)
     at.read_and_parse_data(args.binlog)
 
