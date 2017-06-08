@@ -31,7 +31,7 @@
  */
 
 /*
- * syscalls_unknown.h -- define unknown syscalls' numbers
+ * syscalls_numbers.h -- define unknown syscalls' numbers
  */
 
 #ifndef SYSCALLS_UNKNOWN_H

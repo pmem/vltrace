@@ -34,33 +34,49 @@
  * test_syscalls.c -- functional tests for vltrace
  */
 
+#define _GNU_SOURCE
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
+#include <utime.h>
+#include <assert.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/utsname.h>
-#include <linux/futex.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <sys/epoll.h>
-#include <sys/types.h>
 #include <sys/xattr.h>
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/inotify.h>
 #include <sys/mman.h>
 #include <sys/mount.h>
-#include <poll.h>
-#include <signal.h>
 #include <sys/select.h>
 #include <sys/swap.h>
+#include <sys/sendfile.h>
+
+#include <linux/futex.h>
+#include <linux/fs.h>
+#include <linux/falloc.h>
+
+#include "../src/syscalls_numbers.h"
+
+#define F_ADD_SEALS		1033
+#define F_GET_SEALS		1034
+#define ANY_STR			"any-string"
 
 #define PATTERN_START		0x12345678
 #define PATTERN_END		0x87654321
-#define BUF_LEN			0x100
+#define BUF_SIZE		0x100
 
 #define MARK_START()		close(PATTERN_START)
 #define MARK_END()		close(PATTERN_END)
@@ -150,7 +166,7 @@ s()
 static void
 test_basic_syscalls(void)
 {
-	char buffer[BUF_LEN];
+	char buffer[BUF_SIZE];
 	struct utsname name;
 	struct stat buf;
 	int fd;
@@ -165,11 +181,11 @@ s();
 s();
 	fd = open(FILE_CREATE, O_RDWR | O_CREAT, 0666);
 s();
-	write(fd, buffer, BUF_LEN);
+	write(fd, buffer, BUF_SIZE);
 s();
 	lseek(fd, 0, SEEK_SET);
 s();
-	read(fd, buffer, BUF_LEN);
+	read(fd, buffer, BUF_SIZE);
 s();
 	fstat(fd, &buf);
 s();
@@ -434,7 +450,7 @@ test_signal(void)
 /*
  * test_0 -- test basic syscalls
  */
-static void test_0(void)
+static void test_0(char *a, char *b, char *c)
 {
 	MARK_START();
 	test_basic_syscalls();
@@ -444,16 +460,16 @@ static void test_0(void)
 /*
  * test_1 -- test basic syscalls with fork()
  */
-static void test_1(void)
+static void test_1(char *a, char *b, char *c)
 {
 	syscall(SYS_fork);
-	test_0();
+	test_0(a, b, c);
 }
 
 /*
  * test_2 -- test unsupported syscalls
  */
-static void test_2(void)
+static void test_2(char *a, char *b, char *c)
 {
 	MARK_START();
 	test_unsupported_syscalls();
@@ -463,16 +479,16 @@ static void test_2(void)
 /*
  * test_3 -- test unsupported syscalls with fork()
  */
-static void test_3(void)
+static void test_3(char *a, char *b, char *c)
 {
 	syscall(SYS_fork);
-	test_2();
+	test_2(a, b, c);
 }
 
 /*
  * test_4 -- test vfork()
  */
-static void test_4(void)
+static void test_4(char *a, char *b, char *c)
 {
 	MARK_START();
 
@@ -509,25 +525,25 @@ s();
 /*
  * test_5 -- test basic syscalls after double fork()
  */
-static void test_5(void)
+static void test_5(char *a, char *b, char *c)
 {
 	syscall(SYS_fork);
-	test_1();
+	test_1(a, b, c);
 }
 
 /*
  * test_6 -- test unsupported syscalls after double fork()
  */
-static void test_6(void)
+static void test_6(char *a, char *b, char *c)
 {
 	syscall(SYS_fork);
-	test_3();
+	test_3(a, b, c);
 }
 
 /*
  * test_7 -- test the syscall 'signal'
  */
-static void test_7(void)
+static void test_7(char *a, char *b, char *c)
 {
 	MARK_START();
 	test_signal();
@@ -537,7 +553,7 @@ static void test_7(void)
 /*
  * test_8 -- test syscalls with string arguments of length < 126
  */
-static void test_8(void)
+static void test_8(char *a, char *b, char *c)
 {
 	MARK_START();
 	test_strings(strings[0]);
@@ -547,7 +563,7 @@ static void test_8(void)
 /*
  * test_9 -- test syscalls with string arguments of length < 382
  */
-static void test_9(void)
+static void test_9(char *a, char *b, char *c)
 {
 	MARK_START();
 	test_strings(strings[1]);
@@ -557,7 +573,7 @@ static void test_9(void)
 /*
  * test_10 -- test syscalls with string arguments of length < 765
  */
-static void test_10(void)
+static void test_10(char *a, char *b, char *c)
 {
 	MARK_START();
 	test_strings(strings[2]);
@@ -567,7 +583,7 @@ static void test_10(void)
 /*
  * test_11 -- test syscalls with string arguments of length < 1148
  */
-static void test_11(void)
+static void test_11(char *a, char *b, char *c)
 {
 	MARK_START();
 	test_strings(strings[3]);
@@ -577,7 +593,7 @@ static void test_11(void)
 /*
  * test_12 -- test syscalls with string arguments of length < 1531
  */
-static void test_12(void)
+static void test_12(char *a, char *b, char *c)
 {
 	MARK_START();
 	test_strings(strings[4]);
@@ -588,26 +604,243 @@ static void test_12(void)
  * test_13 -- test syscalls with string arguments of length < 1531
  *            with single fork
  */
-static void test_13(void)
+static void test_13(char *a, char *b, char *c)
 {
 	syscall(SYS_fork);
-	test_12();
+	test_12(a, b, c);
 }
 
 /*
  * test_14 -- test syscalls with string arguments of length < 1531
  *            with double fork
  */
-static void test_14(void)
+static void test_14(char *a, char *b, char *c)
 {
 	syscall(SYS_fork);
-	test_13();
+	test_13(a, b, c);
+}
+
+/*
+ * test_analyzing_tool -- test unsupported syscalls #2
+ */
+static void
+test_analyzing_tool(char *dir, char *pmem, char *nonp)
+{
+	char buf[BUF_SIZE];
+	char *const argv[2] = {pmem, pmem};
+
+	if (!dir || !pmem || !nonp) {
+		fprintf(stderr, "Error: Not enough parameters:\n");
+		if (!dir)
+			fprintf(stderr, "\t 'dir' is not set\n");
+		if (!pmem)
+			fprintf(stderr, "\t 'pmem' is not set\n");
+		if (!nonp)
+			fprintf(stderr, "\t 'nonp' is not set\n");
+		exit(-1);
+	}
+
+	char *abspmem = calloc(1, strlen(dir) + strlen(pmem) + 2);
+	char *absnonp = calloc(1, strlen(dir) + strlen(nonp) + 2);
+	assert(abspmem && absnonp);
+
+	strcat(abspmem, dir);
+	strcat(abspmem, "/");
+	strcat(abspmem, pmem);
+
+	strcat(absnonp, dir);
+	strcat(absnonp, "/");
+	strcat(absnonp, nonp);
+
+	int dirfd = open(dir, O_RDONLY);
+	if (dirfd == -1)
+		perror(dir);
+	int fdpmem = open(abspmem, O_RDWR);
+	if (fdpmem == -1)
+		perror(abspmem);
+	int fdnonp = open(absnonp, O_RDWR);
+	if (fdnonp == -1)
+		perror(absnonp);
+
+	s(); chroot(nonp);
+	s(); chroot(pmem);
+	s(); chroot(absnonp);
+	s(); chroot(abspmem);
+
+	s(); setxattr(pmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); lsetxattr(pmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); getxattr(pmem, ANY_STR, buf, BUF_SIZE);
+	s(); lgetxattr(pmem, ANY_STR, buf, BUF_SIZE);
+
+	s(); setxattr(absnonp, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); setxattr(abspmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); lsetxattr(absnonp, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); lsetxattr(abspmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); fsetxattr(fdnonp, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); fsetxattr(fdpmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+
+	s(); getxattr(absnonp, ANY_STR, buf, BUF_SIZE);
+	s(); getxattr(abspmem, ANY_STR, buf, BUF_SIZE);
+	s(); lgetxattr(absnonp, ANY_STR, buf, BUF_SIZE);
+	s(); lgetxattr(abspmem, ANY_STR, buf, BUF_SIZE);
+	s(); fgetxattr(fdnonp, ANY_STR, buf, BUF_SIZE);
+	s(); fgetxattr(fdpmem, ANY_STR, buf, BUF_SIZE);
+
+	s(); listxattr(absnonp, ANY_STR, 0x101);
+	s(); listxattr(abspmem, ANY_STR, 0x101);
+	s(); llistxattr(absnonp, ANY_STR, 0x102);
+	s(); llistxattr(abspmem, ANY_STR, 0x102);
+	s(); flistxattr(fdnonp, ANY_STR, 0x104);
+	s(); flistxattr(fdpmem, ANY_STR, 0x104);
+
+	s(); removexattr(absnonp, ANY_STR);
+	s(); removexattr(abspmem, ANY_STR);
+	s(); lremovexattr(absnonp, ANY_STR);
+	s(); lremovexattr(abspmem, ANY_STR);
+	s(); fremovexattr(fdnonp, ANY_STR);
+	s(); fremovexattr(fdpmem, ANY_STR);
+
+	s(); dup(fdnonp);
+	s(); dup(fdpmem);
+	s(); dup2(fdnonp, 100);
+	s(); dup2(fdpmem, 101);
+	s(); dup3(fdnonp, 200, O_CLOEXEC);
+	s(); dup3(fdpmem, 201, O_CLOEXEC);
+
+	s(); mmap(NULL, 100, PROT_READ, MAP_SHARED, fdnonp, 0);
+	s(); mmap(NULL, 100, PROT_READ, MAP_SHARED, fdpmem, 0);
+
+	s(); execve(absnonp, argv, NULL);
+	s(); execve(abspmem, argv, NULL);
+	s(); syscall(__NR_execveat, dirfd, nonp, NULL, NULL);
+	s(); syscall(__NR_execveat, dirfd, pmem, NULL, NULL);
+
+	s(); flock(fdnonp, 0);
+	s(); flock(fdpmem, 0);
+
+	s(); utime(absnonp, (const struct utimbuf *)0x101);
+	s(); utime(abspmem, (const struct utimbuf *)0x101);
+
+	s(); utimes(absnonp, (const struct timeval *)0x101);
+	s(); utimes(abspmem, (const struct timeval *)0x101);
+
+	s(); utimensat(dirfd, nonp, (const struct timespec *)0x101, 0);
+	s(); utimensat(dirfd, pmem, (const struct timespec *)0x101, 0);
+
+	s(); futimesat(dirfd, nonp, (const struct timeval *)0x101);
+	s(); futimesat(dirfd, pmem, (const struct timeval *)0x101);
+
+	s(); readahead(fdnonp, 0, 0);
+	s(); readahead(fdpmem, 0, 0);
+
+	s(); sendfile(fdnonp, fdnonp, 0, 0);
+	s(); sendfile(fdpmem, fdnonp, 0, 0);
+	s(); sendfile(fdnonp, fdpmem, 0, 0);
+	s(); sendfile(fdpmem, fdpmem, 0, 0);
+
+	s(); syscall(__NR_splice, fdnonp, 0, fdnonp, 0, 0);
+	s(); syscall(__NR_splice, fdpmem, 0, fdnonp, 0, 0);
+	s(); syscall(__NR_splice, fdnonp, 0, fdpmem, 0, 0);
+	s(); syscall(__NR_splice, fdpmem, 0, fdpmem, 0, 0);
+
+	s(); name_to_handle_at(dirfd, nonp, NULL, NULL, 0);
+	s(); name_to_handle_at(dirfd, pmem, NULL, NULL, 0);
+
+	s(); syscall(__NR_copy_file_range, fdnonp, 0, fdnonp, 0, 1, 0);
+	s(); syscall(__NR_copy_file_range, fdpmem, 0, fdnonp, 0, 1, 0);
+	s(); syscall(__NR_copy_file_range, fdnonp, 0, fdpmem, 0, 1, 0);
+	s(); syscall(__NR_copy_file_range, fdpmem, 0, fdpmem, 0, 1, 0);
+
+
+	s(); open(absnonp, O_RDONLY);
+	s(); open(abspmem, O_RDONLY);
+	s(); open(absnonp, O_RDONLY | O_ASYNC);
+	s(); open(abspmem, O_RDONLY | O_ASYNC);
+
+	s(); openat(dirfd, nonp, O_RDONLY);
+	s(); openat(dirfd, pmem, O_RDONLY);
+	s(); openat(dirfd, nonp, O_RDONLY | O_ASYNC);
+	s(); openat(dirfd, pmem, O_RDONLY | O_ASYNC);
+
+	s(); syscall(__NR_renameat, dirfd, nonp, dirfd, nonp);
+	s(); syscall(__NR_renameat, dirfd, pmem, dirfd, pmem);
+	s(); syscall(__NR_renameat2, dirfd, nonp, dirfd, nonp, 0);
+	s(); syscall(__NR_renameat2, dirfd, pmem, dirfd, pmem, 0);
+	s(); syscall(__NR_renameat2, dirfd, nonp, dirfd, nonp, RENAME_WHITEOUT);
+	s(); syscall(__NR_renameat2, dirfd, pmem, dirfd, pmem, RENAME_WHITEOUT);
+
+	s(); fallocate(fdnonp, FALLOC_FL_COLLAPSE_RANGE, 0, 0);
+	s(); fallocate(fdpmem, FALLOC_FL_COLLAPSE_RANGE, 0, 0);
+	s(); fallocate(fdnonp, FALLOC_FL_ZERO_RANGE, 0, 0);
+	s(); fallocate(fdpmem, FALLOC_FL_ZERO_RANGE, 0, 0);
+	s(); fallocate(fdnonp, FALLOC_FL_INSERT_RANGE, 0, 0);
+	s(); fallocate(fdpmem, FALLOC_FL_INSERT_RANGE, 0, 0);
+
+	int fdfnonp = fcntl(fdnonp, F_GETFD);
+	int fdfpmem = fcntl(fdpmem, F_GETFD);
+
+	fcntl(fdnonp, F_SETFD, fdfnonp & (~O_CLOEXEC));
+	fcntl(fdpmem, F_SETFD, fdfpmem & (~O_CLOEXEC));
+
+	fcntl(fdnonp, F_SETOWN, 0);
+	fcntl(fdpmem, F_SETOWN, 0);
+
+	fcntl(fdnonp, F_GETOWN, 0);
+	fcntl(fdpmem, F_GETOWN, 0);
+
+	fcntl(fdnonp, F_SETSIG, 0);
+	fcntl(fdpmem, F_SETSIG, 0);
+
+	fcntl(fdnonp, F_GETSIG, 0);
+	fcntl(fdpmem, F_GETSIG, 0);
+
+	fcntl(fdnonp, F_SETOWN_EX, 0);
+	fcntl(fdpmem, F_SETOWN_EX, 0);
+
+	fcntl(fdnonp, F_GETOWN_EX, 0);
+	fcntl(fdpmem, F_GETOWN_EX, 0);
+
+	fcntl(fdnonp, F_OFD_GETLK, 0);
+	fcntl(fdpmem, F_OFD_GETLK, 0);
+
+	fcntl(fdnonp, F_OFD_SETLK, 0);
+	fcntl(fdpmem, F_OFD_SETLK, 0);
+
+	fcntl(fdnonp, F_OFD_SETLKW, 0);
+	fcntl(fdpmem, F_OFD_SETLKW, 0);
+
+	fcntl(fdnonp, F_SETLEASE, 0);
+	fcntl(fdpmem, F_SETLEASE, 0);
+
+	fcntl(fdnonp, F_GETLEASE, 0);
+	fcntl(fdpmem, F_GETLEASE, 0);
+
+	fcntl(fdnonp, F_NOTIFY, 0);
+	fcntl(fdpmem, F_NOTIFY, 0);
+
+	fcntl(fdnonp, F_ADD_SEALS, 0);
+	fcntl(fdpmem, F_ADD_SEALS, 0);
+
+	fcntl(fdnonp, F_GET_SEALS, 0);
+	fcntl(fdpmem, F_GET_SEALS, 0);
+
+	s(); close(fdpmem);
+}
+
+/*
+ * test_15 -- test unsupported syscalls
+ */
+static void test_15(char *dir, char *pmem, char *nonp)
+{
+	MARK_START();
+	test_analyzing_tool(dir, pmem, nonp);
+	MARK_END();
 }
 
 /*
  * run_test -- array of tests
  */
-static void (*run_test[])(void) = {
+static void (*run_test[])(char *, char *, char *) = {
 	test_0,
 	test_1,
 	test_2,
@@ -622,7 +855,8 @@ static void (*run_test[])(void) = {
 	test_11,
 	test_12,
 	test_13,
-	test_14
+	test_14,
+	test_15
 };
 
 int
@@ -646,7 +880,9 @@ main(int argc, char *argv[])
 
 	printf("Starting: test_%i ...\n", n);
 
-	run_test[n]();
+	run_test[n](argc > 2 ? argv[2] : NULL,
+			argc > 3 ? argv[3] : NULL,
+			argc > 4 ? argv[4] : NULL);
 
 	printf("Done (test_%i)\n", n);
 }
