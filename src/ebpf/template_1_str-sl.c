@@ -67,11 +67,13 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
 	unsigned length = BUF_SIZE - 1;
+	char *src = (char *)u.ev.args[STR1];
 	char *dest = (char *)&u.ev.aux_str;
-
 	memset(dest, 0, BUF_SIZE);
 
-	bpf_probe_read(dest, length, (void *)u.ev.args[STR1]);
+	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		memcpy(dest, str_error, STR_ERR_LEN);
+	}
 
 	events.perf_submit(ctx, &u.ev, _pad_size);
 

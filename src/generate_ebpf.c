@@ -48,6 +48,13 @@
 #include "generate_ebpf.h"
 #include "syscalls_numbers.h"
 
+#ifdef DEBUG
+#define STR_REPLACE_DEBUG_WITH_SPACES(pbpf, str)
+#else
+#define STR_REPLACE_DEBUG_WITH_SPACES(pbpf, str) \
+	str_replace_with_spaces(pbpf, str)
+#endif
+
 static const char *Tmpl_str[MAX_STR_ARG] = {"STR1", "STR2", "STR3"};
 
 static char *
@@ -288,6 +295,8 @@ apply_process_attach_code(char **const pbpf_str)
 					loaded_file, Args.n_str_packets - 2);
 	}
 
+	STR_REPLACE_DEBUG_WITH_SPACES(*pbpf_str,
+				"memcpy(dest, str_error, STR_ERR_LEN);");
 }
 
 /*

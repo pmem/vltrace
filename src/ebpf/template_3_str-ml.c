@@ -73,17 +73,29 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	/* from the beginning (0) to 1st string - contains 1st string */
 	u.ev.packet_type = E_KP_ENTRY | (0 << 2) + ((STR1 + 1) << 5);
-	bpf_probe_read(dest, length, (void *)u.ev.args[STR1]);
+
+	char *src = (char *)u.ev.args[STR1];
+	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		memcpy(dest, str_error, STR_ERR_LEN);
+	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	/* from 1st to 2nd string argument - contains 2nd string */
 	u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + ((STR2 + 1) << 5);
-	bpf_probe_read(dest, length, (void *)u.ev.args[STR2]);
+
+	src = (char *)u.ev.args[STR2];
+	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		memcpy(dest, str_error, STR_ERR_LEN);
+	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	/* from 2nd string argument to the end (7) - contains 3rd string */
 	u.ev.packet_type = E_KP_ENTRY | ((STR2 + 1) << 2)+ (7 << 5);
-	bpf_probe_read(dest, length, (void *)u.ev.args[STR3]);
+
+	src = (char *)u.ev.args[STR3];
+	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		memcpy(dest, str_error, STR_ERR_LEN);
+	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	return 0;

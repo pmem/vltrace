@@ -42,7 +42,9 @@
 		if (bpf_probe_read(dest, length, (void *)src) == 0) {
 			events.perf_submit(ctx, &u.ev, _pad_size);
 		} else {
+			/* read error occurred */
 			error_bpf_read = 1;
+			memcpy(dest, str_error, STR_ERR_LEN);
 		}
 	}
 /* END */

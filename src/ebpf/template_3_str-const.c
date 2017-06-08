@@ -76,9 +76,10 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 /* 1st string argument */
 	src = (char *)u.ev.args[STR1];
 
-	if (bpf_probe_read(dest, length, (void *)src)) {
-		/* string is completed */
+	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		/* read error occurred */
 		error_bpf_read = 1;
+		memcpy(dest, str_error, STR_ERR_LEN);
 		/* from the beginning (0) to 2nd string - contains 1st string */
 		u.ev.packet_type = E_KP_ENTRY |
 				   (0 << 2) +
@@ -118,7 +119,11 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 				   (1 << 9); /* is a continuation */
 		if (!error_bpf_read) {
 			src += length;
-			bpf_probe_read(dest, length, (void *)src);
+			if (bpf_probe_read(dest, length, (void *)src)) {
+				/* read error occurred */
+				error_bpf_read = 1;
+				memcpy(dest, str_error, STR_ERR_LEN);
+			}
 		}
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
@@ -127,9 +132,10 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	error_bpf_read = 0;
 	src = (char *)u.ev.args[STR2];
 
-	if (bpf_probe_read(dest, length, (void *)src)) {
-		/* string is completed */
+	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		/* read error occurred */
 		error_bpf_read = 1;
+		memcpy(dest, str_error, STR_ERR_LEN);
 		/* from the 2nd to 3rd string - contains 2nd string */
 		u.ev.packet_type = E_KP_ENTRY |
 				   (STR2 << 2) +
@@ -169,7 +175,11 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 				   (1 << 9); /* is a continuation */
 		if (!error_bpf_read) {
 			src += length;
-			bpf_probe_read(dest, length, (void *)src);
+			if (bpf_probe_read(dest, length, (void *)src)) {
+				/* read error occurred */
+				error_bpf_read = 1;
+				memcpy(dest, str_error, STR_ERR_LEN);
+			}
 		}
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
@@ -178,9 +188,10 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	error_bpf_read = 0;
 	src = (char *)u.ev.args[STR3];
 
-	if (bpf_probe_read(dest, length, (void *)src)) {
-		/* string is completed */
+	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		/* read error occurred */
 		error_bpf_read = 1;
+		memcpy(dest, str_error, STR_ERR_LEN);
 		/* from the 3rd string to the end (7) - contains 3rd string */
 		u.ev.packet_type = E_KP_ENTRY |
 				   (STR3 << 2) +
@@ -220,7 +231,11 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 				   (1 << 9); /* is a continuation */
 		if (!error_bpf_read) {
 			src += length;
-			bpf_probe_read(dest, length, (void *)src);
+			if (bpf_probe_read(dest, length, (void *)src)) {
+				/* read error occurred */
+				error_bpf_read = 1;
+				memcpy(dest, str_error, STR_ERR_LEN);
+			}
 		}
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
