@@ -84,32 +84,40 @@ EM_fd_4 = 1 << 9  # syscall has fd as a 4. arg
 EM_fd_5 = 1 << 10  # syscall has fd as a 5. arg
 EM_fd_6 = 1 << 11  # syscall has fd as a 6. arg
 
-EM_fileat = 1 << 12  # '*at' type syscall (dirfd + path)
-EM_fileat2 = 1 << 13  # double '*at' type syscall (dirfd + path)
-EM_no_ret = 1 << 14  # syscall does not return
-EM_rfd = 1 << 15  # syscall returns a file descriptor
+EM_path_1 = 1 << 12  # syscall has path as 1. arg
+EM_path_2 = 1 << 13  # syscall has path as 2. arg
+EM_path_3 = 1 << 14  # syscall has path as 3. arg
+EM_path_4 = 1 << 15  # syscall has path as 4. arg
+EM_path_5 = 1 << 16  # syscall has path as 5. arg
+EM_path_6 = 1 << 17  # syscall has path as 6. arg
 
-EM_fd_from_path = EM_rfd | EM_str_1
+EM_fileat = 1 << 18  # '*at' type syscall (dirfd + path)
+EM_fileat2 = 1 << 19  # double '*at' type syscall (dirfd + path)
+EM_no_ret = 1 << 20  # syscall does not return
+EM_rfd = 1 << 21  # syscall returns a file descriptor
+
+EM_fd_from_path = EM_rfd | EM_path_1
 EM_fd_from_fd = EM_rfd | EM_fd_1
-EM_fd_from_dirfd_path = EM_rfd | EM_fd_1 | EM_str_2
+EM_fd_from_dirfd_path = EM_rfd | EM_fd_1 | EM_path_2
 
-EM_isfileat = EM_fd_1 | EM_str_2 | EM_fileat
-EM_isfileat2 = EM_fd_3 | EM_str_4 | EM_fileat2
+EM_isfileat = EM_fd_1 | EM_path_2 | EM_fileat
+EM_isfileat2 = EM_fd_3 | EM_path_4 | EM_fileat2
 
 EM_str_all = EM_str_1 | EM_str_2 | EM_str_3 | EM_str_4 | EM_str_5 | EM_str_6
+EM_path_all = EM_path_1 | EM_path_2 | EM_path_3 | EM_path_4 | EM_path_5 | EM_path_6
 EM_fd_all = EM_fd_1 | EM_fd_2 | EM_fd_3 | EM_fd_4 | EM_fd_5 | EM_fd_6
 
 Arg_is_str = [EM_str_1, EM_str_2, EM_str_3, EM_str_4, EM_str_5, EM_str_6]
+Arg_is_path = [EM_path_1, EM_path_2, EM_path_3, EM_path_4, EM_path_5, EM_path_6]
 Arg_is_fd = [EM_fd_1, EM_fd_2, EM_fd_3, EM_fd_4, EM_fd_5, EM_fd_6]
 
 FLAG_RENAME_WHITEOUT = (1 << 2)  # renameat2's flag: whiteout source
 FLAG_O_ASYNC = 0o20000  # open's flag
 
 # fallocate flags:
-FLAG_FALLOC_FL_COLLAPSE_RANGE = 0x08
-FLAG_FALLOC_FL_ZERO_RANGE = 0x10
-FLAG_FALLOC_FL_INSERT_RANGE = 0x20
-FLAGS_FALLOCATE = FLAG_FALLOC_FL_COLLAPSE_RANGE | FLAG_FALLOC_FL_ZERO_RANGE | FLAG_FALLOC_FL_INSERT_RANGE
+F_FALLOC_FL_COLLAPSE_RANGE = 0x08
+F_FALLOC_FL_ZERO_RANGE = 0x10
+F_FALLOC_FL_INSERT_RANGE = 0x20
 
 # fcntl's flags:
 F_SETFD = 2
@@ -751,11 +759,28 @@ class ListSyscalls(list):
         if narg > self[n].sc.nargs:
             return 0
         narg -= 1
-        if self[n].has_mask(Arg_is_str[narg] | Arg_is_fd[narg]):
+        if self[n].has_mask(Arg_is_path[narg] | Arg_is_fd[narg]):
             str_ind = self[n].args[narg]
             if str_ind != -1 and str_ind < len(self.path_is_pmem) and self.path_is_pmem[str_ind]:
                 return 1
         return 0
+
+    def check_fallocate_flags(self, n):
+        ret = 0
+        if self[n].args[1] == F_FALLOC_FL_COLLAPSE_RANGE:
+            self[n].unsupported_flag = "FALLOC_FL_COLLAPSE_RANGE"
+            ret = 1
+        elif self[n].args[1] == F_FALLOC_FL_ZERO_RANGE:
+            self[n].unsupported_flag = "FALLOC_FL_ZERO_RANGE"
+            ret = 1
+        elif self[n].args[1] == F_FALLOC_FL_INSERT_RANGE:
+            self[n].unsupported_flag = "FALLOC_FL_INSERT_RANGE"
+            ret = 1
+        if ret == 1:
+            self[n].unsupported = RESULT_UNSUPPORTED_FLAG
+            return 1
+        else:
+            return 0
 
     def check_fcntl_flags(self, n):
         ret = 0
@@ -821,8 +846,8 @@ class ListSyscalls(list):
             return
 
         if self[n].has_mask(EM_rfd):  # open & openat - O_ASYNC
-            if (self[n].is_mask(Arg_is_str[0]) and self[n].args[1] & FLAG_O_ASYNC and self[n].name == "open") or \
-               (self[n].is_mask(Arg_is_fd[0] | Arg_is_str[1] | EM_fileat) and self[n].args[2] & FLAG_O_ASYNC and
+            if (self[n].is_mask(Arg_is_path[0]) and self[n].args[1] & FLAG_O_ASYNC and self[n].name == "open") or \
+               (self[n].is_mask(Arg_is_fd[0] | Arg_is_path[1] | EM_fileat) and self[n].args[2] & FLAG_O_ASYNC and
                self[n].name == "openat"):
                 self[n].unsupported_flag = "O_ASYNC"
                 self[n].unsupported = RESULT_UNSUPPORTED_FLAG
@@ -841,9 +866,7 @@ class ListSyscalls(list):
 
         # fallocate - FALLOC_FL_COLLAPSE_RANGE or FALLOC_FL_ZERO_RANGE or FALLOC_FL_INSERT_RANGE
         if self[n].has_mask(EM_fd_1):
-            if self[n].name == "fallocate" and self[n].args[1] & FLAGS_FALLOCATE:
-                self[n].unsupported_flag = "FALLOC_FL_COLLAPSE_RANGE or FALLOC_FL_ZERO_RANGE or FALLOC_FL_INSERT_RANGE"
-                self[n].unsupported = RESULT_UNSUPPORTED_FLAG
+            if self[n].name == "fallocate" and self[n].args[1] & self.check_fallocate_flags(n):
                 return
             if self[n].name == "fcntl" and self.check_fcntl_flags(n):
                 return
@@ -881,7 +904,7 @@ class ListSyscalls(list):
         fd_out = self[n].iret
 
         # check if AT_EMPTY_PATH is set
-        if self[n].sc.nargs > (arg2 + 1) and self[n].has_mask(Arg_is_str[arg2 + 1] | Arg_is_fd[arg2 + 1]) == 0 and\
+        if self[n].sc.nargs > (arg2 + 1) and self[n].has_mask(Arg_is_path[arg2 + 1] | Arg_is_fd[arg2 + 1]) == 0 and\
            self[n].args[arg2 + 1] & AT_EMPTY_PATH:
             path = ""
 
@@ -1004,12 +1027,12 @@ class ListSyscalls(list):
                     print("{0:20s} (0x{1:016X})".format(self[n].name, fd_in), file=fhout)
 
             # syscalls with path or file descriptor
-            elif self[n].has_mask(EM_str_all | EM_fd_all):
+            elif self[n].has_mask(EM_path_all | EM_fd_all):
                 print("{0:20s}".format(self[n].name), end='', file=fhout)
                 for narg in range(self[n].sc.nargs):
                     if self[n].has_mask(Arg_is_str[narg]):
                         path = self[n].strings[self[n].args[narg]]
-                        if len(path) > 0 and path[0] != '/':
+                        if self[n].has_mask(Arg_is_path[narg]) and len(path) > 0 and path[0] != '/':
                             path = self.cwd + "/" + path
                         is_pmem = self.check_if_path_is_pmem(path)
                         self[n].is_pmem |= is_pmem

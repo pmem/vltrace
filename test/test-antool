@@ -36,6 +36,11 @@
 
 VLTRACE=../src/vltrace
 
+DIR=/tmp/mnt
+PMEM=pmem
+NONP=nonp
+FILE=file
+
 [ ! -x $VLTRACE ] \
 	&& echo "Error: executable file '$VLTRACE' does not exist" \
 	&& exit 1
@@ -76,24 +81,30 @@ FUNCT=$TEST_DIR/helper_functions.sh
 
 source $FUNCT
 
-PATTERN_START="---------------- close 0000000012345678"
-PATTERN_END="---------------- close 0000000087654321"
 OUTBIN=output-bin-$TEST_NUM.log
 OUT=output-$TEST_NUM.log
-OUT_BARE=output-bare-$TEST_NUM.log
-OUT_SORT=output-sort-$TEST_NUM.log
+OUT_ANTOOL=output-antool-$TEST_NUM.log
 
 if [ "$VLTRACE_SKIP" != "1" ]; then
 	require_superuser
+
+	mkdir -p $DIR/$PMEM
+	mkdir -p $DIR/$NONP
+	touch $DIR/$PMEM/$FILE
+	touch $DIR/$NONP/$FILE
+
+	USER=$(stat --format=%U $TEST_FILE)
+	chown -R $USER.$USER $DIR/*
+
 	# remove all logs of the current test
 	rm -f *-$TEST_NUM.log
-	echo "$ sudo bash -c \"$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM\""
-	sudo bash -c "$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM"
+	echo "$ sudo bash -c \"$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM $DIR $PMEM/$FILE $NONP/$FILE\""
+	sudo bash -c "$RUN_VLTRACE $FF -o $OUTBIN $TEST_FILE $TEST_NUM $DIR $PMEM/$FILE $NONP/$FILE"
 fi
 
 set +e
-echo "$ $TEST_DIR/convert_bin2txt.py -t syscalls_table.dat -b $OUTBIN > $OUT"
-$TEST_DIR/convert_bin2txt.py -t syscalls_table.dat -b $OUTBIN > $OUT
+echo "$ $TEST_DIR/convert_bin2txt.py -t syscalls_table.dat -b $OUTBIN -a -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT"
+$TEST_DIR/convert_bin2txt.py -t syscalls_table.dat -b $OUTBIN -a -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT
 RV=$?
 [ $RV -ne 0 ] \
 	&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \
@@ -102,28 +113,6 @@ RV=$?
 echo "$ grep --text -e "ERROR" -e "rror" -e "arning" $OUT"
 grep --text -e "ERROR" -e "rror" -e "arning" $OUT
 [ $? -eq 0 ] && echo "LOG ($OUT):" && cat $OUT && exit 1
-
-grep --text -e "^0" $OUT > $OUT_BARE
 set -e
-
-[ $(cat $OUT_BARE | wc -l) -eq 0 ] \
-	&& echo "ERROR: no traces in output of vltrace:" \
-	&& cat $OUT \
-	&& exit 1
-
-if [ "$FF" == "" ]; then
-	# tests without fork()
-	echo "$ sort $OUT_BARE -o $OUT_SORT"
-	sort $OUT_BARE -o $OUT_SORT
-	cut_part_file $OUT_SORT "$PATTERN_START" "$PATTERN_END" > cut-$TEST_NUM.log
-else
-	# tests with fork()
-	NFILES=$(split_forked_file $OUT_BARE out $TEST_NUM.log)
-	for N in $(seq -s' ' $NFILES); do
-		echo "$ sort out-$N-$TEST_NUM.log -o out-sort-$N-$TEST_NUM.log"
-		sort out-$N-$TEST_NUM.log -o out-sort-$N-$TEST_NUM.log
-		cut_part_file out-sort-$N-$TEST_NUM.log "$PATTERN_START" "$PATTERN_END" > cut-$N-$TEST_NUM.log
-	done
-fi
 
 check
