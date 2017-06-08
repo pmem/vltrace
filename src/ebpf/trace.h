@@ -48,6 +48,16 @@
 #define STR_MAX_2	((BUF_SIZE / 2) - 2)
 #define STR_MAX_3	((BUF_SIZE / 3) - 2)
 
+#define STR_ERR_LEN 20
+static const char *str_error = "(bpf_probe_read < 0)";
+
+#ifdef DEBUG
+#define MEMCPY(dest, str_error, STR_ERR_LEN)\
+	memcpy(dest, str_error, STR_ERR_LEN)
+#else
+#define MEMCPY(dest, str_error, STR_ERR_LEN)
+#endif
+
 /* types of data packets */
 enum data_packet_types {
 	E_KP_ENTRY = 0,	/* entry of KProbe */

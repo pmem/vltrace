@@ -73,9 +73,10 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	unsigned length = BUF_SIZE - 1;
 	memset(dest, 0, BUF_SIZE);
 
-	if (bpf_probe_read(dest, length, (void *)src)) {
-		/* string is completed */
+	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		/* read error occurred */
 		error_bpf_read = 1;
+		MEMCPY(dest, str_error, STR_ERR_LEN);
 		/* from the beginning (0) to the end (7) - contains 1st string */
 		u.ev.packet_type = E_KP_ENTRY |
 				   (0 << 2) +
@@ -113,7 +114,11 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 					(1 << 9); /* is a continuation */
 		if (!error_bpf_read) {
 			src += length;
-			bpf_probe_read(dest, length, (void *)src);
+			if (bpf_probe_read(dest, length, (void *)src)) {
+				/* read error occurred */
+				error_bpf_read = 1;
+				MEMCPY(dest, str_error, STR_ERR_LEN);
+			}
 		}
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
