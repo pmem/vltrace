@@ -477,12 +477,37 @@ str_replace_with_char(char *const text, const char *templt, const char c)
 pid_t
 start_command(char *const argv[])
 {
+	struct stat buf;
+	int error = 0;
+
 	pid_t pid = fork();
 	switch (pid) {
 	case -1:
 		break;
 
 	case 0:
+		if (stat(argv[0], &buf) == 0) {
+			if (setgid(buf.st_gid)) {
+				error = errno;
+				perror("setgid");
+			}
+			if (setegid(buf.st_gid)) {
+				error = errno;
+				perror("setegid");
+			}
+			if (setuid(buf.st_uid)) {
+				error = errno;
+				perror("setuid");
+			}
+			if (seteuid(buf.st_uid)) {
+				error = errno;
+				perror("seteuid");
+			}
+		} else {
+			error = errno;
+			perror(argv[0]);
+		}
+
 		/*
 		 * Wait until the parent will be ready.
 		 * For unknown reasons sigwait(SIGCONT) and pause()
@@ -490,9 +515,13 @@ start_command(char *const argv[])
 		 */
 		raise(SIGSTOP);
 
-		execvp(argv[0], argv);
+		if (!error) {
+			execvp(argv[0], argv);
+			exit(errno);
+		} else {
+			exit(error);
+		}
 
-		exit(errno);
 		break;
 
 	default:

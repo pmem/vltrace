@@ -99,28 +99,20 @@ for release in Debug Release; do
 	if [ $ACT_KV -ge $REQ_KV ]; then
 		echo "$ ctest -V"
 		ctest -V
-		echo
 	elif [ $ACT_KV -ge 404 ]; then
 		echo "Notice: running basic tests available for kernels >= 4.4"
 		echo
+
 		VLTRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t -e kp-all"
+		DATE=$(which date)
 
-		echo "$ sudo bash -c \"$VLTRACE -s 126  date\""
-		sudo bash -c "$VLTRACE -s 126  date"
-		echo
-
-		echo "$ sudo bash -c \"$VLTRACE -s 382  date\""
-		sudo bash -c "$VLTRACE -s 382  date"
-		echo
-
-		echo "$ sudo bash -c \"$VLTRACE -s 4096 date\""
-		sudo bash -c "$VLTRACE -s 4096 date"
-		echo
+		echo "$ sudo bash -c \"$VLTRACE $DATE\""
+		sudo bash -c "$VLTRACE -s 126 $DATE"
 	else
 		echo "Notice: skipping tests (too old kernel: required >= $V_REQ, actual = $V_ACT)"
-		echo
 	fi
 
+	echo
 	echo "$ make install"
 	make install
 	echo
