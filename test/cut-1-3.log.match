@@ -64,11 +64,11 @@ $(X) $(X) ---------------- ---------------- lgetxattr 222_non_exist 111_non_exis
 $(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF lgetxattr
 $(X) $(X) ---------------- ---------------- fgetxattr 0000000000000105 222_non_exist 0000000000000106 0000000000000107
 $(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF fgetxattr
-$(X) $(X) ---------------- ---------------- listxattr 111_non_exist 222_non_exist 0000000000000101
+$(X) $(X) ---------------- ---------------- listxattr 111_non_exist $(X) 0000000000000101
 $(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF listxattr
-$(X) $(X) ---------------- ---------------- llistxattr 222_non_exist 111_non_exist 0000000000000102
+$(X) $(X) ---------------- ---------------- llistxattr 222_non_exist $(X) 0000000000000102
 $(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF llistxattr
-$(X) $(X) ---------------- ---------------- flistxattr 0000000000000103 222_non_exist 0000000000000104
+$(X) $(X) ---------------- ---------------- flistxattr 0000000000000103 $(X) 0000000000000104
 $(X) $(X) 0000000000000009 FFFFFFFFFFFFFFFF flistxattr
 $(X) $(X) ---------------- ---------------- removexattr 111_non_exist 222_non_exist
 $(X) $(X) 0000000000000002 FFFFFFFFFFFFFFFF removexattr

@@ -69,12 +69,17 @@ enum masks_t {
 	/* syscall has fd as sixth arg */
 	EM_fd_6 = 1 << 11,
 
+	/* '*at' type syscall (dirfd + path) */
+	EM_fileat = 1 << 12,
+	/* double '*at' type syscall (dirfd + path) */
+	EM_fileat2 = EM_fileat | 1 << 13,
+
 	/* syscall does not return */
-	EM_no_ret = 1 << 12,
+	EM_no_ret = 1 << 14,
 	/* syscall returns a file descriptor */
-	EM_rfd = 1 << 13,
+	EM_rfd = 1 << 15,
 	/* syscall returns a PID */
-	EM_rpid = 1 << 14,
+	EM_rpid = 1 << 16,
 
 	/* syscall has fs paths as first and second Args. rename() */
 	EM_str_1_2 = EM_str_1 | EM_str_2,
@@ -84,6 +89,9 @@ enum masks_t {
 	EM_str_2_4 = EM_str_2 | EM_str_4,
 	/* syscall has strings as 1st, 2nd and 3rd args. mount() */
 	EM_str_1_2_3 = EM_str_1 | EM_str_2 | EM_str_3,
+
+	/* syscall has fd as first and third args. renameat() */
+	EM_fd_1_3 = EM_fd_1 | EM_fd_3,
 
 	/* disabled syscall */
 	EM_DISABLED = 1 << 31,
