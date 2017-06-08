@@ -171,6 +171,16 @@ main(const int argc, char *const argv[])
 
 	if (Args.command) {
 		/* run the command */
+		if (access(argv[st_optind], F_OK)) {
+			perror(argv[st_optind]);
+			ERROR("cannot access the file: %s", argv[st_optind]);
+			return EXIT_FAILURE;
+		}
+		if (access(argv[st_optind], X_OK)) {
+			perror(argv[st_optind]);
+			ERROR("file is not executable: %s", argv[st_optind]);
+			return EXIT_FAILURE;
+		}
 		Args.pid = start_command(argv + st_optind);
 		if (Args.pid == -1) {
 			ERROR("failed to start the command");
