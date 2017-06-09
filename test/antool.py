@@ -62,7 +62,7 @@ CHECK_IGNORE = 2
 CHECK_NO_ENTRY = 3
 CHECK_NO_EXIT = 4
 CHECK_WRONG_ID = 5
-CHECK_LOOK_FOR_EXIT = 6
+CHECK_WRONG_EXIT = 6
 CHECK_REINIT = 7
 CHECK_SAVE_IN_ENTRY = 8
 
@@ -400,8 +400,8 @@ class Syscall:
             return -1
 
     ###############################################################################
-    def print_debug(self):
-        if not self.debug_mode and not self.truncated:
+    def debug_print(self):
+        if self.truncated:
             return
 
         if self.state not in (STATE_IN_ENTRY, STATE_ENTRY_COMPLETED, STATE_COMPLETED):
@@ -417,7 +417,7 @@ class Syscall:
 
     ###############################################################################
     def print_always(self):
-        if self.state != STATE_COMPLETED:
+        if self.debug_mode and self.state not in (STATE_ENTRY_COMPLETED, STATE_COMPLETED):
             print("DEBUG STATE =", self.state)
 
         self.print_entry()
@@ -461,11 +461,21 @@ class Syscall:
             print("{0:016X} {1:016X} {2:016X} {3:016X} sys_exit {4:016X}".format(
                 self.time_end, self.pid_tid, self.err, self.ret, self.sc_id))
 
+    def print_mismatch_info(self, etype, pid_tid, sc_id, name):
+        print("Error: packet type mismatch: etype {0:d} while state {1:d}".format(etype, self.state))
+        print("       previous syscall: {0:016X} {1:s} (sc_id:{2:d}) state {3:d}"
+              .format(self.pid_tid, self.name, self.sc_id, self.state))
+        print("        current syscall: {0:016X} {1:s} (sc_id:{2:d}) etype {3:d}"
+              .format(pid_tid, name, sc_id, etype))
+
     ###############################################################################
-    def check(self, packet_type, pid_tid, sc_id, name, retval):
+    def do_check(self, packet_type, pid_tid, sc_id, name, retval):
 
         etype = packet_type & 0x03
         ret = CHECK_OK
+
+        if pid_tid != self.pid_tid or sc_id != self.sc_id:
+            ret = CHECK_WRONG_ID
 
         if (name == "fork") and is_exit(etype) and (retval == 0):
             return CHECK_IGNORE
@@ -476,19 +486,19 @@ class Syscall:
             return CHECK_NO_ENTRY
 
         if self.state == STATE_IN_ENTRY and is_exit(etype):
-            print("Error: packet type mismatch:", etype, "state:", self.state)
+            self.print_mismatch_info(etype, pid_tid, sc_id, name)
             return CHECK_SAVE_IN_ENTRY
 
-        if self.state == STATE_ENTRY_COMPLETED and is_entry(etype):
-            if self.debug_mode and self.name != "fork":
-                print("Notice: exit info not found:", self.name)
-            return CHECK_NO_EXIT
+        if self.state == STATE_ENTRY_COMPLETED:
+            if is_entry(etype):
+                if self.debug_mode and self.name != "fork":
+                    print("Notice: exit info not found:", self.name)
+                return CHECK_NO_EXIT
+            elif is_exit(etype) and ret == CHECK_WRONG_ID:
+                return CHECK_WRONG_EXIT
 
-        if pid_tid != self.pid_tid or sc_id != self.sc_id:
-            ret = CHECK_WRONG_ID
-
-        if (ret == CHECK_WRONG_ID) and (self.state == STATE_ENTRY_COMPLETED) and is_exit(etype):
-            return CHECK_LOOK_FOR_EXIT
+        if ret != CHECK_OK:
+            self.print_mismatch_info(etype, pid_tid, sc_id, name)
 
         return ret
 
@@ -722,8 +732,7 @@ class ListSyscalls(list):
     def search(self, packet_type, pid_tid, sc_id, name, retval):
         for n in range(len(self)):
             syscall = self[n]
-            check = syscall.check(packet_type, pid_tid, sc_id, name, retval)
-            #  print("CHECK =", check)
+            check = syscall.do_check(packet_type, pid_tid, sc_id, name, retval)
             if check == CHECK_OK:
                 del self[n]
                 return syscall
@@ -1148,8 +1157,8 @@ class AnalyzingTool:
         self.syscall = []
 
         self.list_ok = ListSyscalls(script_mode, debug_mode)
-        self.list_no_exit = ListSyscalls(script_mode,  debug_mode)
-        self.list_in_entry = ListSyscalls(script_mode, debug_mode)
+        self.list_no_exit = ListSyscalls(script_mode, debug_mode)
+        self.list_others = ListSyscalls(script_mode, debug_mode)
 
         if fileout:
             self.fileout = fileout
@@ -1172,17 +1181,15 @@ class AnalyzingTool:
     def print_log(self):
         self.list_ok.print()
 
-        if len(self.list_in_entry):
-            print("\nWarning: list 'list_in_entry' is not empty!")
-            self.list_in_entry.sort()
-            self.list_in_entry.make_time_relative()
-            self.list_in_entry.print_always()
-
-        if len(self.list_no_exit):
+        if self.debug_mode and len(self.list_no_exit):
             print("\nNotice: list 'list_no_exit' is not empty!")
             self.list_no_exit.sort()
-            self.list_no_exit.make_time_relative()
             self.list_no_exit.print_always()
+
+        if self.debug_mode and len(self.list_others):
+            print("\nWarning: list 'list_others' is not empty!")
+            self.list_others.sort()
+            self.list_others.print_always()
 
     ###############################################################################
     # analyze_check - analyze check result
@@ -1198,40 +1205,32 @@ class AnalyzingTool:
                       .format(packet_type, self.syscall_table.name(sc_id), sc_id))
             return DO_CONTINUE
 
-        elif CHECK_NO_ENTRY == check:
-            self.syscall = self.list_no_exit.search(packet_type, pid_tid, sc_id, name, retval)
-            if self.syscall == -1:
-                if self.debug_mode:
-                    print("Notice: NO ENTRY found: exit without entry info found: {0:s} (sc_id:{1:d})"
-                          .format(name, sc_id))
-                return DO_REINIT
-            return DO_GO_ON
-
         elif CHECK_NO_EXIT == check:
             self.list_no_exit.append(self.syscall)
             return DO_REINIT
 
-        elif CHECK_LOOK_FOR_EXIT == check:
+        elif check in (CHECK_NO_ENTRY, CHECK_SAVE_IN_ENTRY, CHECK_WRONG_EXIT):
             old_syscall = self.syscall
+            if CHECK_SAVE_IN_ENTRY == check:
+                self.list_others.append(self.syscall)
             self.syscall = self.list_no_exit.search(packet_type, pid_tid, sc_id, name, retval)
-            self.list_no_exit.append(old_syscall)
+            if CHECK_WRONG_EXIT == check:
+                self.list_no_exit.append(old_syscall)
+            if self.debug_mode:
+                if self.syscall == -1:
+                    print("Notice: NO ENTRY found: exit without entry info found: {0:s} (sc_id:{1:d})"
+                          .format(name, sc_id))
+                else:
+                    print("Notice: found matching ENTRY for: {0:s} (sc_id:{1:d} pid:{2:016X}):"
+                          .format(name, sc_id, pid_tid))
             if self.syscall == -1:
-                if self.debug_mode:
-                    print("Notice: CHECK_LOOK_FOR_EXIT: no EXIT found")
                 return DO_REINIT
-            return DO_GO_ON
+            else:
+                return DO_GO_ON
 
         elif CHECK_WRONG_ID == check:
-            print("ERROR: CHECK_WRONG_ID")
+            self.list_others.append(self.syscall)
             return DO_REINIT
-
-        elif CHECK_SAVE_IN_ENTRY == check:
-            self.list_in_entry.append(self.syscall)
-            self.syscall = self.list_no_exit.search(packet_type, pid_tid, sc_id, name, retval)
-            if self.syscall == -1:
-                print("ERROR: CHECK_SAVE_IN_ENTRY: no EXIT found")
-                return DO_REINIT
-            return DO_GO_ON
 
     ###############################################################################
     # read_and_parse_data - read and parse data
@@ -1290,7 +1289,7 @@ class AnalyzingTool:
                 name = self.syscall_table.name(sc_id)
                 retval = self.syscall.get_ret(bdata)
 
-                check = self.syscall.check(packet_type, pid_tid, sc_id, name, retval)
+                check = self.syscall.do_check(packet_type, pid_tid, sc_id, name, retval)
                 result = self.analyze_check(check, packet_type, pid_tid, sc_id, name, retval)
                 if result == DO_CONTINUE:
                     continue
@@ -1302,7 +1301,8 @@ class AnalyzingTool:
                 if state == STATE_COMPLETED:
                     self.list_ok.append(self.syscall)
 
-                self.syscall.print_debug()
+                if self.debug_mode:
+                    self.syscall.debug_print()
 
                 if self.syscall.truncated:
                     truncated = self.syscall.truncated
@@ -1322,14 +1322,14 @@ class AnalyzingTool:
             print("\rDone (read {0:d} packets).".format(n))
         fh.close()
 
-        if len(self.list_in_entry):
-            self.list_ok += self.list_in_entry
-
         if len(self.list_no_exit):
             self.list_ok += self.list_no_exit
 
+        if len(self.list_others):
+            self.list_ok += self.list_others
+
         self.list_ok.sort()
-        self.list_ok.make_time_relative()
+        # self.list_ok.make_time_relative()
 
     def count_pids(self):
         self.list_ok.count_pids(self.fhout)
