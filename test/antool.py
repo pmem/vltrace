@@ -1161,7 +1161,7 @@ class AnalyzingTool:
         if max_packets:
             self.max_packets = int(max_packets)
         else:
-            self.max_packets = 1000
+            self.max_packets = -1
 
     def read_syscall_table(self, path_to_syscalls_table_dat):
         self.syscall_table = SyscallTable()
@@ -1272,8 +1272,9 @@ class AnalyzingTool:
                 n += 1
 
                 if state == STATE_COMPLETED:
-                    if n > self.max_packets and not self.script_mode:
-                        print("done (read maximum number of packets: {0:d})".format(n - 1))
+                    if n > self.max_packets > 0:
+                        if not self.script_mode:
+                            print("done (read maximum number of packets: {0:d})".format(n - 1))
                         break
                     state = STATE_INIT
 
