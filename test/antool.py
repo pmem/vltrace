@@ -63,8 +63,7 @@ CHECK_NO_ENTRY = 3
 CHECK_NO_EXIT = 4
 CHECK_WRONG_ID = 5
 CHECK_WRONG_EXIT = 6
-CHECK_REINIT = 7
-CHECK_SAVE_IN_ENTRY = 8
+CHECK_SAVE_IN_ENTRY = 7
 
 DO_REINIT = 0
 DO_CONTINUE = 1
@@ -454,7 +453,7 @@ class Syscall:
     def print_exit(self):
         if not (self.content & CNT_EXIT):
             return
-        if self.sc.avail:
+        if len(self.name) > 0:
             print("{0:016X} {1:016X} {2:016X} {3:016X} {4:s}".format(
                 self.time_end, self.pid_tid, self.err, self.ret, self.name))
         else:
@@ -477,12 +476,11 @@ class Syscall:
         if pid_tid != self.pid_tid or sc_id != self.sc_id:
             ret = CHECK_WRONG_ID
 
-        if (name == "fork") and is_exit(etype) and (retval == 0):
-            return CHECK_IGNORE
-
         if self.state == STATE_INIT and is_exit(etype):
             if sc_id == 0xFFFFFFFFFFFFFFFF:  # 0xFFFFFFFFFFFFFFFF = sys_exit of rt_sigreturn
-                return CHECK_REINIT
+                return CHECK_OK
+            if retval == 0 and name in ("clone", "fork", "vfork"):
+                return CHECK_OK
             return CHECK_NO_ENTRY
 
         if self.state == STATE_IN_ENTRY and is_exit(etype):
@@ -491,7 +489,7 @@ class Syscall:
 
         if self.state == STATE_ENTRY_COMPLETED:
             if is_entry(etype):
-                if self.debug_mode and self.name != "fork":
+                if self.debug_mode and self.name not in ("clone", "fork", "vfork"):
                     print("Notice: exit info not found:", self.name)
                 return CHECK_NO_EXIT
             elif is_exit(etype) and ret == CHECK_WRONG_ID:
@@ -1182,7 +1180,7 @@ class AnalyzingTool:
         self.list_ok.print()
 
         if self.debug_mode and len(self.list_no_exit):
-            print("\nNotice: list 'list_no_exit' is not empty!")
+            print("\nWarning: list 'list_no_exit' is not empty!")
             self.list_no_exit.sort()
             self.list_no_exit.print_always()
 
@@ -1213,12 +1211,15 @@ class AnalyzingTool:
             old_syscall = self.syscall
             if CHECK_SAVE_IN_ENTRY == check:
                 self.list_others.append(self.syscall)
-            self.syscall = self.list_no_exit.search(packet_type, pid_tid, sc_id, name, retval)
+            if retval != 0 or name not in ("clone", "fork", "vfork"):
+                self.syscall = self.list_no_exit.search(packet_type, pid_tid, sc_id, name, retval)
             if CHECK_WRONG_EXIT == check:
                 self.list_no_exit.append(old_syscall)
+            if retval == 0 and name in ("clone", "fork", "vfork"):
+                return DO_REINIT
             if self.debug_mode:
                 if self.syscall == -1:
-                    print("Notice: NO ENTRY found: exit without entry info found: {0:s} (sc_id:{1:d})"
+                    print("Warning: NO ENTRY found: exit without entry info found: {0:s} (sc_id:{1:d})"
                           .format(name, sc_id))
                 else:
                     print("Notice: found matching ENTRY for: {0:s} (sc_id:{1:d} pid:{2:016X}):"
