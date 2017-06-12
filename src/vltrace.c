@@ -114,6 +114,60 @@ check_args(struct cl_options const *args)
 	return TRACING_ALL;
 }
 
+/*
+ * do_perf_reader_poll -- poll perf reader events
+ */
+void
+do_perf_reader_poll(int tracing, struct bpf_ctx *bpf,
+			struct perf_reader **readers)
+{
+	while (1) {
+
+		(void) perf_reader_poll((int)bpf->pr_arr_qty, readers, -1);
+
+		if (OutputError) {
+			ERROR("error while writing to output");
+			return;
+		}
+
+		if (AbortTracing) {
+			NOTICE("terminated by signal. Exiting...");
+			return;
+		}
+
+		switch (tracing) {
+			case TRACING_ALL:
+				/* wait for a terminating signal */
+				break;
+			case TRACING_CMD:
+				if (Args.ff_mode) {
+					/* trace until all children exit */
+					if (waitpid(-1, NULL, WNOHANG) == -1 &&
+					    errno == ECHILD) {
+						NOTICE("all children exited");
+						return;
+					}
+				} else {
+					/* trace until the child exits */
+					if (waitpid(-1, NULL, WNOHANG)
+					    == Args.pid) {
+						NOTICE("the child exited");
+						return;
+					}
+				}
+				break;
+			case TRACING_PID:
+				/* check if the process traced by PID exists */
+				if (kill(Args.pid, 0) == -1) {
+					ERROR("traced process with PID '%d' "
+						"disappeared", Args.pid);
+					return;
+				}
+				break;
+		}
+	}
+}
+
 int
 main(const int argc, char *const argv[])
 {
@@ -282,51 +336,7 @@ main(const int argc, char *const argv[])
 	for (unsigned i = 0; i < bpf->pr_arr_qty; i++)
 		readers[i] = bpf->pr_arr[i]->pr;
 
-	int stop_tracing = 0;
-	while (!stop_tracing) {
-
-		(void) perf_reader_poll((int)bpf->pr_arr_qty, readers, -1);
-
-		if (OutputError) {
-			ERROR("error while writing to output");
-			break;
-		}
-
-		if (AbortTracing) {
-			NOTICE("terminated by signal. Exiting...");
-			break;
-		}
-
-		switch (tracing) {
-		case TRACING_ALL:
-			/* wait for a terminating signal */
-			break;
-		case TRACING_CMD:
-			if (Args.ff_mode) {
-				/* trace until all children exit */
-				if ((waitpid(-1, NULL, WNOHANG) == -1) &&
-				    (errno == ECHILD)) {
-					NOTICE("all children exited");
-					stop_tracing = 1;
-				}
-			} else {
-				/* trace until the child exits */
-				if (waitpid(-1, NULL, WNOHANG) == Args.pid) {
-					NOTICE("the child exited");
-					stop_tracing = 1;
-				}
-			}
-			break;
-		case TRACING_PID:
-			/* check if the process traced by PID exists */
-			if (kill(Args.pid, 0) == -1) {
-				ERROR("traced process with PID '%d' "
-					"disappeared", Args.pid);
-				stop_tracing = 1;
-			}
-			break;
-		}
-	}
+	do_perf_reader_poll(tracing, bpf, readers);
 
 	fflush(OutputFile);
 	free(readers);
