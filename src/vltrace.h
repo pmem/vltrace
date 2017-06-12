@@ -34,8 +34,8 @@
  * vltrace.h -- application-wide stuff
  */
 
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef VLTRACE_H
+#define VLTRACE_H
 
 #include <stdio.h>
 #include <unistd.h>
@@ -141,4 +141,4 @@ extern FILE *OutputFile;
 /* Output logfile format */
 extern enum out_format OutputFormat;
 
-#endif /* MAIN_H */
+#endif /* VLTRACE_H */
