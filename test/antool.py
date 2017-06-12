@@ -1147,7 +1147,8 @@ class ListSyscalls(list):
 # AnalyzingTool
 ###############################################################################
 class AnalyzingTool:
-    def __init__(self, fileout, max_packets, script_mode, debug_mode):
+    def __init__(self, convert_mode, script_mode, debug_mode, fileout, max_packets):
+        self.convert_mode = convert_mode
         self.script_mode = script_mode
         self.debug_mode = debug_mode
         self.cwd = ""
@@ -1158,17 +1159,23 @@ class AnalyzingTool:
         self.list_no_exit = ListSyscalls(script_mode, debug_mode)
         self.list_others = ListSyscalls(script_mode, debug_mode)
 
-        if fileout:
-            self.fileout = fileout
-            self.fhout = open_file(fileout, 'wt')
-        else:
-            self.fileout = ""
-            self.fhout = stdout
-
         if max_packets:
             self.max_packets = int(max_packets)
         else:
             self.max_packets = -1
+
+        if fileout:
+            self.fileout = fileout
+            self.fhout = open_file(self.fileout, 'wt')
+        else:
+            if self.convert_mode or self.debug_mode:
+                self.fileout = ""
+                self.fhout = stdout
+            else:
+                if not script_mode:
+                    print("Notice: output of analysis will be saved in the file: /tmp/antool-analysis-output")
+                self.fileout = "/tmp/antool-analysis-output"
+                self.fhout = open_file(self.fileout, 'wt')
 
     def read_syscall_table(self, path_to_syscalls_table_dat):
         self.syscall_table = SyscallTable()
@@ -1251,7 +1258,6 @@ class AnalyzingTool:
         bdata = fh.read(cwd_len)
         cwd = str(bdata.decode(errors="ignore"))
         self.cwd = cwd.replace('\0', ' ')
-        print("Current working directory:", self.cwd, file=self.fhout)
 
         # read header = command line
         data_size, argc = read_fmt_data(fh, 'ii')
@@ -1259,10 +1265,13 @@ class AnalyzingTool:
         bdata = fh.read(data_size)
         argv = str(bdata.decode(errors="ignore"))
         argv = argv.replace('\0', ' ')
-        print("Command line:", argv, file=self.fhout)
 
-        if not self.debug_mode and not self.script_mode:
-            print("Reading packets:")
+        if not self.script_mode:
+            print("Current working directory:", self.cwd, file=self.fhout)
+            print("Command line:", argv, file=self.fhout)
+            if not self.debug_mode:
+                print("Reading packets:")
+
         n = 0
         state = STATE_INIT
         while True:
@@ -1367,7 +1376,7 @@ def main():
 
     args = parser.parse_args()
 
-    at = AnalyzingTool(args.output, args.max_packets, args.script, args.debug)
+    at = AnalyzingTool(args.convert, args.script, args.debug, args.output, args.max_packets)
     at.read_syscall_table(args.table)
     at.read_and_parse_data(args.binlog)
 
