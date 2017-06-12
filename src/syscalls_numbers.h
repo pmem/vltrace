@@ -40,6 +40,10 @@
 #include "syscalls_64_num.h_gen"
 
 enum {
+	/*
+	 * __NR_FIRST_UNKNOWN should be a number that never will be
+	 * a valid syscall number. Let's take 700.
+	 */
 	__NR_FIRST_UNKNOWN = 700,
 
 #ifndef __NR_arch_prctl
