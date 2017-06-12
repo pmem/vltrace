@@ -43,26 +43,6 @@ endif ()
 add_custom_target(syscalls_64 ALL ../utils/copy_syscalls_64.sh make
                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-# .txt sources
-set (TXT_SRCS
-	help_text.txt
-	usage_text.txt)
-
-set(TXT_OBJS "")
-foreach(FILE_SRC ${TXT_SRCS})
-	get_filename_component(FILENAME ${FILE_SRC} NAME)
-	get_filename_component(FILEPATH ${FILE_SRC} PATH)
-	add_custom_command(OUTPUT
-			${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${FILENAME}.o
-		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/${FILEPATH}
-		COMMAND ${CMAKE_LINKER} -r -b binary
-		-o ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${FILENAME}.o
-			${FILENAME})
-	list(APPEND TXT_OBJS
-		${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${FILENAME}.o)
-	#message(STATUS "Linking ${FILE_SRC}")
-endforeach(FILE_SRC)
-
 find_package(PkgConfig)
 pkg_check_modules(LIBBCC REQUIRED libbcc)
 
@@ -82,7 +62,7 @@ include_directories(compat)
 include_directories(${LIBBCC_INCLUDE_DIRS})
 link_directories(${LIBBCC_LIBRARY_DIRS})
 
-add_executable(vltrace ${SOURCES} ${TXT_OBJS})
+add_executable(vltrace ${SOURCES})
 
 # XXX libbcc expects multi-treading safety. Currently it's required for
 # print_event_cb.o only, although we will apply it for overall application.
