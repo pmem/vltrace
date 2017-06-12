@@ -1160,10 +1160,15 @@ class AnalyzingTool:
 
         if fileout:
             self.fileout = fileout
-            self.fhout = open_file(fileout, 'wt')
+            self.fhout = open_file(self.fileout, 'wt')
         else:
-            self.fileout = ""
-            self.fhout = stdout
+            if self.debug_mode:
+                self.fileout = ""
+                self.fhout = stdout
+            else:
+                print("Output of analysis will be saved in file: /tmp/output-antool")
+                self.fileout = "/tmp/output-antool"
+                self.fhout = open_file(self.fileout, 'wt')
 
         if max_packets:
             self.max_packets = int(max_packets)
