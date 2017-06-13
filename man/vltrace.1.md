@@ -66,8 +66,8 @@ based on eBPF, KProbe and TracePoint technologies and libbcc library.
 
 # FEATURES #
 
- - Used combination of technologies allow tool to be about one order faster
-   than regular system strace.
+ - Used combination of technologies allow tool to be about one order
+   of magnitude faster than regular system strace.
  - This tool consumes far less CPU resources
  - Output of this tool is designed to be suitable for processing with
    classical tools and technologies, like awk.
@@ -81,9 +81,6 @@ WARNING: System-wide tracing can fill out your disk really fast.
 
  - Limited functionality
  - Slow attaching and detaching
- - Asynchronity. If a user will not provide enough system resources for
-   performance, the tool skips some calls. Tool does not assume to try
-   any work-around behind the scene.
  - Depends on modern kernel features
  - The underlying eBPF technology is still in active development, so we can
    expect hangs and crashes, especially on low-res systems.
