@@ -85,10 +85,8 @@ add_c_flag(-ggdb DEBUG)
 add_c_flag(-DDEBUG DEBUG)
 
 # RelWithDebInfo configuration
-add_c_flag(-O1 RELWITHDEBINFO)
 add_c_flag(-ggdb RELWITHDEBINFO)
 add_c_flag(-fno-omit-frame-pointer RELWITHDEBINFO)
-add_c_flag(-fno-optimize-sibling-calls RELWITHDEBINFO)
 
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
