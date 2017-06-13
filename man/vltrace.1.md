@@ -48,8 +48,8 @@ title: vltrace(1)
 
 # NAME #
 
-**vltrace** -- extremely fast strace-like tool built on top of eBPF, KProbe
-and TracePoint technologies.
+**vltrace** -- extremely fast strace-like tool built on top of eBPF, Kprobe
+and Tracepoint technologies.
 
 
 # SYNOPSIS #
@@ -62,7 +62,7 @@ $ vltrace [options] [command [arg ...]]
 # DESCRIPTION #
 
 vltrace is a strace equivalent tool for Linux with limited functionality
-based on eBPF, KProbe and TracePoint technologies and libbcc library.
+based on eBPF, Kprobe and Tracepoint technologies and libbcc library.
 
 # FEATURES #
 
@@ -141,12 +141,12 @@ only show failed syscalls
 `-e, --expr <expr>`
 
 defines which syscalls should be traced:
-	1) Intercepting using both KProbes and TracePoints (requires kernel >= 4.7):
+	1) Intercepting using both Kprobes and Tracepoints (requires kernel >= 4.7):
 	- 'all' all syscalls provided by the kernel using:
-		- KProbes on syscalls' entry and
-		- TracePoint (raw syscall sys_exit) on syscalls' exit.
+		- Kprobes on syscalls' entry and
+		- Tracepoint (raw syscall sys_exit) on syscalls' exit.
 		This is the default and recommended option.
-	2) Intercepting using KProbes only:
+	2) Intercepting using Kprobes only:
 	- 'kp-all'    - all syscalls provided by kernel
 	- 'kp-fileio' - all syscalls related to file IO
 	- 'kp-file'   - all syscalls with path arguments

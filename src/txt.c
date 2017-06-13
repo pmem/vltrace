@@ -71,13 +71,13 @@ Filtering:\n\
         only show failed syscalls\n\
     -e, --expr <expr>\n\
         which syscalls should be traced (Default: 'all'):\n\
-	1) Intercepting using both KProbes and TracePoints (requires\n\
+	1) Intercepting using both Kprobes and Tracepoints (requires\n\
            kernel >= 4.7):\n\
 	- 'all' all syscalls provided by the kernel using:\n\
-		- KProbes on syscalls' entry and\n\
-		- TracePoint (raw syscall sys_exit) on syscalls' exit.\n\
+		- Kprobes on syscalls' entry and\n\
+		- Tracepoint (raw syscall sys_exit) on syscalls' exit.\n\
 		This is the default and recommended option.\n\
-	2) Intercepting using KProbes only:\n\
+	2) Intercepting using Kprobes only:\n\
 	- 'kp-all'    - all syscalls provided by kernel\n\
 	- 'kp-fileio' - all syscalls related to file IO\n\
 	- 'kp-file'   - all syscalls with path arguments\n\

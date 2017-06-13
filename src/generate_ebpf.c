@@ -110,7 +110,7 @@ replace_skip_STRX:
 
 /*
  * generate_ebpf_kp_mask -- generate eBPF syscall handlers specific
- *                          for KProbes with given mask
+ *                          for Kprobes with given mask
  */
 static int
 generate_ebpf_kp_mask(FILE *ts, unsigned mask)
@@ -147,7 +147,7 @@ generate_ebpf_kp_mask(FILE *ts, unsigned mask)
 
 /*
  * generate_ebpf_tp_all -- generate eBPF syscall handlers
- *                         specific for TracePoints
+ *                         specific for Tracepoints
  */
 static int
 generate_ebpf_tp_all(FILE *ts)
@@ -168,7 +168,7 @@ generate_ebpf_tp_all(FILE *ts)
 
 /*
  * generate_ebpf_all_kp_tp -- generate eBPF syscall handlers
- *                            specific for KProbes and TracePoints
+ *                            specific for Kprobes and Tracepoints
  */
 static int
 generate_ebpf_all_kp_tp(FILE *ts)

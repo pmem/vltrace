@@ -278,7 +278,7 @@ event2ev_name(const char pref, const char *event)
 
 /*
  * load_fn_and_attach_to_kp -- load ebpf function code into VM and attach it
- *                             to syscall entry point using KProbe
+ *                             to syscall entry point using Kprobe
  */
 int
 load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
@@ -321,7 +321,7 @@ load_fn_and_attach_to_kp(struct bpf_ctx *sbcp,
 
 /*
  * load_fn_and_attach_to_kretp -- load ebpf function code into VM and attach it
- *                                to syscall exit point using KProbe
+ *                                to syscall exit point using Kprobe
  */
 int
 load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
@@ -364,7 +364,7 @@ load_fn_and_attach_to_kretp(struct bpf_ctx *sbcp,
 
 /*
  * load_fn_and_attach_to_tp -- load ebpf function code into VM and attach it
- *                             to syscall exit point using TracePoint.
+ *                             to syscall exit point using Tracepoint.
  */
 int
 load_fn_and_attach_to_tp(struct bpf_ctx *sbcp,

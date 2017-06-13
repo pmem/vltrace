@@ -34,7 +34,7 @@
 .SH NAME
 .PP
 \f[B]vltrace\f[] \-\- extremely fast strace\-like tool built on top of
-eBPF, KProbe and TracePoint technologies.
+eBPF, Kprobe and Tracepoint technologies.
 .SH SYNOPSIS
 .IP
 .nf
@@ -45,7 +45,7 @@ $\ vltrace\ [options]\ [command\ [arg\ ...]]
 .SH DESCRIPTION
 .PP
 vltrace is a strace equivalent tool for Linux with limited functionality
-based on eBPF, KProbe and TracePoint technologies and libbcc library.
+based on eBPF, Kprobe and Tracepoint technologies and libbcc library.
 .SH FEATURES
 .IP \[bu] 2
 Used combination of technologies allow tool to be about one order of
@@ -138,11 +138,11 @@ only show failed syscalls
 \f[C]\-e,\ \-\-expr\ <expr>\f[]
 .PP
 defines which syscalls should be traced: 1) Intercepting using both
-KProbes and TracePoints (requires kernel >= 4.7): \- \[aq]all\[aq] all
-syscalls provided by the kernel using: \- KProbes on syscalls\[aq] entry
-and \- TracePoint (raw syscall sys_exit) on syscalls\[aq] exit.
+Kprobes and Tracepoints (requires kernel >= 4.7): \- \[aq]all\[aq] all
+syscalls provided by the kernel using: \- Kprobes on syscalls\[aq] entry
+and \- Tracepoint (raw syscall sys_exit) on syscalls\[aq] exit.
 This is the default and recommended option.
-2) Intercepting using KProbes only: \- \[aq]kp\-all\[aq] \- all syscalls
+2) Intercepting using Kprobes only: \- \[aq]kp\-all\[aq] \- all syscalls
 provided by kernel \- \[aq]kp\-fileio\[aq] \- all syscalls related to
 file IO \- \[aq]kp\-file\[aq] \- all syscalls with path arguments \-
 \[aq]kp\-desc\[aq] \- all syscalls with file descriptor arguments
