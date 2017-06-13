@@ -77,7 +77,7 @@ load_file_from_disk(const char *const fn)
 
 	buf = calloc(1, (size_t)st.st_size + 1);
 
-	if (NULL == buf)
+	if (buf == NULL)
 		goto out;
 
 	res = read(fd, buf, (size_t)st.st_size);
@@ -162,18 +162,18 @@ load_file_no_cr(const char *const fn)
 	static const char *const eofcr_sep = " */\n";
 	char *f = load_file(fn);
 
-	if (NULL == f)
+	if (f == NULL)
 		return NULL;
 
-	if (NULL == strcasestr(f, "Copyright"))
+	if (strcasestr(f, "Copyright") == NULL)
 		return f;
 
 	char *new_f = strcasestr(f, eofcr_sep);
-	if (NULL == new_f)
+	if (new_f == NULL)
 		return f;
 
 	new_f = strdup(new_f + strlen(eofcr_sep));
-	if (NULL == new_f)
+	if (new_f == NULL)
 		return f;
 
 	free(f);
@@ -335,7 +335,7 @@ get_sc_list(FILE *f, template_t template)
 
 	FILE *in = fopen(AVAILABLE_FILTERS, "r");
 
-	if (NULL == in) {
+	if (in == NULL) {
 		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);
 		return;
 	}
@@ -396,7 +396,7 @@ str_replace_all(char **const text, const char *templt, const char *str)
 			size_t text_len = strlen(p);
 
 			*text = calloc(1, text_len - templt_len + str_len + 1);
-			if (NULL == *text) {
+			if (*text == NULL) {
 				free(p);
 				return -1;
 			}
@@ -427,7 +427,7 @@ str_replace_many(char **const text, const char *templt, const char *str, int n)
 		size_t text_len = strlen(p);
 
 		*text = calloc(1, text_len - templt_len + (n * str_len) + 1);
-		if (NULL == *text) {
+		if (*text == NULL) {
 			free(p);
 			return -1;
 		}
@@ -578,7 +578,7 @@ setup_out_lf(void)
 {
 	int err_no;
 
-	if (NULL == Args.output_name) {
+	if (Args.output_name == NULL) {
 		OutputFile = stdout;
 
 		goto setup_buffer;

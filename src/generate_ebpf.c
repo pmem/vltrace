@@ -86,7 +86,7 @@ get_template(unsigned sc_num)
 
 	const char *file = ebpf_file_table[nstr][Args.fnr_mode];
 	text = load_file_no_cr(file);
-	if (NULL == text) {
+	if (text == NULL) {
 		ERROR("cannot load the file: %s", file);
 		return NULL;
 	}
@@ -206,7 +206,7 @@ generate_ebpf()
 
 	free(head);
 
-	if (NULL == Args.expr) {
+	if (Args.expr == NULL) {
 		NOTICE("defaulting to 'all'");
 		ret = generate_ebpf_all_kp_tp(ts);
 	} else if (!strcasecmp(Args.expr, "all")) {

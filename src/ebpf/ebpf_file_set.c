@@ -108,7 +108,7 @@ const char *ebpf_file_table[4][4] = {
 char *
 ebpf_load_file(const char *const fn)
 {
-	if (NULL == fn)
+	if (fn == NULL)
 		return NULL;
 
 	/* fallback to embedded ones */

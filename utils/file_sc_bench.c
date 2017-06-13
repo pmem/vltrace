@@ -83,7 +83,7 @@ loop_tx(char *name, tx_t tx_f, uint64_t qty, FILE *f)
 
 	gettimeofday(&tv_end, NULL);
 
-	if (NULL == f)
+	if (f == NULL)
 		return;
 
 	tu_start = tv_start.tv_sec * 1000000 + tv_start.tv_usec;
