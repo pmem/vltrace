@@ -77,8 +77,6 @@ endforeach(FILE_SRC)
 
 
 add_library(ebpf STATIC ${BIN_OBJS} ebpf_file_set.c)
-set_target_properties(ebpf PROPERTIES
-	ARCHIVE_OUTPUT_DIRECTORY ../nondebug)
 
 # XXX libbcc expects multi-treading safety. Currently it's required for
 # print_event_cb.o only, although we will apply it for overall application.
