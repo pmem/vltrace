@@ -197,7 +197,7 @@ main(const int argc, char *const argv[])
 	/* check input arguments */
 	tracing = check_args(&Args);
 
-	setup_out_lf();
+	OutputFile = setup_output();
 	if (OutputFile == NULL) {
 		ERROR("failed to set up the output file");
 		return EXIT_FAILURE;

@@ -571,35 +571,28 @@ attach_signals_handlers(void)
 }
 
 /*
- * Setup OutputFile stream
+ * setup_output -- setup output stream
  */
-void
-setup_out_lf(void)
+FILE *
+setup_output(void)
 {
+	FILE *output;
 	int err_no;
 
 	if (Args.output_name == NULL) {
-		OutputFile = stdout;
-
-		goto setup_buffer;
+		output = stdout;
+	} else {
+		output = fopen(Args.output_name, "w");
+		if (output == NULL) {
+			err_no = errno;
+			ERROR("failed to open '%s' for appending: '%m'",
+				Args.output_name);
+			errno = err_no;
+			return NULL;
+		}
 	}
 
-	OutputFile = fopen(Args.output_name, "w");
+	setvbuf(output, NULL, _IOFBF, Args.out_buf_size);
 
-	if (NULL != OutputFile)
-		goto setup_buffer;
-
-	err_no = errno;
-
-	fprintf(stderr, "ERROR: "
-		"Failed to open '%s' for appending: '%m'\n",
-		Args.output_name);
-
-	errno = err_no;
-	return;
-
-setup_buffer:
-	/* XXX We should improve it. May be we should use fd directly */
-	/* setbuffer(OutputFile, NULL, Args.out_buf_size); */
-	(void) Args.out_buf_size;
+	return output;
 }

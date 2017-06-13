@@ -82,7 +82,7 @@ pid_t start_command_with_signals(int argc, char *const argv[]);
 
 void attach_signals_handlers(void);
 
-void setup_out_lf(void);
+FILE *setup_output(void);
 
 #define AVAILABLE_FILTERS "/sys/kernel/debug/tracing/available_filter_functions"
 
