@@ -31,31 +31,31 @@
 
 find_program(PANDOC pandoc)
 if (NOT PANDOC)
-        message(WARNING "pandoc not found")
+	message(WARNING "pandoc not found")
 endif()
 
 add_custom_target(manpages)
 
 function(generate_manpage name)
-        add_custom_command(
-                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/${name}
-                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}.md
-                COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/generated/
-                COMMAND ${CMAKE_SOURCE_DIR}/utils/md2man.sh
+	add_custom_command(
+		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/${name}
+		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}.md
+		COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/generated/
+		COMMAND ${CMAKE_SOURCE_DIR}/utils/md2man.sh
 			${CMAKE_CURRENT_SOURCE_DIR}/${name}.md
 			${CMAKE_CURRENT_SOURCE_DIR}/default.man
 			${CMAKE_CURRENT_BINARY_DIR}/generated/${name}
-        )
-        add_custom_target(manpage-${name} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/generated/${name})
-        add_dependencies(manpages manpage-${name})
+	)
+	add_custom_target(manpage-${name} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/generated/${name})
+	add_dependencies(manpages manpage-${name})
 endfunction()
 
 generate_manpage(vltrace.1)
 
 if(PANDOC)
-        set(DIR ${CMAKE_CURRENT_BINARY_DIR})
+	set(DIR ${CMAKE_CURRENT_BINARY_DIR})
 else()
-        set(DIR ${CMAKE_CURRENT_SOURCE_DIR})
+	set(DIR ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/generated/vltrace.1

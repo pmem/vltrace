@@ -38,7 +38,7 @@ execute_process(COMMAND utils/check-kernel.sh ${VLTRACE_MINIMUM_KERNEL_VERSION}
 		RESULT_VARIABLE VLTRACE_KERNEL_OK)
 
 if (NOT ${VLTRACE_KERNEL_OK} EQUAL 0)
-        message( WARNING "Tests skipped (required kernel >= ${VLTRACE_MINIMUM_KERNEL_VERSION})" )
+	message( WARNING "Tests skipped (required kernel >= ${VLTRACE_MINIMUM_KERNEL_VERSION})" )
 else ()
 
 	# running kernel meets version requirements, so we can add tests

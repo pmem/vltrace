@@ -40,7 +40,7 @@ if (NOT ${KERNEL_HEADER} EQUAL 0)
 endif ()
 
 add_custom_target(syscalls_64 ALL ../utils/copy_syscalls_64.sh make
-                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+		  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 find_package(PkgConfig)
 pkg_check_modules(LIBBCC REQUIRED libbcc)
@@ -83,6 +83,6 @@ add_subdirectory(ebpf)
 target_link_libraries(vltrace ebpf ${LIBBCC_LIBRARIES})
 
 install(TARGETS vltrace
-        CONFIGURATIONS Release RelWithDebInfo Debug None
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+	CONFIGURATIONS Release RelWithDebInfo Debug None
+	DESTINATION ${CMAKE_INSTALL_BINDIR}
+	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
