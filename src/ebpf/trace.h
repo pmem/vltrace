@@ -53,10 +53,10 @@ static const char *str_error = "(bpf_probe_read < 0)";
 
 /* types of data packets */
 enum data_packet_types {
-	E_KP_ENTRY = 0,	/* entry of KProbe */
-	E_KP_EXIT  = 1,	/* exit  of KProbe */
-	E_TP_ENTRY = 2,	/* entry of TracePoint */
-	E_TP_EXIT  = 3,	/* exit  of TracePoint */
+	E_KP_ENTRY = 0,	/* entry of Kprobe */
+	E_KP_EXIT  = 1,	/* exit  of Kprobe */
+	E_TP_ENTRY = 2,	/* entry of Tracepoint */
+	E_TP_EXIT  = 3,	/* exit  of Tracepoint */
 };
 
 struct data_entry_s {

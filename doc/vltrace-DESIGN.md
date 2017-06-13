@@ -23,7 +23,7 @@ Used technologies
 ------------------
 
  - eBPF
- - KProbe
+ - Kprobe
  - Perf Event Circular Buffer
  - event-loop
 

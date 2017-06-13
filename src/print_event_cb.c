@@ -328,7 +328,7 @@ init_printing_events(void)
 }
 
 /*
- * print_event_text_kp_entry -- print syscall's logs on KProbe's entry
+ * print_event_text_kp_entry -- print syscall's logs on Kprobe's entry
  */
 static void
 print_event_text_kp_entry(FILE *f, void *data, int size)
@@ -427,7 +427,7 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 }
 
 /*
- * print_event_text_kp_exit -- print syscall's logs on KProbe's exit
+ * print_event_text_kp_exit -- print syscall's logs on Kprobe's exit
  */
 static void
 print_event_text_kp_exit(FILE *f, void *data, int size)
@@ -471,7 +471,7 @@ print_event_text_kp_exit(FILE *f, void *data, int size)
 }
 
 /*
- * print_event_text_tp_exit -- print syscall's logs on TracePoint's exit
+ * print_event_text_tp_exit -- print syscall's logs on Tracepoint's exit
  */
 static void
 print_event_text_tp_exit(FILE *f, void *data, int size)

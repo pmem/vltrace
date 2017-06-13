@@ -145,7 +145,7 @@ attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 
 /*
  * attach_kp_mask -- attach eBPF handler to each syscall that matches the mask
- *                   using KProbes
+ *                   using Kprobes
  */
 static int
 attach_kp_mask(struct bpf_ctx *b, attach_f attach, unsigned mask)
@@ -176,7 +176,7 @@ static const char tp_all_exit_fn[]  = "tracepoint__sys_exit";
 
 /*
  * attach_tp_exit -- attach eBPF handler to raw syscall sys_exit
- *                   using TracePoints
+ *                   using Tracepoints
  *
  * Should be faster and better but requires kernel >= v4.7
  *
@@ -200,8 +200,8 @@ attach_tp_exit(struct bpf_ctx *b)
 
 /*
  * attach_all_kp_tp -- attach eBPF handlers to all syscalls using:
- *                     - KProbes for entry handlers and
- *                     - TracePoints for exit handlers
+ *                     - Kprobes for entry handlers and
+ *                     - Tracepoints for exit handlers
  *
  * Requires kernel >= v4.7
  *

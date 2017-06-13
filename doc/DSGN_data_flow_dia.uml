@@ -27,24 +27,24 @@ TA -down-> SCx : SysCall
 }
 '1
 [EBPF VM #1] as VM1
-SC1 -down-> VM1 : KProbe
+SC1 -down-> VM1 : Kprobe
 VM1 -up->    CB : events
 
 [SC #1 Handler] as SCH1
-VM1 -down-> SCH1 : KProbe
+VM1 -down-> SCH1 : Kprobe
 'x
 [EBPF VM #x] as VMx
-SCx -down-> VMx : KProbe
+SCx -down-> VMx : Kprobe
 VMx -up->    CB : events
 
 [SC #x Handler] as SCHx
-VMx -down-> SCHx : KProbe
+VMx -down-> SCHx : Kprobe
 'n
 [EBPF VM #n] as VMn
-SCn -down-> VMn : KProbe
+SCn -down-> VMn : Kprobe
 VMn -up->    CB : events
 
 [SC #n Handler] as SCHn
-VMn -down-> SCHn : KProbe
+VMn -down-> SCHn : Kprobe
 }
 @enduml
