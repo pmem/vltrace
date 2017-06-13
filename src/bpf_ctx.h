@@ -43,21 +43,22 @@
 
 #include <bcc/libbpf.h>
 
+enum perf_reader_type_t {
+	PERF_TYPE_NONE = 0,
+	PERF_TYPE_KPROBE = BPF_PROG_TYPE_KPROBE,
+	PERF_TYPE_TRACEPOINT = BPF_PROG_TYPE_TRACEPOINT,
+	PERF_TYPE_READER,
+};
+
 /* This struct represent perf reader object */
 struct bpf_pr {
-	/* A pointer to corresponding libbcc's perf reader object */
+	/* pointer to corresponding libbcc's perf reader object */
 	struct perf_reader *pr;
 
-	/*
-	 * The state of our perf reader.
-	 *
-	 * XXX May be we should replace this field with some
-	 *    enum perf_reader_type_t as soon as tracepoints
-	 *    will be fixed.
-	 */
-	bool  attached;
+	/* type of perf reader attached */
+	enum perf_reader_type_t type;
 
-	/* The unique key associated with our perf reader */
+	/* unique key associated with our perf reader */
 	char  key[];
 };
 
