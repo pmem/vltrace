@@ -2,7 +2,7 @@
 .\"
 .TH "vltrace" "1" "" "" "" ""
 .hy
-.\" Copyright 2014-2017, Intel Corporation
+.\" Copyright 2016-2017, Intel Corporation
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -48,10 +48,10 @@ vltrace is a strace equivalent tool for Linux with limited functionality
 based on eBPF, KProbe and TracePoint technologies and libbcc library.
 .SH FEATURES
 .IP \[bu] 2
-Used combination of technologies allow tool to be about one order faster
-than regular system strace.
+Used combination of technologies allow tool to be about one order of
+magnitude faster than regular system strace.
 .IP \[bu] 2
-This tool consumes far less CPU resources
+This tool consumes fewer CPU resources.
 .IP \[bu] 2
 Output of this tool is designed to be suitable for processing with
 classical tools and technologies, like awk.
@@ -67,11 +67,6 @@ WARNING: System\-wide tracing can fill out your disk really fast.
 Limited functionality
 .IP \[bu] 2
 Slow attaching and detaching
-.IP \[bu] 2
-Asynchronity.
-If a user will not provide enough system resources for performance, the
-tool skips some calls.
-Tool does not assume to try any work\-around behind the scene.
 .IP \[bu] 2
 Depends on modern kernel features
 .IP \[bu] 2
