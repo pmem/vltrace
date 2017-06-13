@@ -779,8 +779,8 @@ test_analyzing_tool(char *dir, char *pmem, char *nonp)
 	int fdfnonp = fcntl(fdnonp, F_GETFD);
 	int fdfpmem = fcntl(fdpmem, F_GETFD);
 
-	fcntl(fdnonp, F_SETFD, fdfnonp & (~O_CLOEXEC));
-	fcntl(fdpmem, F_SETFD, fdfpmem & (~O_CLOEXEC));
+	fcntl(fdnonp, F_SETFD, fdfnonp & (~FD_CLOEXEC));
+	fcntl(fdpmem, F_SETFD, fdfpmem & (~FD_CLOEXEC));
 
 	fcntl(fdnonp, F_SETOWN, 0);
 	fcntl(fdpmem, F_SETOWN, 0);

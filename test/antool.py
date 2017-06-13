@@ -135,7 +135,7 @@ F_NOTIFY = 1026
 F_ADD_SEALS = 1033
 F_GET_SEALS = 1034
 
-O_CLOEXEC = 0o2000000
+FD_CLOEXEC = 1
 AT_EMPTY_PATH = 0x1000
 
 
@@ -791,8 +791,8 @@ class ListSyscalls(list):
 
     def check_fcntl_flags(self, n):
         ret = 0
-        if self[n].args[1] == F_SETFD and (self[n].args[2] & O_CLOEXEC == 0):
-            self[n].unsupported_flag = "F_SETFD: not possible to clear O_CLOEXEC flag"
+        if self[n].args[1] == F_SETFD and (self[n].args[2] & FD_CLOEXEC == 0):
+            self[n].unsupported_flag = "F_SETFD: not possible to clear FD_CLOEXEC flag"
             ret = 1
         elif self[n].args[1] == F_SETOWN:
             self[n].unsupported_flag = "F_SETOWN"
