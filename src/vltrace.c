@@ -174,6 +174,7 @@ main(const int argc, char *const argv[])
 	struct perf_reader **readers;
 	int tracing = TRACING_ALL; /* what are we tracing ? */
 	int st_optind;
+	int ret = EXIT_FAILURE;
 
 	/* default values */
 	Args.pid = -1;
@@ -340,9 +341,8 @@ main(const int argc, char *const argv[])
 
 	fflush(OutputFile);
 	free(readers);
-	detach_all(bpf);
-	free(bpf);
-	return EXIT_SUCCESS;
+	PidToBeKilled = 0;
+	ret = EXIT_SUCCESS;
 
 error_detach:
 	detach_all(bpf);
@@ -353,5 +353,5 @@ error_kill:
 		/* kill the started child */
 		kill(PidToBeKilled, SIGKILL);
 	}
-	return EXIT_FAILURE;
+	return ret;
 }
