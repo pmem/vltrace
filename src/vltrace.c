@@ -295,7 +295,7 @@ main(const int argc, char *const argv[])
 	}
 
 	INFO("Attaching probes...");
-	if (!attach_probes(bpf)) {
+	if (attach_probes(bpf)) {
 		ERROR("no probes were attached");
 		goto error_free_bpf;
 	}
