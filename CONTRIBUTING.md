@@ -5,8 +5,8 @@ Here you'll find instructions on how to contribute to vltrace.
 Your contributions are most welcome!  You'll find it is best to begin
 with a conversation about your changes, rather than just writing a bunch
 of code and contributing it out of the blue.
-There are several good ways to suggest new features, offer to add a feature,
-or just begin a dialog about the vltrace:
+The only way to suggest new features, offer to add a feature,
+or just begin a dialog about the vltrace is:
 
 * Open an issue in GitHub
 
