@@ -563,7 +563,7 @@ mark_available(const char *sc_name)
 		if (Syscall_array[i].available)
 			continue;
 
-		if (NULL == Syscall_array[i].handler_name)
+		if (Syscall_array[i].handler_name == NULL)
 			continue;
 
 		if (strcasecmp(sc_name, Syscall_array[i].handler_name) == 0) {

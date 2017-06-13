@@ -87,7 +87,7 @@ attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 	char kprobe[HANDLER_NAME_MAX_SIZE];
 	char kretprobe[HANDLER_NAME_MAX_SIZE];
 
-	if (NULL == handler_name)
+	if (handler_name == NULL)
 		return -1;
 
 	print_kprobe_name(kprobe, sizeof(kprobe),
@@ -130,7 +130,7 @@ attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 	int res = -1;
 	char kprobe[HANDLER_NAME_MAX_SIZE];
 
-	if (NULL == handler)
+	if (handler == NULL)
 		return -1;
 
 	print_kprobe_name(kprobe, sizeof(kprobe), handler);
@@ -224,7 +224,7 @@ attach_all_kp_tp(struct bpf_ctx *b)
 int
 attach_probes(struct bpf_ctx *b)
 {
-	if (NULL == Args.expr)
+	if (Args.expr == NULL)
 		goto default_option;
 
 	if (!strcasecmp(Args.expr, "all")) {

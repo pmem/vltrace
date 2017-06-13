@@ -93,7 +93,7 @@ get_template(unsigned sc_num)
 
 	const char *file = ebpf_file_table[nstr][Args.fnr_mode];
 	text = load_file_no_cr(file);
-	if (NULL == text) {
+	if (text == NULL) {
 		ERROR("cannot load the file: %s", file);
 		return NULL;
 	}
@@ -213,7 +213,7 @@ generate_ebpf()
 
 	free(head);
 
-	if (NULL == Args.expr) {
+	if (Args.expr == NULL) {
 		NOTICE("defaulting to 'all'");
 		ret = generate_ebpf_all_kp_tp(ts);
 	} else if (!strcasecmp(Args.expr, "all")) {
@@ -261,7 +261,7 @@ apply_process_attach_code(char **const pbpf_str)
 		(void) snp_res;
 
 		loaded_file = load_pid_check_hook(Args.ff_mode);
-		assert(NULL != loaded_file);
+		assert(loaded_file != NULL);
 
 		str_replace_all(&loaded_file, "TRACED_PID", strpid);
 	} else {
@@ -274,7 +274,7 @@ apply_process_attach_code(char **const pbpf_str)
 		(void) snp_res;
 
 		loaded_file = load_file_no_cr(ebpf_pid_own_file);
-		assert(NULL != loaded_file);
+		assert(loaded_file != NULL);
 
 		str_replace_all(&loaded_file, "MY_OWN_PID", strpid);
 	}
@@ -283,14 +283,14 @@ apply_process_attach_code(char **const pbpf_str)
 
 	if (Args.fnr_mode == E_STR_FULL_CONST_N && Args.n_str_packets > 2) {
 		loaded_file = load_file_no_cr(ebpf_const_string_mode);
-		assert(NULL != loaded_file);
+		assert(loaded_file != NULL);
 		str_replace_many(pbpf_str, "READ_AND_SUBMIT_N_MINUS_2_PACKETS",
 					loaded_file, Args.n_str_packets - 2);
 	}
 
 	if (Args.fnr_mode == E_STR_FULL && Args.n_str_packets > 2) {
 		loaded_file = load_file_no_cr(ebpf_full_string_mode);
-		assert(NULL != loaded_file);
+		assert(loaded_file != NULL);
 		str_replace_many(pbpf_str, "READ_AND_SUBMIT_N_MINUS_2_PACKETS",
 					loaded_file, Args.n_str_packets - 2);
 	}

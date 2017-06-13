@@ -38,7 +38,7 @@
 	uint64_t pid = (pid_tid >> 32);
 	if (pid != TRACED_PID) {
 		uint64_t *val = children_map.lookup(&pid);
-		if (NULL == val) {
+		if (val == NULL) {
 			return 0;
 		}
 		if (*val != 1) {
