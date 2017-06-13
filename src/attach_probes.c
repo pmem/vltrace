@@ -137,7 +137,7 @@ attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 
 	res = load_fn_and_attach_to_kp(b, handler, kprobe, Args.pid, 0, -1);
 	if (res == -1) {
-		ERROR("%s: Can't attach %s to '%s'", __func__, kprobe, handler);
+		ERROR("%s: can't attach %s to '%s'", __func__, kprobe, handler);
 	}
 
 	return res;
@@ -162,12 +162,11 @@ attach_kp_mask(struct bpf_ctx *b, attach_f attach, unsigned mask)
 			continue;
 
 		res = (*attach)(b, Syscall_array[i].syscall_name);
-
-		if (res >= 0)
-			counter ++;
+		if (res)
+			return res;
 	}
 
-	return counter;
+	return 0;
 }
 
 static const char tp_all_category[] = "raw_syscalls";
@@ -192,10 +191,10 @@ attach_tp_exit(struct bpf_ctx *b)
 		ERROR("%s: Can't attach %s to '%s:%s'. Exiting.",
 			__func__, tp_all_exit_fn,
 			tp_all_category, tp_all_exit_name);
-		return false;
+		return -1;
 	}
 
-	return true;
+	return 0;
 }
 
 /*
@@ -209,12 +208,13 @@ attach_tp_exit(struct bpf_ctx *b)
 static int
 attach_all_kp_tp(struct bpf_ctx *b)
 {
-	int res = attach_kp_mask(b, attach_single_sc_enter, 0);
+	int res;
 
+	res = attach_kp_mask(b, attach_single_sc_enter, 0);
 	if (res)
-		res = attach_tp_exit(b);
+		return res;
 
-	return res;
+	return attach_tp_exit(b);
 }
 
 /*
