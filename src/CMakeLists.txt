@@ -29,8 +29,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 2.8.7)
-project(vltrace.exe C)
+project(vltrace C)
 
 execute_process(COMMAND ../utils/copy_syscalls_64.sh
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
