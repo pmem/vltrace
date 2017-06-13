@@ -5,7 +5,7 @@ vltrace: tool tracing syscalls using eBPF
 
 This is the top-level README.md of vltrace.
 
-vltrace is a tool tracing syscalls in a fast way using eBPF linux kernel feature.
+vltrace is a syscall tracing tool which utilizes eBPF - an efficient tracing feature of the Linux kernel.
 
 ### LICENSE ###
 
@@ -16,10 +16,6 @@ for information on how this tool is licensed.
 
 The vltrace depends on [libbcc](https://github.com/iovisor/bcc) library.
 The installation guide of libbcc can be found [here](https://github.com/iovisor/bcc/blob/master/INSTALL.md).
-
-Warning: some old libbcc packages require manual copying of libbcc.pc from sources to
-appropriate place in a system. In case of Ubuntu 16.04 LTS appropriate place
-is /usr/lib/x86_64-linux-gnu/pkgconfig/libbcc.pc.
 
 ### SYSTEM REQUIREMENTS ###
 
