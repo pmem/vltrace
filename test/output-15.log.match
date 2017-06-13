@@ -22,7 +22,7 @@ Unsupported syscall's flag detected:
    fallocate           		 /tmp/mnt/pmem/file [PMEM]   [unsupported flag:] FALLOC_FL_COLLAPSE_RANGE
    fallocate           		 /tmp/mnt/pmem/file [PMEM]   [unsupported flag:] FALLOC_FL_ZERO_RANGE
    fallocate           		 /tmp/mnt/pmem/file [PMEM]   [unsupported flag:] FALLOC_FL_INSERT_RANGE
-   fcntl               		 /tmp/mnt/pmem/file [PMEM]   [unsupported flag:] F_SETFD: not possible to clear O_CLOEXEC flag
+   fcntl               		 /tmp/mnt/pmem/file [PMEM]   [unsupported flag:] F_SETFD: not possible to clear FD_CLOEXEC flag
    fcntl               		 /tmp/mnt/pmem/file [PMEM]   [unsupported flag:] F_SETOWN
    fcntl               		 /tmp/mnt/pmem/file [PMEM]   [unsupported flag:] F_GETOWN$(*)
    fcntl               		 /tmp/mnt/pmem/file [PMEM]   [unsupported flag:] F_SETSIG
