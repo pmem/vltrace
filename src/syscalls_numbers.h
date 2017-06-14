@@ -31,18 +31,33 @@
  */
 
 /*
- * syscalls_numbers.h -- define unknown syscalls' numbers
+ * syscalls_numbers.h -- define syscalls numbers '__NR_syscall_name'
+ *                       that are not defined in the running kernel.
+ *
+ * The syscalls numbers '__NR_syscall_name' are indices in the syscalls table:
+ *
+ *     struct syscall_descriptor Syscall_array[SC_TBL_SIZE]
+ *
+ * defined in the file 'src/ebpf_syscalls.c', so all syscalls numbers contained
+ * in this table have to be defined.
  */
 
 #ifndef SYSCALLS_UNKNOWN_H
 #define SYSCALLS_UNKNOWN_H
 
+/* include syscalls numbers defined in the running kernel */
 #include "syscalls_64_num.h_gen"
 
+/*
+ * Define syscalls numbers '__NR_syscall_name'
+ * which are not defined in the running kernel.
+ */
 enum {
 	/*
-	 * __NR_FIRST_UNKNOWN should be a number that never will be
-	 * a valid syscall number. Let's take 700.
+	 * __NR_FIRST_UNKNOWN has to be a valid index in the Syscall_array table
+	 * and a number that never will be a valid syscall number. The biggest
+	 * number in the 'syscalls_64_num.h_gen' file is 547, so let's take
+	 * something bigger, for example 700, for safety reasons.
 	 */
 	__NR_FIRST_UNKNOWN = 700,
 
