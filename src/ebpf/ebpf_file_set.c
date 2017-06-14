@@ -102,8 +102,7 @@ const char *ebpf_file_table[4][4] = {
 };
 
 /*
- * ebpf_load_file -- This function return strndup() from embedded body of
- *                   'virtual' file.
+ * ebpf_load_file -- return strndup() from embedded body of a 'virtual' file
  */
 char *
 ebpf_load_file(const char *const fn)

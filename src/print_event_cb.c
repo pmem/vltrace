@@ -125,7 +125,7 @@ print_header_hex(int argc, char *const argv[])
 }
 
 /*
- * b2hex -- This function returns character corresponding to hexadecimal digit.
+ * b2hex -- return character corresponding to hexadecimal digit
  */
 static inline char
 b2hex(char b)
@@ -629,7 +629,7 @@ print_event_bin(void *cb_cookie, void *data, int size)
 }
 
 /*
- * out_fmt_str2enum -- This function parses log's type
+ * out_fmt_str2enum -- parse log's type
  */
 enum out_format
 out_fmt_str2enum(const char *str)
