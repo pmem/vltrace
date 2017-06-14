@@ -376,27 +376,34 @@ str_replace_all(char **const text, const char *templt, const char *str)
 		}
 
 		/* replace all */
-		while ((occ = strstr(*text, templt)) != NULL) {
+		occ = *text;
+		while ((occ = strstr(occ, templt)) != NULL) {
 			memcpy(occ, new_str, templt_len);
+			occ += templt_len;
 		}
 
 		free(new_str);
 
 	} else {
-		while ((occ = strstr(*text, templt)) != NULL) {
-			char *p = *text;
-			size_t text_len = strlen(p);
+		occ = *text;
+		while ((occ = strstr(occ, templt)) != NULL) {
+			char *old_text = *text;
+			size_t text_len = strlen(old_text);
 
 			*text = calloc(1, text_len - templt_len + str_len + 1);
 			if (*text == NULL) {
-				free(p);
+				free(old_text);
 				return -1;
 			}
 
-			strncpy(*text, p, ((uintptr_t)occ) - ((uintptr_t)p));
+			size_t length_before = occ - old_text;
+
+			strncpy(*text, old_text, length_before);
 			strcat(*text, str);
 			strcat(*text, occ + templt_len);
-			free(p);
+
+			free(old_text);
+			occ = *text + length_before + str_len;
 		}
 	}
 
@@ -414,21 +421,26 @@ str_replace_many(char **const text, const char *templt, const char *str, int n)
 	const size_t str_len = strlen(str);
 	char *occ;
 
-	while ((occ = strstr(*text, templt)) != NULL) {
-		char *p = *text;
-		size_t text_len = strlen(p);
+	occ = *text;
+	while ((occ = strstr(occ, templt)) != NULL) {
+		char *old_text = *text;
+		size_t text_len = strlen(old_text);
 
 		*text = calloc(1, text_len - templt_len + (n * str_len) + 1);
 		if (*text == NULL) {
-			free(p);
+			free(old_text);
 			return -1;
 		}
 
-		strncpy(*text, p, ((uintptr_t)occ) - ((uintptr_t)p));
+		size_t length_before = occ - old_text;
+
+		strncpy(*text, old_text, length_before);
 		for (int i = 0; i < n; i++)
 			strcat(*text, str);
 		strcat(*text, occ + templt_len);
-		free(p);
+		free(old_text);
+
+		occ = *text + length_before + n * str_len;
 	}
 
 	return 0;
@@ -453,9 +465,10 @@ str_replace_with_char(char *const text, const char *templt, const char c)
 	memset(new_str + 1, ' ', len - 1);
 
 	/* replace all */
-	char *occ;
-	while ((occ = strstr(text, templt)) != NULL) {
+	char *occ = text;
+	while ((occ = strstr(occ, templt)) != NULL) {
 		memcpy(occ, new_str, len);
+		occ += len;
 	}
 
 	free(new_str);
@@ -480,9 +493,10 @@ str_replace_with_spaces(char *const text, const char *templt)
 	memset(new_str, ' ', len);
 
 	/* replace all */
-	char *occ;
-	while ((occ = strstr(text, templt)) != NULL) {
+	char *occ = text;
+	while ((occ = strstr(occ, templt)) != NULL) {
 		memcpy(occ, new_str, len);
+		occ += len;
 	}
 
 	free(new_str);
