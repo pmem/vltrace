@@ -324,39 +324,31 @@ is_a_sc(const char *const line, const ssize_t size)
 }
 
 /*
- * get_sc_list -- fetch syscall's list from running kernel
+ * print_sc_list -- print syscall's list of the running kernel
  */
 void
-get_sc_list(FILE *f, template_t template)
+print_sc_list(filter_f filter)
 {
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t read;
 
-	FILE *in = fopen(AVAILABLE_FILTERS, "r");
+	FILE *file = fopen(AVAILABLE_FILTERS, "r");
 
-	if (in == NULL) {
+	if (file == NULL) {
 		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);
 		return;
 	}
 
-	while ((read = getline(&line, &len, in)) != -1) {
-		size_t fw_res;
-
-		if (template != NULL) {
-			if (!template(line, read - 1))
-				continue;
-		}
-
-		fw_res = fwrite(line, (size_t)read, 1, f);
-
-		assert(fw_res > 0);
-		(void) fw_res;
+	while ((read = getline(&line, &len, file)) != -1) {
+		if ((filter != NULL) && !(*filter)(line, read - 1))
+			continue;
+		else
+			printf("%s", line);
 	}
 
 	free(line);
-	fclose(in);
-	fflush(f);
+	fclose(file);
 }
 
 /*

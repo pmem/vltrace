@@ -69,9 +69,9 @@ void check_bpf_jit_status();
 
 void save_trace_h(void);
 
-typedef bool (*template_t)(const char *line, ssize_t size);
+typedef bool (*filter_f)(const char *line, ssize_t size);
 bool is_a_sc(const char *const line, const ssize_t size);
-void get_sc_list(FILE *f, template_t template);
+void print_sc_list(filter_f filter);
 
 int str_replace_with_char(char *const text, const char *templt, const char c);
 int str_replace_all(char **text, const char *templt, const char *str);

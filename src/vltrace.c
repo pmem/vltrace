@@ -261,7 +261,6 @@ main(const int argc, char *const argv[])
 	if (Args.debug)
 		fprint_ebpf_code_with_debug_marks(stderr, bpf_str);
 
-	/* XXX should be done only by user request */
 	save_trace_h();
 
 	/* initialize BPF */

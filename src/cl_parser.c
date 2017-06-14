@@ -175,11 +175,11 @@ cl_parser(struct cl_options *const clo,
 			break;
 
 		case 'L':
-			get_sc_list(stdout, is_a_sc);
+			print_sc_list(is_a_sc);
 			exit(EXIT_SUCCESS);
 
 		case 'R':
-			get_sc_list(stdout, NULL);
+			print_sc_list(NULL);
 			exit(EXIT_SUCCESS);
 
 		case 'B':
