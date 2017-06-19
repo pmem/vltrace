@@ -986,6 +986,14 @@ class ListSyscalls(list):
             if fhout != stdout and not self.script_mode:
                 print("\r{0:d} of {1:d} ({2:d}%)".format(n + 1, length, int((100 * (n + 1)) / length)), end='')
 
+            if not (self[n].content & CNT_ENTRY):  # no entry info (no info about arguments)
+                if self[n].name not in ("clone", "fork", "vfork"):
+                    if not self.script_mode:
+                        print()
+                    print("Warning: missing info about arguments of syscall: {0:s} - skipping..."
+                          .format(self[n].name), file=stderr)
+                continue
+
             # syscalls: SyS_open or SyS_creat
             if self[n].is_mask(EM_fd_from_path):
                 path = self[n].strings[0]
