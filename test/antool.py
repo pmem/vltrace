@@ -34,6 +34,8 @@ from sys import exc_info, stderr, stdout
 import argparse
 import struct
 
+READ_ERROR = 1 << 31
+
 RESULT_SUPPORTED = 0
 RESULT_UNSUPPORTED_YET = 1
 RESULT_UNSUPPORTED_RELATIVE = 2
@@ -290,6 +292,7 @@ class Syscall:
         self.num_str = 0
         self.str_fini = -1
 
+        self.read_error = 0
         self.packet = 0
         self.arg_begin = 0
         self.arg_end = 7
@@ -435,12 +438,17 @@ class Syscall:
     def print_entry(self):
         if not (self.content & CNT_ENTRY):
             return
+        if self.read_error:
+            print("Warning: BPF read error occurred, a string argument is empty in syscall:", self.name)
         print("{0:016X} {1:016X} {2:s} {3:s}".format(
             self.time_start, self.pid_tid, self.__str, self.name), end='')
         for n in range(0, self.sc.nargs):
             print(" ", end='')
             if self.is_string(n):
-                print("{0:s}".format(self.strings[self.args[n]]), end='')
+                if self.strings[self.args[n]] != "":
+                    print("{0:s}".format(self.strings[self.args[n]]), end='')
+                else:
+                    print("\"\"", end='')
             else:
                 print("{0:016X}".format(self.args[n]), end='')
         print()
@@ -504,7 +512,6 @@ class Syscall:
     ###############################################################################
     def add_data(self, packet_type, bdata, timestamp):
         etype = packet_type & 0x03
-        packet_type >>= 2
         if etype == E_KP_ENTRY:
             if self.state not in (STATE_INIT, STATE_IN_ENTRY):
                 print("Error: wrong state for etype == E_KP_ENTRY:", self.state, file=stderr)
@@ -519,12 +526,16 @@ class Syscall:
     ###############################################################################
     def add_kprobe_entry(self, packet, bdata, timestamp):
         self.time_start = timestamp
-        if packet:
+
+        if packet & READ_ERROR:
+            self.read_error = 1
+
+        if packet & ~READ_ERROR:
             self.packet = packet
-            self.arg_begin = packet & 0x7  # bits 0-2
-            self.arg_end = (packet >> 3) & 0x7  # bits 3-5
-            self.arg_will_cont = (packet >> 6) & 0x1  # bit 6 (will be continued)
-            self.arg_is_cont = (packet >> 7) & 0x1  # bit 7 (is a continuation)
+            self.arg_begin = (packet >> 2) & 0x7  # bits 2-4
+            self.arg_end = (packet >> 5) & 0x7  # bits 5-7
+            self.arg_will_cont = (packet >> 8) & 0x1  # bit 8 (will be continued)
+            self.arg_is_cont = (packet >> 9) & 0x1  # bit 9 (is a continuation)
 
         if self.state == STATE_INIT and self.arg_begin > 0:
             print("Error: missed first packet of syscall :", self.name, file=stderr)
@@ -929,7 +940,7 @@ class ListSyscalls(list):
         dir_str = ""
         newpath = path
         unknown_dirfd = 0
-        if (len(path) > 0 and path[0] != '/') or path == "":
+        if (len(path) == 0 and not self[n].read_error) or (len(path) != 0 and path[0] != '/'):
             fd_table = self.all_fd_tables[self[n].pid_ind]
             if dirfd == -100:
                 dir_str = self.cwd
@@ -978,7 +989,12 @@ class ListSyscalls(list):
             # syscalls: SyS_open or SyS_creat
             if self[n].is_mask(EM_fd_from_path):
                 path = self[n].strings[0]
-                if len(path) > 0 and path[0] != '/':
+                if self[n].read_error and len(path) == 0:
+                    print("Warning: BPF read error occurred, a path is empty in syscall:", self[n].name, file=fhout)
+                    if not self.script_mode:
+                        print()
+                    print("Warning: BPF read error occurred, a path is empty in syscall:", self[n].name, file=stderr)
+                elif len(path) == 0 or path[0] != '/':
                     path = self.cwd + "/" + path
                 is_pmem = self.check_if_path_is_pmem(path)
                 self[n].is_pmem = is_pmem
@@ -995,6 +1011,11 @@ class ListSyscalls(list):
 
             # all *at syscalls
             elif self[n].is_mask(EM_isfileat):
+                if self[n].read_error:
+                    print("Warning: BPF read error occurred, path is empty in syscall:", self[n].name, file=fhout)
+                    if not self.script_mode:
+                        print()
+                    print("Warning: BPF read error occurred, path is empty in syscall:", self[n].name, file=stderr)
                 print("{0:20s}".format(self[n].name), end='', file=fhout)
                 path, is_pmem, fd_out = self.handle_fileat(n, 0, 1, fhout)
                 # syscall SyS_openat
@@ -1046,6 +1067,11 @@ class ListSyscalls(list):
 
             # syscalls with path or file descriptor
             elif self[n].has_mask(EM_str_all | EM_fd_all):
+                if self[n].read_error:
+                    print("Warning: BPF read error occurred, path is empty in syscall:", self[n].name, file=fhout)
+                    if not self.script_mode:
+                        print()
+                    print("Warning: BPF read error occurred, path is empty in syscall:", self[n].name, file=stderr)
                 print("{0:20s}".format(self[n].name), end='', file=fhout)
                 for narg in range(self[n].sc.nargs):
                     if self[n].has_mask(Arg_is_str[narg]):
@@ -1054,8 +1080,9 @@ class ListSyscalls(list):
                         else:
                             self[n].str_is_path.append(0)
                         path = self[n].strings[self[n].args[narg]]
-                        if self[n].has_mask(Arg_is_path[narg]) and len(path) > 0 and path[0] != '/':
-                            path = self.cwd + "/" + path
+                        if self[n].has_mask(Arg_is_path[narg]):
+                            if (len(path) == 0 and not self[n].read_error) or (len(path) != 0 and path[0] != '/'):
+                                path = self.cwd + "/" + path
                         is_pmem = self.check_if_path_is_pmem(path)
                         self[n].is_pmem |= is_pmem
                         str_ind = self.all_strings_append(path, is_pmem)

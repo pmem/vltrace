@@ -76,6 +76,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	char *src = (char *)u.ev.args[STR1];
 	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		u.ev.packet_type |= READ_ERROR;
 		memcpy(dest, str_error, STR_ERR_LEN);
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
@@ -85,6 +86,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	src = (char *)u.ev.args[STR2];
 	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		u.ev.packet_type |= READ_ERROR;
 		memcpy(dest, str_error, STR_ERR_LEN);
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
@@ -94,6 +96,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	src = (char *)u.ev.args[STR3];
 	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		u.ev.packet_type |= READ_ERROR;
 		memcpy(dest, str_error, STR_ERR_LEN);
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);

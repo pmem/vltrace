@@ -81,7 +81,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		error_bpf_read = 1;
 		memcpy(dest, str_error, STR_ERR_LEN);
 		/* from the beginning (0) to 2nd string - contains 1st string */
-		u.ev.packet_type = E_KP_ENTRY |
+		u.ev.packet_type = READ_ERROR | E_KP_ENTRY |
 				   (0 << 2) +
 				   (STR2 << 5);
 	} else {
@@ -125,6 +125,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 				memcpy(dest, str_error, STR_ERR_LEN);
 			}
 		}
+		if (error_bpf_read)
+			u.ev.packet_type |= READ_ERROR;
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
 
@@ -137,7 +139,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		error_bpf_read = 1;
 		memcpy(dest, str_error, STR_ERR_LEN);
 		/* from the 2nd to the end (7) - contains 2nd string */
-		u.ev.packet_type = E_KP_ENTRY |
+		u.ev.packet_type = READ_ERROR | E_KP_ENTRY |
 				   (STR2 << 2) +
 				   (7 << 5);
 	} else {
@@ -181,6 +183,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 				memcpy(dest, str_error, STR_ERR_LEN);
 			}
 		}
+		if (error_bpf_read)
+			u.ev.packet_type |= READ_ERROR;
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
 

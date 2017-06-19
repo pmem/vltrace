@@ -72,6 +72,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	memset(dest, 0, BUF_SIZE);
 
 	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+		u.ev.packet_type |= READ_ERROR;
 		memcpy(dest, str_error, STR_ERR_LEN);
 	}
 

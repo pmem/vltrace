@@ -48,6 +48,8 @@
 #define STR_MAX_2	((BUF_SIZE / 2) - 2)
 #define STR_MAX_3	((BUF_SIZE / 3) - 2)
 
+#define READ_ERROR	(1 << 31)
+
 #define STR_ERR_LEN 20
 static const char *str_error = "(bpf_probe_read < 0)";
 
@@ -64,14 +66,16 @@ struct data_entry_s {
 	uint32_t size;
 
 	/*
-	 * bits 0-1   type of data packet (enum data_packet_types)
+	 * bits 0-1 type of data packet (enum data_packet_types)
 	 *
-	 * bits 2-31  describe a series of packets for every syscall:
+	 * bits 2-9 describe a series of packets for every syscall:
 	 *      2-4   number of the first saved argument in the packet
 	 *      5-7   number of the last saved argument in the packet
 	 *      8     the syscall is not finished and will be continued -
 	 *            - next packets will be sent
 	 *      9     the syscall has not finished and this is a continuation
+	 *
+	 * bit 31 - bpf_probe_read error occurred
 	 */
 	uint32_t packet_type;
 
