@@ -1,0 +1,114 @@
+Unsupported syscalls detected:
+   chroot:
+		/tmp/mnt/pmem/file [PMEM]
+   setxattr:
+		/tmp/mnt/pmem/file [PMEM]
+   lsetxattr:
+		/tmp/mnt/pmem/file [PMEM]
+   fsetxattr:
+		/tmp/mnt/pmem/file [PMEM]
+   listxattr:
+		/tmp/mnt/pmem/file [PMEM]
+   llistxattr:
+		/tmp/mnt/pmem/file [PMEM]
+   flistxattr:
+		/tmp/mnt/pmem/file [PMEM]
+   removexattr:
+		/tmp/mnt/pmem/file [PMEM]
+   lremovexattr:
+		/tmp/mnt/pmem/file [PMEM]
+   fremovexattr:
+		/tmp/mnt/pmem/file [PMEM]
+   execve:
+		/tmp/mnt/pmem/file [PMEM]
+   execveat:
+		/tmp/mnt
+		pmem/file [PMEM]
+   readahead:
+		/tmp/mnt/pmem/file [PMEM]
+   name_to_handle_at:
+		/tmp/mnt
+		pmem/file [PMEM]
+
+Unsupported syscall's flag detected:
+   open <O_ASYNC>:
+		/tmp/mnt/pmem/file [PMEM]
+   openat <O_ASYNC>:
+		/tmp/mnt
+		pmem/file [PMEM]
+   renameat2 <RENAME_WHITEOUT>:
+		/tmp/mnt
+		pmem/file [PMEM]
+   fallocate <FALLOC_FL_COLLAPSE_RANGE>:
+		/tmp/mnt/pmem/file [PMEM]
+   fallocate <FALLOC_FL_ZERO_RANGE>:
+		/tmp/mnt/pmem/file [PMEM]
+   fallocate <FALLOC_FL_INSERT_RANGE>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_SETFD: not possible to clear FD_CLOEXEC flag>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_SETOWN>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_GETOWN_EX>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_SETSIG>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_GETSIG>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_SETOWN_EX>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_OFD_GETLK>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_OFD_SETLK>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_OFD_SETLKW>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_SETLEASE>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_GETLEASE>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_NOTIFY>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_ADD_SEALS>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_GET_SEALS>:
+		/tmp/mnt/pmem/file [PMEM]
+
+Unsupported syscalls with relative path detected:
+   chroot:
+		nonp/file
+		pmem/file [PMEM]
+   setxattr:
+		pmem/file [PMEM]
+   lsetxattr:
+		pmem/file [PMEM]
+   getxattr:
+		pmem/file [PMEM]
+   lgetxattr:
+		pmem/file [PMEM]
+
+Yet-unsupported syscalls detected (will be supported):
+   mmap:
+		/tmp/mnt/pmem/file [PMEM]
+   flock:
+		/tmp/mnt/pmem/file [PMEM]
+   utime:
+		/tmp/mnt/pmem/file [PMEM]
+   utimes:
+		/tmp/mnt/pmem/file [PMEM]
+   utimensat:
+		/tmp/mnt
+		pmem/file [PMEM]
+   futimesat:
+		/tmp/mnt
+		pmem/file [PMEM]
+   sendfile64:
+		/tmp/mnt/pmem/file [PMEM]
+		/tmp/mnt/nonp/file
+   splice:
+		/tmp/mnt/pmem/file [PMEM]
+		/tmp/mnt/nonp/file
+   copy_file_range:
+		/tmp/mnt/pmem/file [PMEM]
+		/tmp/mnt/nonp/file
+

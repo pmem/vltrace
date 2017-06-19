@@ -35,7 +35,7 @@ import argparse
 import struct
 
 RESULT_SUPPORTED = 0
-RESULT_YET_UNSUPPORTED = 1
+RESULT_UNSUPPORTED_YET = 1
 RESULT_UNSUPPORTED_RELATIVE = 2
 RESULT_UNSUPPORTED_FLAG = 3
 RESULT_UNSUPPORTED = 4
@@ -298,6 +298,7 @@ class Syscall:
         self.truncated = 0
 
         self.strings = []
+        self.str_is_path = []
 
         self.buf_size = int(buf_size)
         self.buf_size_2 = int(buf_size / 2)
@@ -680,10 +681,20 @@ class ListSyscalls(list):
         self.pmem_paths = str("")
         self.path_is_pmem = [0, 0, 0]
 
+        self.unsupported = 0
         self.unsupported_yet = 0
         self.unsupported_rel = 0
         self.unsupported_flag = 0
-        self.unsupported = 0
+
+        self.list_unsup = []
+        self.list_unsup_yet = []
+        self.list_unsup_rel = []
+        self.list_unsup_flag = []
+
+        self.ind_unsup = []
+        self.ind_unsup_yet = []
+        self.ind_unsup_rel = []
+        self.ind_unsup_flag = []
 
     def check_if_path_is_pmem(self, string):
         string = str(string)
@@ -864,7 +875,7 @@ class ListSyscalls(list):
             if self[n].name in ("execveat", "name_to_handle_at"):
                 self[n].unsupported = RESULT_UNSUPPORTED
             elif self[n].name in ("futimesat", "utimensat"):
-                self[n].unsupported = RESULT_YET_UNSUPPORTED
+                self[n].unsupported = RESULT_UNSUPPORTED_YET
             # renameat2 - RENAME_WHITEOUT
             elif self[n].sc.nargs == 5 and self[n].name in "renameat2" and self[n].args[4] & FLAG_RENAME_WHITEOUT:
                 self[n].unsupported_flag = "RENAME_WHITEOUT"
@@ -887,18 +898,18 @@ class ListSyscalls(list):
                 self[n].unsupported = RESULT_UNSUPPORTED
             elif self[n].name in (
                     "dup", "dup2", "dup3", "utime", "utimes", "flock"):
-                self[n].unsupported = RESULT_YET_UNSUPPORTED
+                self[n].unsupported = RESULT_UNSUPPORTED_YET
 
         if (self.arg_is_pmem(n, 1) or self.arg_is_pmem(n, 3)) and self[n].name in ("copy_file_range", "splice"):
-            self[n].unsupported = RESULT_YET_UNSUPPORTED
+            self[n].unsupported = RESULT_UNSUPPORTED_YET
             return
 
         if (self.arg_is_pmem(n, 1) or self.arg_is_pmem(n, 2)) and self[n].name in ("sendfile", "sendfile64"):
-            self[n].unsupported = RESULT_YET_UNSUPPORTED
+            self[n].unsupported = RESULT_UNSUPPORTED_YET
             return
 
         if self.arg_is_pmem(n, 5) and self[n].name == "mmap":
-            self[n].unsupported = RESULT_YET_UNSUPPORTED
+            self[n].unsupported = RESULT_UNSUPPORTED_YET
             return
 
         return
@@ -1034,10 +1045,14 @@ class ListSyscalls(list):
                     print("{0:20s} (0x{1:016X})".format(self[n].name, fd_in), file=fhout)
 
             # syscalls with path or file descriptor
-            elif self[n].has_mask(EM_path_all | EM_fd_all):
+            elif self[n].has_mask(EM_str_all | EM_fd_all):
                 print("{0:20s}".format(self[n].name), end='', file=fhout)
                 for narg in range(self[n].sc.nargs):
                     if self[n].has_mask(Arg_is_str[narg]):
+                        if self[n].has_mask(Arg_is_path[narg]):
+                            self[n].str_is_path.append(1)
+                        else:
+                            self[n].str_is_path.append(0)
                         path = self[n].strings[self[n].args[narg]]
                         if self[n].has_mask(Arg_is_path[narg]) and len(path) > 0 and path[0] != '/':
                             path = self.cwd + "/" + path
@@ -1074,83 +1089,157 @@ class ListSyscalls(list):
             self.check_if_supported(n)
 
         if fhout != stdout and not self.script_mode:
-            print(" done.")
+            print(" done.\n")
 
-    def print_local(self, n):
+    def print_syscall(self, n, relative, end):
         print("   {0:20s}\t\t".format(self[n].name), end='')
-        for nstr in range(len(self[n].strings)):
-            print(" {0:s}".format(self[n].strings[nstr]), end='')
-        print()
+        if relative:
+            for nstr in range(len(self[n].strings)):
+                print(" {0:s}".format(self[n].strings[nstr]), end='')
+        else:
+            for narg in range(self[n].sc.nargs):
+                if self[n].has_mask(Arg_is_str[narg] | Arg_is_fd[narg]):
+                    str_ind = self[n].args[narg]
+                    if str_ind != -1:
+                        if self.path_is_pmem[str_ind]:
+                            print(" {0:s} [PMEM]  ".format(self.all_strings[str_ind]), end='')
+                        else:
+                            print(" {0:s}".format(self.all_strings[str_ind]), end='')
+        if end:
+            print()
 
-    def print_global(self, n):
-        print("   {0:20s}\t\t".format(self[n].name), end='')
-        for narg in range(self[n].sc.nargs):
-            if self[n].has_mask(Arg_is_str[narg] | Arg_is_fd[narg]):
-                str_ind = self[n].args[narg]
-                if str_ind != -1:
-                    if self.path_is_pmem[str_ind]:
-                        print(" {0:s} [PMEM]  ".format(self.all_strings[str_ind]), end='')
+    def print_unsupported(self, l_names, l_inds, verbose_mode):
+        len_names = len(l_names)
+        for n in range(len_names):
+            if not verbose_mode:
+                print("   {0:s}".format(l_names[n]))
+            else:
+                list_ind = l_inds[n]
+                len_inds = len(list_ind)
+                print("   {0:s}:".format(l_names[n]))
+                for i in range(len_inds):
+                    if self.path_is_pmem[list_ind[i]]:
+                        print("\t\t{0:s} [PMEM]".format(self.all_strings[list_ind[i]]))
                     else:
-                        print(" {0:s}".format(self.all_strings[str_ind]), end='')
+                        print("\t\t{0:s}".format(self.all_strings[list_ind[i]]))
 
-    def print_unsupported(self, n):
-        if not self.unsupported:
-            print("\nUnsupported syscall detected:")
-            self.unsupported = 1
-        self.print_global(n)
-        print()
+    def add_to_unsupported_lists(self, n, name, l_names, l_inds, relative):
+        if l_names.count(name) == 0:
+            l_names.append(name)
+            ind = len(l_names) - 1
+            list_ind = []
+            l_inds.append(list_ind)
+            assert (len(l_inds) - 1 == ind)
+        else:
+            ind = l_names.index(name)
+            list_ind = l_inds[ind]
 
-    def print_unsupported_flag(self, n):
-        if not self.unsupported_flag:
-            print("\nUnsupported syscall's flag detected:")
-            self.unsupported_flag = 1
-        self.print_global(n)
-        print(" [unsupported flag:]", self[n].unsupported_flag)
+        if relative:
+            for nstr in range(len(self[n].strings)):
+                if self[n].str_is_path[nstr]:
+                    string = self[n].strings[nstr]
+                    if self.all_strings.count(string):
+                        str_ind = self.all_strings.index(string)
+                        if list_ind.count(str_ind) == 0:
+                            list_ind.append(str_ind)
+        else:
+            for narg in range(self[n].sc.nargs):
+                if self[n].has_mask(Arg_is_path[narg] | Arg_is_fd[narg]):
+                    str_ind = self[n].args[narg]
+                    if str_ind != -1:
+                        if list_ind.count(str_ind) == 0:
+                            list_ind.append(str_ind)
+        l_inds[ind] = list_ind
 
-    def print_unsupported_relative(self, n):
-        if not self.unsupported_rel:
-            print("\nUnsupported syscall with relative path detected:")
-            self.unsupported_rel = 1
-        self.print_local(n)
-
-    def print_unsupported_yet(self, n):
-        if not self.unsupported_yet:
-            print("\nYet-unsupported syscall detected (will be supported):")
-            self.unsupported_yet = 1
-        self.print_global(n)
-        print()
-
-    def print_unsupported_syscalls(self):
+    def print_unsupported_syscalls(self, verbose_mode):
         length = len(self)
 
+        # RESULT_UNSUPPORTED
+        relative = 0
         for n in range(length):
             if self[n].unsupported == RESULT_UNSUPPORTED:
-                self.print_unsupported(n)
+                if not self.unsupported:
+                    print("Unsupported syscalls detected:")
+                    self.unsupported = 1
+                if verbose_mode > 1:
+                    self.print_syscall(n, relative, end=1)
+                else:
+                    name = self[n].name
+                    self.add_to_unsupported_lists(n, name, self.list_unsup, self.ind_unsup, relative)
+        if verbose_mode <= 1:
+            self.print_unsupported(self.list_unsup, self.ind_unsup, verbose_mode)
+        if self.unsupported:
+            print()
 
+        # RESULT_UNSUPPORTED_FLAG
+        relative = 0
         for n in range(length):
             if self[n].unsupported == RESULT_UNSUPPORTED_FLAG:
-                self.print_unsupported_flag(n)
+                if not self.unsupported_flag:
+                    print("Unsupported syscall's flag detected:")
+                    self.unsupported_flag = 1
+                if verbose_mode > 1:
+                    self.print_syscall(n, relative, end=0)
+                    print(" [unsupported flag:]", self[n].unsupported_flag)
+                else:
+                    name = self[n].name + " <" + self[n].unsupported_flag + ">"
+                    self.add_to_unsupported_lists(n, name, self.list_unsup_flag, self.ind_unsup_flag, relative)
+        if verbose_mode <= 1:
+            self.print_unsupported(self.list_unsup_flag, self.ind_unsup_flag, verbose_mode)
+        if self.unsupported_flag:
+            print()
 
+        # RESULT_UNSUPPORTED_RELATIVE
+        relative = 1
         for n in range(length):
             if self[n].unsupported == RESULT_UNSUPPORTED_RELATIVE:
-                self.print_unsupported_relative(n)
+                if not self.unsupported_rel:
+                    print("Unsupported syscalls with relative path detected:")
+                    self.unsupported_rel = 1
+                if verbose_mode > 1:
+                    self.print_syscall(n, relative, end=1)
+                else:
+                    name = self[n].name
+                    self.add_to_unsupported_lists(n, name, self.list_unsup_rel, self.ind_unsup_rel, relative)
+        if verbose_mode <= 1:
+            self.print_unsupported(self.list_unsup_rel, self.ind_unsup_rel, verbose_mode)
+        if self.unsupported_rel:
+            print()
 
+        # RESULT_UNSUPPORTED_YET
+        relative = 0
         for n in range(length):
-            if self[n].unsupported == RESULT_YET_UNSUPPORTED:
-                self.print_unsupported_yet(n)
+            if self[n].unsupported == RESULT_UNSUPPORTED_YET:
+                if not self.unsupported_yet:
+                    print("Yet-unsupported syscalls detected (will be supported):")
+                    self.unsupported_yet = 1
+                if verbose_mode > 1:
+                    self.print_syscall(n, relative, end=1)
+                else:
+                    name = self[n].name
+                    self.add_to_unsupported_lists(n, name, self.list_unsup_yet, self.ind_unsup_yet, relative)
+        if verbose_mode <= 1:
+            self.print_unsupported(self.list_unsup_yet, self.ind_unsup_yet, verbose_mode)
+        if self.unsupported_yet:
+            print()
 
-        if not self.unsupported and not self.unsupported_rel and not self.unsupported_yet:
-            print("\nAll syscalls are supported.")
+        if not (self.unsupported or self.unsupported_flag or self.unsupported_rel or self.unsupported_yet):
+            print("All syscalls are supported.")
 
 
 ###############################################################################
 # AnalyzingTool
 ###############################################################################
 class AnalyzingTool:
-    def __init__(self, convert_mode, script_mode, debug_mode, fileout, max_packets):
+    def __init__(self, convert_mode, script_mode, debug_mode, fileout, max_packets, verbose_mode):
         self.convert_mode = convert_mode
         self.script_mode = script_mode
         self.debug_mode = debug_mode
+        if verbose_mode:
+            self.verbose_mode = verbose_mode
+        else:
+            self.verbose_mode = 0
+
         self.cwd = ""
         self.syscall_table = []
         self.syscall = []
@@ -1267,10 +1356,12 @@ class AnalyzingTool:
         argv = argv.replace('\0', ' ')
 
         if not self.script_mode:
+            # noinspection PyTypeChecker
             print("Current working directory:", self.cwd, file=self.fhout)
+            # noinspection PyTypeChecker
             print("Command line:", argv, file=self.fhout)
             if not self.debug_mode:
-                print("Reading packets:")
+                print("\nReading packets:")
 
         n = 0
         state = STATE_INIT
@@ -1328,7 +1419,7 @@ class AnalyzingTool:
                 print("Unexpected error:", exc_info()[0], file=stderr)
                 raise
 
-        if not self.debug_mode and not self.script_mode and n <= self.max_packets:
+        if not self.debug_mode and not self.script_mode:
             print("\rDone (read {0:d} packets).".format(n))
         fh.close()
 
@@ -1348,7 +1439,7 @@ class AnalyzingTool:
         self.list_ok.match_fd_with_path(self.cwd, pmem_paths, self.fhout)
 
     def print_unsupported_syscalls(self):
-        self.list_ok.print_unsupported_syscalls()
+        self.list_ok.print_unsupported_syscalls(self.verbose_mode)
 
 
 ###############################################################################
@@ -1373,10 +1464,11 @@ def main():
     parser.add_argument("-l", "--log", action='store_true', required=False, help="print output log in analyze mode")
     parser.add_argument("-o", "--output", required=False, help="output file")
     parser.add_argument("-d", "--debug", action='store_true', required=False, help="debug mode")
+    parser.add_argument("-v", "--verbose", action='count', required=False, help="verbose mode")
 
     args = parser.parse_args()
 
-    at = AnalyzingTool(args.convert, args.script, args.debug, args.output, args.max_packets)
+    at = AnalyzingTool(args.convert, args.script, args.debug, args.output, args.max_packets, args.verbose)
     at.read_syscall_table(args.table)
     at.read_and_parse_data(args.binlog)
 

@@ -41,6 +41,12 @@ PMEM=pmem
 NONP=nonp
 FILE=file
 
+function check_result {
+	[ $1 -ne 0 ] \
+		&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \
+		&& exit $1
+}
+
 [ ! -x $VLTRACE ] \
 	&& echo "Error: executable file '$VLTRACE' does not exist" \
 	&& exit 1
@@ -83,6 +89,8 @@ source $FUNCT
 
 OUTBIN=output-bin-$TEST_NUM.log
 OUT=output-$TEST_NUM.log
+OUTv=output-v-$TEST_NUM.log
+OUTvv=output-vv-$TEST_NUM.log
 OUT_ANTOOL=output-antool-$TEST_NUM.log
 
 if [ "$VLTRACE_SKIP" != "1" ]; then
@@ -103,16 +111,22 @@ if [ "$VLTRACE_SKIP" != "1" ]; then
 fi
 
 set +e
+
 echo "$ $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT"
 $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT
-RV=$?
-[ $RV -ne 0 ] \
-	&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \
-	&& exit $RV
+check_result $?
 
-echo "$ grep --text -e "ERROR" -e "rror" -e "arning" $OUT"
+echo "$ $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -v > $OUTv"
+$TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -v > $OUTv
+check_result $?
+
+echo "$ $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -vv > $OUTvv"
+$TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -vv > $OUTvv
+check_result $?
+
 grep --text -e "ERROR" -e "rror" -e "arning" $OUT
-[ $? -eq 0 ] && echo "LOG ($OUT):" && cat $OUT && exit 1
+[ $? -eq 0 ] \
+	&& check_result 1
 set -e
 
 check
