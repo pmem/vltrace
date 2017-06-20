@@ -110,6 +110,8 @@ set(VLTRACE_VERSION
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
+add_executable(check_license EXCLUDE_FROM_ALL utils/check_license/check-license.c)
+
 # Generates cstyle-$name target and attaches it as a dependency of global
 # "cstyle" target. This target verifies C style of files in current source dir.
 # If more arguments are used, then they are used as files to be checked
@@ -130,27 +132,80 @@ function(add_cstyle name)
 	add_dependencies(cstyle cstyle-${name})
 endfunction()
 
+# Generates check-whitespace-$name target and attaches it as a dependency
+# of global "check-whitespace" target. This target verifies C files in current
+# source dir do not have any whitespace errors.
+# If more arguments are used, then they are used as files to be checked
+# instead.
+# ${name} must be unique.
+function(add_check_whitespace name)
+	if(${ARGC} EQUAL 1)
+		add_custom_target(check-whitespace-${name}
+			COMMAND ${PERL_EXECUTABLE}
+				${CMAKE_SOURCE_DIR}/utils/check_whitespace
+				${CMAKE_CURRENT_SOURCE_DIR}/*.c
+				${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+	else()
+		add_custom_target(check-whitespace-${name}
+			COMMAND ${PERL_EXECUTABLE}
+				${CMAKE_SOURCE_DIR}/utils/check_whitespace ${ARGN})
+	endif()
+	add_dependencies(check-whitespace check-whitespace-${name})
+endfunction()
+
+add_custom_target(checkers ALL)
 add_custom_target(cstyle)
-add_custom_target(check_whitespace
-	COMMAND perl ${PROJECT_SOURCE_DIR}/utils/check_whitespace
-	-r ${PROJECT_SOURCE_DIR}/src)
-
-add_executable(check_license_executable utils/check_license/check-license.c)
-set_property(TARGET check_license_executable PROPERTY
-	RUNTIME_OUTPUT_DIRECTORY
-	${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY})
-
+add_custom_target(check-whitespace)
 add_custom_target(check-license
-	COMMAND
-	${PROJECT_SOURCE_DIR}/utils/check_license/check-headers.sh
-	${PROJECT_SOURCE_DIR}
-	$<TARGET_FILE:check_license_executable>
-	${PROJECT_SOURCE_DIR}/LICENSE -a)
+	COMMAND ${CMAKE_SOURCE_DIR}/utils/check_license/check-headers.sh
+		${CMAKE_SOURCE_DIR}
+		${CMAKE_BINARY_DIR}/check_license
+		${CMAKE_SOURCE_DIR}/LICENSE
+		-a)
+add_custom_target(check-whitespace-main
+	COMMAND ${PERL_EXECUTABLE}
+		${CMAKE_SOURCE_DIR}/utils/check_whitespace
+		${CMAKE_SOURCE_DIR}/utils/check_license/*.sh
+		${CMAKE_SOURCE_DIR}/utils/*.sh
+		${CMAKE_SOURCE_DIR}/README.md
+		${CMAKE_SOURCE_DIR}/*.spec
+		${CMAKE_SOURCE_DIR}/debian/*
+		${CMAKE_SOURCE_DIR}/debian/*/*
+		${CMAKE_SOURCE_DIR}/doc/*.md)
+add_dependencies(check-license check_license)
+add_dependencies(check-whitespace check-whitespace-main)
 
-add_dependencies(check-license check_license_executable)
+add_cstyle(check_license ${CMAKE_SOURCE_DIR}/utils/check_license/*.c)
+add_check_whitespace(check_license ${CMAKE_SOURCE_DIR}/utils/check_license/*.c)
+
+option(DEVELOPER_MODE "enable developer checks" OFF)
+if(DEVELOPER_MODE)
+	add_dependencies(checkers cstyle)
+	add_dependencies(checkers check-whitespace)
+	add_dependencies(checkers check-license)
+endif(DEVELOPER_MODE)
 
 enable_testing()
 add_subdirectory(test)
 add_subdirectory(src)
 add_subdirectory(utils)
 add_subdirectory(man)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
