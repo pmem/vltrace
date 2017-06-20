@@ -82,6 +82,8 @@ add_subdirectory(ebpf)
 
 target_link_libraries(vltrace ebpf ${LIBBCC_LIBRARIES})
 
+add_cstyle(src)
+
 install(TARGETS vltrace
 	CONFIGURATIONS Release RelWithDebInfo Debug None
 	DESTINATION ${CMAKE_INSTALL_BINDIR}

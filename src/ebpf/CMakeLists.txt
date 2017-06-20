@@ -31,6 +31,8 @@
 
 project(libebpf C)
 
+add_cstyle(ebpf)
+
 # eBPF sources
 set (BIN_SRCS
 	trace.h

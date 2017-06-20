@@ -110,11 +110,27 @@ set(VLTRACE_VERSION
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
-add_custom_target(cstyle
-	COMMAND perl ${PROJECT_SOURCE_DIR}/utils/cstyle
-	-pP ${PROJECT_SOURCE_DIR}/src/*.h
-	${PROJECT_SOURCE_DIR}/src/*.c)
+# Generates cstyle-$name target and attaches it as a dependency of global
+# "cstyle" target. This target verifies C style of files in current source dir.
+# If more arguments are used, then they are used as files to be checked
+# instead.
+# ${name} must be unique.
+function(add_cstyle name)
+	if(${ARGC} EQUAL 1)
+		add_custom_target(cstyle-${name}
+			COMMAND ${PERL_EXECUTABLE}
+				${CMAKE_SOURCE_DIR}/utils/cstyle
+				${CMAKE_CURRENT_SOURCE_DIR}/*.c
+				${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+	else()
+		add_custom_target(cstyle-${name}
+			COMMAND ${PERL_EXECUTABLE}
+				${CMAKE_SOURCE_DIR}/utils/cstyle ${ARGN})
+	endif()
+	add_dependencies(cstyle cstyle-${name})
+endfunction()
 
+add_custom_target(cstyle)
 add_custom_target(check_whitespace
 	COMMAND perl ${PROJECT_SOURCE_DIR}/utils/check_whitespace
 	-r ${PROJECT_SOURCE_DIR}/src)

@@ -155,7 +155,7 @@ static void
 s()
 {
 #define NSLEEP 1000000
-	for(int i = 0; i < NSLEEP; i++)
+	for (int i = 0; i < NSLEEP; i++)
 		counter += rand();
 #undef NSLEEP
 }
@@ -194,7 +194,7 @@ s();
 	unlink(FILE_CREATE);
 
 s();
-	execve(FILE_CREATE, (char * const*)0x123456, (char * const*)0x654321);
+	execve(FILE_CREATE, (char * const *)0x123456, (char * const *)0x654321);
 
 s();
 	stat(FILE_EXIST, &buf);
@@ -214,7 +214,7 @@ s();
 s();
 	write(0x101, buffer, 1);
 s();
-	read (0x102, buffer, 2);
+	read(0x102, buffer, 2);
 s();
 	lseek(0x103, 3, SEEK_END);
 s();
@@ -305,13 +305,13 @@ s();
 
 s();
 	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
-		 (const void *)0x101, 0x102, 0x103);
+			(const void *)0x101, 0x102, 0x103);
 s();
 	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
-		  (const void *)0x104, 0x105, 0x106);
+			(const void *)0x104, 0x105, 0x106);
 s();
 	fsetxattr(0x107, NON_EXIST_PATH_2,
-		  (const void *)0x108, 0x109, 0x110);
+			(const void *)0x108, 0x109, 0x110);
 
 s();
 	getxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, (void *)0x101, 0x102);
@@ -503,8 +503,8 @@ s();
 
 s();
 	if (vfork() == 0) { /* vfork - handle child */
-		execve(NON_EXIST_PATH_1, (char * const*)0x123456,
-		       (char * const*)0x654321);
+		execve(NON_EXIST_PATH_1, (char * const *)0x123456,
+					(char * const *)0x654321);
 		_exit(1);
 	}
 

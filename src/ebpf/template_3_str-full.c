@@ -216,7 +216,10 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		 */
 		READ_AND_SUBMIT_N_MINUS_2_PACKETS
 
-		/* from 3rd string argument to the end (7) - contains 3rd string */
+		/*
+		 * From 3rd string argument to the end (7) -
+		 * contains 3rd string.
+		 */
 		u.ev.packet_type = E_KP_ENTRY |
 					((STR3 + 1) << 2) +
 					(7 << 5) +

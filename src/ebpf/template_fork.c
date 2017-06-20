@@ -35,7 +35,8 @@
  */
 
 /*
- * kprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() entry handler
+ * kprobe__SYSCALL_NAME_filled_for_replace --
+ *				SYSCALL_NAME_filled_for_replace() entry handler
  */
 int
 kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
@@ -65,7 +66,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 };
 
 /*
- * kretprobe__SYSCALL_NAME_filled_for_replace -- SYSCALL_NAME_filled_for_replace() exit handler
+ * kretprobe__SYSCALL_NAME_filled_for_replace --
+ *				SYSCALL_NAME_filled_for_replace() exit handler
  */
 int
 kretprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)

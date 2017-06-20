@@ -77,18 +77,21 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	if (bpf_probe_read_str(dest, length, (void *)src) < length) {
 		/* string is completed */
 		end_bpf_read = 1;
-		/* from the beginning (0) to the end (7) - contains 1st string */
+		/*
+		 * From the beginning (0) to the end (7) -
+		 * contains 1st string
+		 */
 		u.ev.packet_type = E_KP_ENTRY |
-				   (0 << 2) +
-				   (7 << 5);
+					(0 << 2) +
+					(7 << 5);
 	} else {
 		/* string is not completed */
 		end_bpf_read = 0;
 		/* from the beginning (0) to 1st string - contains 1st string */
 		u.ev.packet_type = E_KP_ENTRY |
-				   (0 << 2) +
-				   ((STR1 + 1) << 5) +
-				   (1 << 8); /* will be continued */
+					(0 << 2) +
+					((STR1 + 1) << 5) +
+					(1 << 8); /* will be continued */
 	}
 
 	events.perf_submit(ctx, &u.ev, _pad_size);
@@ -96,10 +99,10 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	if (!end_bpf_read) {
 		/* only 1st string argument */
 		u.ev.packet_type = E_KP_ENTRY |
-				   ((STR1 + 1) << 2) +
-				   ((STR1 + 1) << 5) +
-				   (1 << 9) + /* it is a continuation */
-				   (1 << 8);  /* and will be continued */
+					((STR1 + 1) << 2) +
+					((STR1 + 1) << 5) +
+					(1 << 9) + /* it is a continuation */
+					(1 << 8);  /* and will be continued */
 
 		/*
 		 * It is a macro for sending (Args.n_str_packets-2) packets.
@@ -109,7 +112,10 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		 */
 		READ_AND_SUBMIT_N_MINUS_2_PACKETS
 
-		/* from 1st string argument to the end (7) - contains 1st string */
+		/*
+		 * From 1st string argument to the end (7) -
+		 * contains 1st string
+		 */
 		u.ev.packet_type = E_KP_ENTRY |
 					((STR1 + 1) << 2) +
 					(7 << 5) +

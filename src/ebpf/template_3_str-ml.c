@@ -90,7 +90,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	events.perf_submit(ctx, &u.ev, _pad_size);
 
 	/* from 2nd string argument to the end (7) - contains 3rd string */
-	u.ev.packet_type = E_KP_ENTRY | ((STR2 + 1) << 2)+ (7 << 5);
+	u.ev.packet_type = E_KP_ENTRY | ((STR2 + 1) << 2) + (7 << 5);
 
 	src = (char *)u.ev.args[STR3];
 	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
