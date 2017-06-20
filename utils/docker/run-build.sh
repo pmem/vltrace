@@ -60,12 +60,8 @@ for release in Debug Release; do
 	mkdir build
 	cd build
 
-	echo "$ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/vltrace -DCMAKE_BUILD_TYPE=$release"
-	cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/vltrace -DCMAKE_BUILD_TYPE=$release
-	echo
-
-	echo "$ make cstyle"
-	make cstyle
+	echo "$ cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/vltrace -DDEVELOPER_MODE=ON -DCMAKE_BUILD_TYPE=$release"
+	cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/vltrace -DDEVELOPER_MODE=ON -DCMAKE_BUILD_TYPE=$release
 	echo
 
 	echo "$ make"
