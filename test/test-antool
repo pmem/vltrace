@@ -124,9 +124,6 @@ echo "$ $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -
 $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -vv > $OUTvv
 check_result $?
 
-grep --text -e "ERROR" -e "rror" -e "arning" $OUT
-[ $? -eq 0 ] \
-	&& check_result 1
 set -e
 
 check
