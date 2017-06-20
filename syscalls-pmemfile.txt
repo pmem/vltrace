@@ -1,14 +1,28 @@
+PMEMFILE SUPPORT
 --------------------------------------------------------------------------
-FLAGS - NOT SUPPORTED:
---------------------------------------------------------------------------
-SYS_renameat2       mostly supported, unsupported flags: RENAME_WHITEOUT
-SYS_openat          mostly supported, O_ASYNC - unsupported, O_CLOEXEC, O_DIRECT, O_DSYNC, O_NOCTTY, O_SYNC - always enabled, O_NONBLOCK - ignored
-SYS_open            see openat
-SYS_fallocate       partially supported, unsupported flags: FALLOC_FL_COLLAPSE_RANGE, FALLOC_FL_ZERO_RANGE, FALLOC_FL_INSERT_RANGE
-SYS_fcntl           partially supported, F_GETFL, F_GETFD - works, F_SETFD - not possible to clear FD_CLOEXEC, F_SETLK - does nothing, rest - unsupported
 
+1. FLAGS - NOT SUPPORTED:
 --------------------------------------------------------------------------
-Does not work at all for relative paths:
+SYS_renameat2       mostly supported:
+			- RENAME_WHITEOUT - unsupported
+SYS_openat          mostly supported,
+			- O_ASYNC - unsupported,
+			- O_CLOEXEC, O_DIRECT, O_DSYNC, O_NOCTTY, O_SYNC - always enabled,
+			- O_NONBLOCK - ignored
+SYS_open            see openat
+SYS_fallocate       partially supported, unsupported flags:
+			- FALLOC_FL_COLLAPSE_RANGE,
+			- FALLOC_FL_ZERO_RANGE,
+			- FALLOC_FL_INSERT_RANGE
+SYS_fcntl           partially supported:
+			- F_GETFL, F_GETFD - supported,
+			- F_SETFD - not possible to clear FD_CLOEXEC,
+			- rest unsupported: F_GETLK, F_SETLK, F_SETLKW, F_SETOWN,
+			  F_GETOWN, F_SETSIG, F_GETSIG, F_SETOWN_EX, F_GETOWN_EX,
+			  F_OFD_GETLK, F_OFD_SETLK, F_OFD_SETLKW, F_SETLEASE,
+			  F_GETLEASE, F_NOTIFY, F_ADD_SEALS, F_GET_SEALS
+
+2. Does not work at all for relative paths:
 --------------------------------------------------------------------------
 SYS_chroot
 SYS_getxattr
@@ -16,8 +30,7 @@ SYS_lgetxattr
 SYS_setxattr
 SYS_lsetxattr
 
---------------------------------------------------------------------------
-NOT SUPPORTED:
+3. NOT SUPPORTED:
 --------------------------------------------------------------------------
 SYS_chroot          not supported, does not work at all for relative paths
 SYS_setxattr        not supported, does not work at all for relative paths
@@ -34,8 +47,7 @@ SYS_execveat        not supported
 SYS_readahead       not supported
 SYS_name_to_handle_at   not supported
 
---------------------------------------------------------------------------
-NOT SUPPORTED _YET_:
+4. NOT SUPPORTED _YET_:
 --------------------------------------------------------------------------
 SYS_dup             not supported (yet)
 SYS_dup2            not supported (yet)
@@ -50,8 +62,7 @@ SYS_sendfile        not supported (yet?)
 SYS_splice          not supported (yet?)
 SYS_mmap            not supported (yet), also affects SYS_mprotect, SYS_munmap, SYS_mremap, SYS_msync
 
---------------------------------------------------------------------------
-SUPPORTED
+5. SUPPORTED
 --------------------------------------------------------------------------
 SYS_getxattr        supported, returns no attributes, does not work at all for relative paths
 SYS_lgetxattr       supported, returns no attributes, does not work at all for relative paths

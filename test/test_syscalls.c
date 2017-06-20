@@ -782,6 +782,15 @@ test_analyzing_tool(char *dir, char *pmem, char *nonp)
 	fcntl(fdnonp, F_SETFD, fdfnonp & (~FD_CLOEXEC));
 	fcntl(fdpmem, F_SETFD, fdfpmem & (~FD_CLOEXEC));
 
+	fcntl(fdnonp, F_GETLK, 0);
+	fcntl(fdpmem, F_GETLK, 0);
+
+	fcntl(fdnonp, F_SETLK, 0);
+	fcntl(fdpmem, F_SETLK, 0);
+
+	fcntl(fdnonp, F_SETLKW, 0);
+	fcntl(fdpmem, F_SETLKW, 0);
+
 	fcntl(fdnonp, F_SETOWN, 0);
 	fcntl(fdpmem, F_SETOWN, 0);
 

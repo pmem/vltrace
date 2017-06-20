@@ -122,6 +122,9 @@ F_FALLOC_FL_INSERT_RANGE = 0x20
 
 # fcntl's flags:
 F_SETFD = 2
+F_GETLK = 5
+F_SETLK = 6
+F_SETLKW = 7
 F_SETOWN = 8
 F_GETOWN = 9
 F_SETSIG = 10
@@ -815,6 +818,15 @@ class ListSyscalls(list):
         ret = 0
         if self[n].args[1] == F_SETFD and (self[n].args[2] & FD_CLOEXEC == 0):
             self[n].unsupported_flag = "F_SETFD: not possible to clear FD_CLOEXEC flag"
+            ret = 1
+        elif self[n].args[1] == F_GETLK:
+            self[n].unsupported_flag = "F_GETLK"
+            ret = 1
+        elif self[n].args[1] == F_SETLK:
+            self[n].unsupported_flag = "F_SETLK"
+            ret = 1
+        elif self[n].args[1] == F_SETLKW:
+            self[n].unsupported_flag = "F_SETLKW"
             ret = 1
         elif self[n].args[1] == F_SETOWN:
             self[n].unsupported_flag = "F_SETOWN"

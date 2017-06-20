@@ -22,6 +22,9 @@ Unsupported syscall's flag detected:
    fallocate <FALLOC_FL_ZERO_RANGE>
    fallocate <FALLOC_FL_INSERT_RANGE>
    fcntl <F_SETFD: not possible to clear FD_CLOEXEC flag>
+   fcntl <F_GETLK>
+   fcntl <F_SETLK>
+   fcntl <F_SETLKW>
    fcntl <F_SETOWN>
    fcntl <F_GETOWN_EX>
    fcntl <F_SETSIG>

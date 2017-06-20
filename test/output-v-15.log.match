@@ -47,6 +47,12 @@ Unsupported syscall's flag detected:
 		/tmp/mnt/pmem/file [PMEM]
    fcntl <F_SETFD: not possible to clear FD_CLOEXEC flag>:
 		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_GETLK>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_SETLK>:
+		/tmp/mnt/pmem/file [PMEM]
+   fcntl <F_SETLKW>:
+		/tmp/mnt/pmem/file [PMEM]
    fcntl <F_SETOWN>:
 		/tmp/mnt/pmem/file [PMEM]
    fcntl <F_GETOWN_EX>:
