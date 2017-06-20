@@ -88,8 +88,8 @@ cl_parser(struct cl_options *const clo,
 			{"string-args",		required_argument, 0, 's'},
 			{"expr",		required_argument, 0, 'e'},
 			{"output",		required_argument, 0, 'o'},
-			{"ebpf-src-dir", 	required_argument, 0, 'N'},
-			{"hex-separator", 	required_argument, 0, 'K'},
+			{"ebpf-src-dir",	required_argument, 0, 'N'},
+			{"hex-separator",	required_argument, 0, 'K'},
 			{"full-follow-fork",	optional_argument, 0, 'f'},
 			{0, 0, 0, 0}
 		};

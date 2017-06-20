@@ -41,7 +41,7 @@
 /* define it as empty for case when Args.n_str_packets <= 2 */
 #define READ_AND_SUBMIT_N_MINUS_2_PACKETS
 
-#define MAX_STR_ARG 	3 /* max supported number of string arguments */
+#define MAX_STR_ARG	3 /* max supported number of string arguments */
 
 #define BUF_SIZE	384 /* size of buffer for string arguments */
 #define STR_MAX_1	(BUF_SIZE - 2)

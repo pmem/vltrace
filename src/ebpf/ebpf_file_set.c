@@ -39,8 +39,8 @@
 
 #include "ebpf_file_set.h"
 
-const char *ebpf_trace_h_file = 	"trace.h";
-const char *ebpf_head_file = 		"trace_head.c";
+const char *ebpf_trace_h_file =		"trace.h";
+const char *ebpf_head_file =		"trace_head.c";
 
 const char *ebpf_0_str_file =		"template_0_str.c";
 
