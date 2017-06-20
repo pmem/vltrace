@@ -36,7 +36,7 @@
 SELF=$0
 
 function usage() {
-	echo "Usage: $SELF path_source_root path_check_license_bin path_license [-h|-v|-a]"
+	echo "Usage: $SELF <source_root_path> <check_license_bin_path> <license_path> [-h|-v|-a]"
 	echo "   -h, --help      this help message"
 	echo "   -v, --verbose   verbose mode"
 	echo "   -a, --all       check all files (only modified files are checked by default)"
@@ -56,7 +56,9 @@ shift
 
 PATTERN=`mktemp`
 TMP=`mktemp`
-rm -f $PATTERN $TMP
+TMP2=`mktemp`
+TEMPFILE=`mktemp`
+rm -f $PATTERN $TMP $TMP2
 
 function exit_if_not_exist()
 {
@@ -74,7 +76,8 @@ fi
 exit_if_not_exist $LICENSE
 exit_if_not_exist $CHECK_LICENSE
 
-git rev-parse || exit 1
+export GIT="git -C ${SOURCE_ROOT}"
+$GIT rev-parse || exit 1
 
 if [ -f $SOURCE_ROOT/.git/shallow ]; then
 	SHALLOW_CLONE=1
@@ -101,10 +104,10 @@ while [ "$1" != "" ]; do
 done
 
 if [ $CHECK_ALL -eq 0 ]; then
-	CURRENT_COMMIT=$(git log --pretty=%H -1)
-	MERGE_BASE=$(git merge-base HEAD origin/master 2>/dev/null)
+	CURRENT_COMMIT=$($GIT log --pretty=%H -1)
+	MERGE_BASE=$($GIT merge-base HEAD origin/master 2>/dev/null)
 	[ -z $MERGE_BASE ] && \
-		MERGE_BASE=$(git log --pretty="%cN:%H" | grep GitHub | head -n1 | cut -d: -f2)
+		MERGE_BASE=$($GIT log --pretty="%cN:%H" | grep GitHub | head -n1 | cut -d: -f2)
 	[ -z $MERGE_BASE -o "$CURRENT_COMMIT" = "$MERGE_BASE" ] && \
 		CHECK_ALL=1
 fi
@@ -116,17 +119,14 @@ else
 	echo
 	echo "Warning: will check copyright headers of modified files only,"
 	echo "         in order to check all files issue the following command:"
-	echo "         $ $SELF srcroot checklicensebin license -a"
+	echo "         $ $SELF <source_root_path> <check_license_bin_path> <license_path> -a"
+	echo "         (e.g.: $ $SELF $SOURCE_ROOT $CHECK_LICENSE $LICENSE -a)"
 	echo
 	echo "Checking copyright headers of modified files only..."
 	GIT_COMMAND="diff --name-only $MERGE_BASE $CURRENT_COMMIT $SOURCE_ROOT"
 fi
 
-FILES=$(git $GIT_COMMAND | \
-	grep -v -E -e 'src/jemalloc/' -e 'src/windows/jemalloc_gen/' \
-		   -e '/queue.h$' -e '/ListEntry.h$' \
-		   -e '/getopt.h$' -e '/getopt.c$' \
-		   -e 'gtest/gtest.h' -e 'gtest/gtest-all.cc' | \
+FILES=$($GIT $GIT_COMMAND | ${SOURCE_ROOT}/utils/check_license/file-exceptions.sh | \
 	grep    -E -e '*\.[chs]$' -e '*\.[ch]pp$' -e '*\.sh$' \
 		   -e '*\.py$' -e '*\.map$' -e 'Makefile*' -e 'TEST*' \
 		   -e '/common.inc$' -e '/match$' -e '/check_whitespace$' \
@@ -143,32 +143,41 @@ $CHECK_LICENSE create $LICENSE $PATTERN
 RV=0
 for file in $FILES ; do
 	[ ! -f $file ] && continue
-	YEARS=`$CHECK_LICENSE check-pattern $PATTERN $file`
+	# ensure that file is UTF-8 encoded
+	ENCODING=`file -b --mime-encoding $file`
+	iconv -f $ENCODING -t "UTF-8" -o $TEMPFILE $file
+
+	YEARS=`$CHECK_LICENSE check-pattern $PATTERN $TEMPFILE $file`
 	if [ $? -ne 0 ]; then
 		echo -n $YEARS
 		RV=1
 	else
 		HEADER_FIRST=`echo $YEARS | cut -d"-" -f1`
 		HEADER_LAST=` echo $YEARS | cut -d"-" -f2`
-		git log --no-merges --format="%ai %H" -- $file | sort > $TMP
-		FIRST=`cat $TMP | head -n1`
-		LAST=` cat $TMP | tail -n1`
+
+		if [ $SHALLOW_CLONE -eq 0 ]; then
+			$GIT log --no-merges --format="%ai %aE" -- $file | sort > $TMP
+		else
+			# mark the grafted commits (commits with no parents)
+			$GIT log --no-merges --format="%ai %aE grafted-%p-commit" -- $file | sort > $TMP
+		fi
+
+		# skip checking dates for new files
+		[ $(cat $TMP | wc -l) -le 1 ] && continue
+
+		# grep out the grafted commits (commits with no parents)
+		# and skip checking dates for non-Intel commits
+		grep -v -e "grafted--commit" $TMP | grep -e "@intel.com" > $TMP2
+
+		[ $(cat $TMP2 | wc -l) -eq 0 ] && continue
+
+		FIRST=`head -n1 $TMP2`
+		LAST=` tail -n1 $TMP2`
+
 		COMMIT_FIRST=`echo $FIRST | cut -d"-" -f1`
 		COMMIT_LAST=` echo $LAST  | cut -d"-" -f1`
-		SKIP=0
-		if [ $SHALLOW_CLONE -eq 1 ]; then
-			HASH_FIRST=`echo $FIRST | cut -d" " -f4`
-			HASH_LAST=` echo $LAST  | cut -d" " -f4`
-			if [ "$HASH_FIRST" == "$HASH_LAST" ]; then
-				CHANGED=`git diff --name-only $HASH_FIRST -- $file`
-				if [ "$CHANGED" == "" ]; then
-					SKIP=1
-					[ $VERBOSE -eq 1 ] && echo "info: checking dates in file '$file' skipped (no history)"
-				fi
-			fi
-		fi
 		if [ "$COMMIT_FIRST" != "" -a "$COMMIT_LAST" != "" ]; then
-			if [ $SKIP -eq 0 -a $HEADER_LAST -lt $COMMIT_LAST ]; then
+			if [ $HEADER_LAST -lt $COMMIT_LAST ]; then
 				if [ $HEADER_FIRST -lt $COMMIT_FIRST ]; then
 					COMMIT_FIRST=$HEADER_FIRST
 				fi
@@ -187,7 +196,7 @@ for file in $FILES ; do
 		fi
 	fi
 done
-rm -f $TMP
+rm -f $TMP $TMP2 $TEMPFILE
 
 # check if error found
 if [ $RV -eq 0 ]; then
