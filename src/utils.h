@@ -76,7 +76,6 @@ void print_sc_list(filter_f filter);
 int str_replace_with_char(char *const text, const char *templt, const char c);
 int str_replace_all(char **text, const char *templt, const char *str);
 int str_replace_many(char **text, const char *templt, const char *str, int n);
-int str_replace_with_spaces(char *const text, const char *templt);
 
 pid_t start_command(char *const argv[]);
 pid_t start_command_with_signals(int argc, char *const argv[]);

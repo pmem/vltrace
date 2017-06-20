@@ -50,9 +50,6 @@
 
 #define READ_ERROR	(1 << 31)
 
-#define STR_ERR_LEN 20
-static const char *str_error = "(bpf_probe_read < 0)";
-
 /* types of data packets */
 enum data_packet_types {
 	E_KP_ENTRY = 0,	/* entry of Kprobe */

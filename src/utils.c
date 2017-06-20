@@ -477,34 +477,6 @@ str_replace_with_char(char *const text, const char *templt, const char c)
 }
 
 /*
- * str_replace_with_spaces -- replace all occurrences of 'templt' in 'text'
- *                            with spaces
- */
-int
-str_replace_with_spaces(char *const text, const char *templt)
-{
-	size_t len = strlen(templt);
-
-	char *new_str = malloc(len);
-	if (new_str == NULL)
-		return -1;
-
-	/* fill it with spaces */
-	memset(new_str, ' ', len);
-
-	/* replace all */
-	char *occ = text;
-	while ((occ = strstr(occ, templt)) != NULL) {
-		memcpy(occ, new_str, len);
-		occ += len;
-	}
-
-	free(new_str);
-
-	return 0;
-}
-
-/*
  * start_command -- run traced command passed through command line
  */
 pid_t

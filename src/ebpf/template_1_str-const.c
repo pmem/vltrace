@@ -76,7 +76,6 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
 		/* read error occurred */
 		error_bpf_read = 1;
-		memcpy(dest, str_error, STR_ERR_LEN);
 		/* from the beginning (0) to the end (7) - contains 1st string */
 		u.ev.packet_type = READ_ERROR | E_KP_ENTRY |
 				   (0 << 2) +
@@ -117,7 +116,6 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 			if (bpf_probe_read(dest, length, (void *)src)) {
 				/* read error occurred */
 				error_bpf_read = 1;
-				memcpy(dest, str_error, STR_ERR_LEN);
 			}
 		}
 		if (error_bpf_read)
