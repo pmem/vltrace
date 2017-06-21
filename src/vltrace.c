@@ -277,6 +277,10 @@ main(const int argc, char *const argv[])
 	free(bpf_str);
 	if (bpf->module == NULL) {
 		ERROR("cannot compile eBPF code");
+		/*
+		 * Details about this error have already been printed to stderr
+		 * by the eBPF compiler.
+		 */
 		goto error_free_bpf;
 	}
 
