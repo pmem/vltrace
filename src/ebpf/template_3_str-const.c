@@ -77,7 +77,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 /* 1st string argument */
 	src = (char *)u.ev.args[STR1];
 
-	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+	if (bpf_probe_read(dest, length, (void *)src)) {
 		/* read error occurred */
 		error_bpf_read = 1;
 		/* from the beginning (0) to 2nd string - contains 1st string */
@@ -133,7 +133,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	error_bpf_read = 0;
 	src = (char *)u.ev.args[STR2];
 
-	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+	if (bpf_probe_read(dest, length, (void *)src)) {
 		/* read error occurred */
 		error_bpf_read = 1;
 		/* from the 2nd to 3rd string - contains 2nd string */
@@ -189,7 +189,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	error_bpf_read = 0;
 	src = (char *)u.ev.args[STR3];
 
-	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+	if (bpf_probe_read(dest, length, (void *)src)) {
 		/* read error occurred */
 		error_bpf_read = 1;
 		/* from the 3rd string to the end (7) - contains 3rd string */
