@@ -31,7 +31,8 @@
  */
 
 /*
- * template_0_str.c -- templates for syscalls with no string arguments
+ * template_0_str.c -- templates for syscalls with no string arguments,
+ *                     see README_templates.txt for details
  */
 
 /*

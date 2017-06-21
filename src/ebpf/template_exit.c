@@ -32,7 +32,8 @@
 
 /*
  * template_exit.c -- templates for exit() and exit_group() syscalls
- *                    in full-follow-fork mode
+ *                    in full-follow-fork mode,
+ *                    see README_templates.txt for details
  */
 
 /*

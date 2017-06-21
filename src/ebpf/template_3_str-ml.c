@@ -32,7 +32,8 @@
 
 /*
  * template_3_str-ml.c -- templates for syscalls with 3 string arguments,
- *                        multi-packet version
+ *                        multi-packet version,
+ *                        see README_templates.txt for details
  */
 
 /*
