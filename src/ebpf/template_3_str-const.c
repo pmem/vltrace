@@ -32,7 +32,8 @@
 
 /*
  * template_3_str-const.c -- templates for syscalls with three string arguments,
- *                           full string version, constant number of packets
+ *                           full string version, constant number of packets,
+ *                           see README_templates.txt for details
  */
 
 /*

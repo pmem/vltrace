@@ -31,7 +31,8 @@
  */
 
 /*
- * template_tracepoints.c -- trace syscalls using tracepoints
+ * template_tracepoints.c -- trace syscalls using tracepoints,
+ *                           see README_templates.txt for details
  */
 
 /*

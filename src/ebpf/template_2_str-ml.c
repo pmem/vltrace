@@ -32,7 +32,8 @@
 
 /*
  * template_2_str-sl.c -- templates for syscalls with two string arguments,
- *                        multi-packet version.
+ *                        multi-packet version,
+ *                        see README_templates.txt for details
  */
 
 /*

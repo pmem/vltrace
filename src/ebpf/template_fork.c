@@ -32,7 +32,8 @@
 
 /*
  * template_fork.c -- templates for: fork, vfork and clone syscalls
- *                    in full-follow-fork mode
+ *                    in full-follow-fork mode,
+ *                    see README_templates.txt for details
  */
 
 /*

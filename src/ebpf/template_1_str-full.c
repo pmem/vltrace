@@ -32,7 +32,8 @@
 
 /*
  * template_1_str-full.c -- templates for syscalls with one string argument,
- *                          full string version
+ *                          full string version,
+ *                          see README_templates.txt for details
  */
 
 /*
