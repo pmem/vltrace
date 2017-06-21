@@ -67,6 +67,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.args[4] = PT_REGS_PARM5(ctx);
 	u.ev.args[5] = PT_REGS_PARM6(ctx);
 
+	int ret;
 	int end_bpf_read = 0;
 	char *src = (char *)u.ev.args[STR1];
 	char *dest = (char *)&u.ev.aux_str;
@@ -75,7 +76,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	int length = BUF_SIZE; /* bpf_probe_read_str is null-terminated */
 
-	if (src == 0 || bpf_probe_read_str(dest, length, (void *)src) < length) {
+	if ((ret = bpf_probe_read_str(dest, length, (void *)src)) < length) {
 		/* string is completed */
 		end_bpf_read = 1;
 		/*
@@ -85,6 +86,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		u.ev.packet_type = E_KP_ENTRY |
 					(0 << 2) +
 					(7 << 5);
+		if (ret < 0)
+			u.ev.packet_type |= READ_ERROR;
 	} else {
 		/* string is not completed */
 		end_bpf_read = 0;
@@ -121,10 +124,14 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 					((STR1 + 1) << 2) +
 					(7 << 5) +
 					(1 << 9); /* is a continuation */
+		if (ret < 0)
+			u.ev.packet_type |= READ_ERROR;
 		if (!end_bpf_read) {
 			/* bpf_probe_read_str is null-terminated */
 			src += length - 1;
-			bpf_probe_read_str(dest, length, (void *)src);
+			ret = bpf_probe_read_str(dest, length, (void *)src);
+			if (ret < 0)
+				u.ev.packet_type |= READ_ERROR;
 		}
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
