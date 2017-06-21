@@ -62,8 +62,6 @@ extern const char *ebpf_2_str_full_file;
 extern const char *ebpf_3_str_full_file;
 
 extern const char *ebpf_fork_file;
-extern const char *ebpf_vfork_file;
-extern const char *ebpf_clone_file;
 extern const char *ebpf_exit_file;
 
 extern const char *ebpf_tracepoints_file;

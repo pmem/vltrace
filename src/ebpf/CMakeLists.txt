@@ -49,9 +49,7 @@ set (BIN_SRCS
 	template_1_str-full.c
 	template_2_str-full.c
 	template_3_str-full.c
-	template_clone.c
 	template_fork.c
-	template_vfork.c
 	template_exit.c
 	template_tracepoints.c
 	macro_const_string_mode.c
