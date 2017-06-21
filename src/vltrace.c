@@ -76,6 +76,7 @@ int OutputError;		/* I/O error in perf callback occured */
 int AbortTracing;		/* terminating signal received */
 
 pid_t PidToBeKilled;		/* PID of started traced process */
+struct bpf_ctx *Bpf;		/* BPF handle */
 
 /* what are we tracing ? */
 enum {
@@ -168,6 +169,22 @@ do_perf_reader_poll(int tracing, struct bpf_ctx *bpf,
 	}
 }
 
+/*
+ * cleanup_on_error -- do clean-up on error
+ */
+void
+cleanup_on_error(void)
+{
+	if (Bpf) {
+		detach_all(Bpf);
+		free(Bpf);
+	}
+	if (PidToBeKilled) {
+		/* kill the started child */
+		kill(PidToBeKilled, SIGKILL);
+	}
+}
+
 int
 main(const int argc, char *const argv[])
 {
@@ -196,6 +213,12 @@ main(const int argc, char *const argv[])
 
 	/* check input arguments */
 	tracing = check_args(&Args);
+
+	if (atexit(cleanup_on_error)) {
+		perror("atexit");
+		ERROR("failed to register at-exit function");
+		return EXIT_FAILURE;
+	}
 
 	OutputFile = setup_output();
 	if (OutputFile == NULL) {
@@ -252,7 +275,7 @@ main(const int argc, char *const argv[])
 	char *bpf_str = generate_ebpf();
 	if (bpf_str == NULL) {
 		ERROR("cannot generate eBPF code");
-		goto error_kill;
+		return EXIT_FAILURE;
 	}
 
 	apply_process_attach_code(&bpf_str);
@@ -264,34 +287,34 @@ main(const int argc, char *const argv[])
 	save_trace_h();
 
 	/* initialize BPF */
-	struct bpf_ctx *bpf = calloc(1, sizeof(*bpf));
-	if (bpf == NULL) {
+	Bpf = calloc(1, sizeof(*Bpf));
+	if (Bpf == NULL) {
 		ERROR("out of memory");
 		free(bpf_str);
-		goto error_kill;
+		return EXIT_FAILURE;
 	}
 
 	/* compile generated eBPF code */
 	INFO("Compiling generated eBPF code...");
-	bpf->module = bpf_module_create_c_from_string(bpf_str, 0, NULL, 0);
+	Bpf->module = bpf_module_create_c_from_string(bpf_str, 0, NULL, 0);
 	free(bpf_str);
-	if (bpf->module == NULL) {
+	if (Bpf->module == NULL) {
 		ERROR("cannot compile eBPF code");
 		/*
 		 * Details about this error have already been printed to stderr
 		 * by the eBPF compiler.
 		 */
-		goto error_free_bpf;
+		return EXIT_FAILURE;
 	}
 
-	bpf->debug  = Args.debug;
+	Bpf->debug  = Args.debug;
 
 	/* if printing in binary format, dump syscalls table */
 	if (OutputFormat == EOF_BIN) {
 		if (dump_syscalls_table(FILE_SYSCALLS_TABLE)) {
 			ERROR("error during saving syscalls table "
 				"to the file: '%s'", FILE_SYSCALLS_TABLE);
-			goto error_free_bpf;
+			return EXIT_FAILURE;
 		} else {
 			NOTICE("saved syscalls table to the file: '%s'",
 				FILE_SYSCALLS_TABLE);
@@ -299,16 +322,16 @@ main(const int argc, char *const argv[])
 	}
 
 	INFO("Attaching probes...");
-	if (attach_probes(bpf)) {
+	if (attach_probes(Bpf)) {
 		ERROR("no probes were attached");
-		goto error_free_bpf;
+		return EXIT_FAILURE;
 	}
 
 	INFO("Starting tracing...");
 
 	if (Print_header[OutputFormat](argc, argv)) {
 		ERROR("error while printing header");
-		goto error_detach;
+		return EXIT_FAILURE;
 	}
 
 	/*
@@ -318,7 +341,7 @@ main(const int argc, char *const argv[])
 	 * XXX We should use str_replace here.
 	 */
 #define PERF_OUTPUT_NAME "events"
-	int res = attach_callback_to_perf_output(bpf, PERF_OUTPUT_NAME,
+	int res = attach_callback_to_perf_output(Bpf, PERF_OUTPUT_NAME,
 						Print_event_cb[OutputFormat]);
 	if (res == 0) {
 		if (Args.command) {
@@ -328,33 +351,22 @@ main(const int argc, char *const argv[])
 	} else {
 		ERROR("cannot attach callbacks to perf output '%s'",
 			PERF_OUTPUT_NAME);
-		goto error_detach;
+		return EXIT_FAILURE;
 	}
 
-	readers = calloc(bpf->pr_arr_qty, sizeof(struct perf_reader *));
+	readers = calloc(Bpf->pr_arr_qty, sizeof(struct perf_reader *));
 	if (readers == NULL) {
 		ERROR("out of memory");
-		goto error_detach;
+		return EXIT_FAILURE;
 	}
 
-	for (unsigned i = 0; i < bpf->pr_arr_qty; i++)
-		readers[i] = bpf->pr_arr[i]->pr;
+	for (unsigned i = 0; i < Bpf->pr_arr_qty; i++)
+		readers[i] = Bpf->pr_arr[i]->pr;
 
-	do_perf_reader_poll(tracing, bpf, readers);
+	do_perf_reader_poll(tracing, Bpf, readers);
 
 	fflush(OutputFile);
 	free(readers);
 	PidToBeKilled = 0;
-	ret = EXIT_SUCCESS;
-
-error_detach:
-	detach_all(bpf);
-error_free_bpf:
-	free(bpf);
-error_kill:
-	if (PidToBeKilled) {
-		/* kill the started child */
-		kill(PidToBeKilled, SIGKILL);
-	}
-	return ret;
+	return EXIT_SUCCESS;
 }
