@@ -68,7 +68,7 @@ based on eBPF, Kprobe and Tracepoint technologies and libbcc library.
 
  - Used combination of technologies allow tool to be about one order
    of magnitude faster than regular system strace.
- - This tool consumes fewer CPU resources.
+ - This tool consumes fewer resources.
  - Output of this tool is designed to be suitable for processing with
    classical tools and technologies, like awk.
  - Could trace syscalls system-wide.
