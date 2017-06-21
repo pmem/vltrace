@@ -877,6 +877,10 @@ class ListSyscalls(list):
             return 0
 
     def check_if_supported(self, n):
+        if self[n].name in ("fork", "vfork"):
+            self[n].unsupported = RESULT_UNSUPPORTED
+            return
+
         if len(self[n].strings) > 0:
             if (len(self[n].strings[0]) > 0 and self[n].strings[0][0] != '/') or self[n].strings[0] == "":
                 if self[n].name in ("chroot", "getxattr", "lgetxattr", "setxattr", "lsetxattr"):

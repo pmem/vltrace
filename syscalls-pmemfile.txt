@@ -45,6 +45,8 @@ SYS_fremovexattr    not supported
 SYS_execve          not supported
 SYS_execveat        not supported
 SYS_readahead       not supported
+SYS_fork            not supported
+SYS_vfork           not supported
 SYS_name_to_handle_at   not supported
 
 4. NOT SUPPORTED _YET_:
