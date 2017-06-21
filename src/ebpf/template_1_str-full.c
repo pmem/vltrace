@@ -75,7 +75,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	int length = BUF_SIZE; /* bpf_probe_read_str is null-terminated */
 
-	if (bpf_probe_read_str(dest, length, (void *)src) < length) {
+	if (src == 0 || bpf_probe_read_str(dest, length, (void *)src) < length) {
 		/* string is completed */
 		end_bpf_read = 1;
 		/*

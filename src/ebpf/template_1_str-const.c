@@ -74,7 +74,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	unsigned length = BUF_SIZE - 1;
 	memset(dest, 0, BUF_SIZE);
 
-	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+	if (bpf_probe_read(dest, length, (void *)src)) {
 		/* read error occurred */
 		error_bpf_read = 1;
 		/*

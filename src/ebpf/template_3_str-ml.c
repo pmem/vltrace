@@ -76,7 +76,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.packet_type = E_KP_ENTRY | (0 << 2) + ((STR1 + 1) << 5);
 
 	char *src = (char *)u.ev.args[STR1];
-	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+	if (bpf_probe_read(dest, length, (void *)src)) {
 		u.ev.packet_type |= READ_ERROR;
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
@@ -85,7 +85,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + ((STR2 + 1) << 5);
 
 	src = (char *)u.ev.args[STR2];
-	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+	if (bpf_probe_read(dest, length, (void *)src)) {
 		u.ev.packet_type |= READ_ERROR;
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
@@ -94,7 +94,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	u.ev.packet_type = E_KP_ENTRY | ((STR2 + 1) << 2) + (7 << 5);
 
 	src = (char *)u.ev.args[STR3];
-	if (src == 0 || bpf_probe_read(dest, length, (void *)src)) {
+	if (bpf_probe_read(dest, length, (void *)src)) {
 		u.ev.packet_type |= READ_ERROR;
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
