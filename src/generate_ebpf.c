@@ -57,13 +57,9 @@ get_template(unsigned sc_num)
 
 	if (Args.ff_mode == E_FF_FULL) {
 		switch (sc_num) {
-		case __NR_clone:
-			text = load_file_no_cr(ebpf_clone_file);
-			goto replace_skip_STRX;
-		case __NR_vfork:
-			text = load_file_no_cr(ebpf_vfork_file);
-			goto replace_skip_STRX;
 		case __NR_fork:
+		case __NR_vfork:
+		case __NR_clone:
 			text = load_file_no_cr(ebpf_fork_file);
 			goto replace_skip_STRX;
 		case __NR_exit:

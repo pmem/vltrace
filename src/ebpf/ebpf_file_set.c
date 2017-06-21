@@ -60,8 +60,6 @@ const char *ebpf_2_str_full_file =	"template_2_str-full.c";
 const char *ebpf_3_str_full_file =	"template_3_str-full.c";
 
 const char *ebpf_fork_file =		"template_fork.c";
-const char *ebpf_vfork_file =		"template_vfork.c";
-const char *ebpf_clone_file =		"template_clone.c";
 const char *ebpf_exit_file =		"template_exit.c";
 
 const char *ebpf_tracepoints_file =	"template_tracepoints.c";
@@ -146,10 +144,6 @@ ebpf_load_file(const char *const fn)
 
 	} else if (0 == strcmp(ebpf_fork_file, fn)) {
 		return BINARY_FILE_CONTENT(template_fork_c);
-	} else if (0 == strcmp(ebpf_vfork_file, fn)) {
-		return BINARY_FILE_CONTENT(template_vfork_c);
-	} else if (0 == strcmp(ebpf_clone_file, fn)) {
-		return BINARY_FILE_CONTENT(template_clone_c);
 	} else if (0 == strcmp(ebpf_exit_file, fn)) {
 		return BINARY_FILE_CONTENT(template_exit_c);
 

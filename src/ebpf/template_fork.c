@@ -31,7 +31,8 @@
  */
 
 /*
- * template_fork.c -- templates for fork() syscall in full-follow-fork mode
+ * template_fork.c -- templates for: fork, vfork and clone syscalls
+ *                    in full-follow-fork mode
  */
 
 /*
@@ -47,7 +48,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	PID_CHECK_HOOK
 
 	ev.packet_type = E_KP_ENTRY;
-	ev.size = offsetof(struct data_entry_s, args);
+	ev.size = offsetof(struct data_entry_s, aux_str);
 	ev.start_ts_nsec = bpf_ktime_get_ns();
 
 	ev.sc_id = SYSCALL_NR; /* SysCall ID */
@@ -60,7 +61,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	ev.args[4] = PT_REGS_PARM5(ctx);
 	ev.args[5] = PT_REGS_PARM6(ctx);
 
-	events.perf_submit(ctx, &ev, offsetof(struct data_entry_s, args));
+	events.perf_submit(ctx, &ev, offsetof(struct data_entry_s, aux_str));
 
 	return 0;
 };
