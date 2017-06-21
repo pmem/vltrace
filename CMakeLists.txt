@@ -52,9 +52,6 @@ if (NOT ${KERNEL_RESULT} EQUAL 0)
 	execute_process(COMMAND echo "${VLTRACE_MINIMUM_KERNEL_VERSION}")
 	message(FATAL_ERROR
 		"Error: cannot read required kernel version from the file ${README_FILE}")
-else ()
-	message(STATUS
-		"Minimum required kernel version: ${VLTRACE_MINIMUM_KERNEL_VERSION}")
 endif ()
 
 include(GNUInstallDirs)
