@@ -31,7 +31,7 @@
  */
 
 /*
- * file_sc_bench.c -- testing BenchMark for vltrace. This simple benchmark
+ * file_sc_bench.c -- testing benchmark for vltrace. This simple benchmark
  *    allow us to measure and compare different tracing tools. This benchmark
  *    doesn't have any dependencies and will be compiled during 'make run'.
  */
@@ -50,7 +50,7 @@
 typedef void (*tx_t)();
 
 /*
- * Tested usecase itself
+ * open_close -- tested usecase itself
  */
 static void
 open_close()
@@ -65,7 +65,7 @@ open_close()
 }
 
 /*
- * This function runs and measures tested usecase.
+ * loop_tx -- run and measure tested usecase
  */
 static void
 loop_tx(char *name, tx_t tx_f, uint64_t qty, FILE *f)
@@ -92,12 +92,9 @@ loop_tx(char *name, tx_t tx_f, uint64_t qty, FILE *f)
 	delta = (tu_end - tu_start);
 	delta *= 1000;
 
-	fprintf(stderr, "%s: Iter time: %ld nsec\n", name,  delta / qty);
+	fprintf(stderr, "%s: iteration time: %ld nsec\n", name,  delta / qty);
 }
 
-/*
- * BenchMark entry point
- */
 int
 main(int argc, char *argv[])
 {
