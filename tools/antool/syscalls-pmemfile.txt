@@ -21,6 +21,10 @@ SYS_fcntl           partially supported:
 			  F_GETOWN, F_SETSIG, F_GETSIG, F_SETOWN_EX, F_GETOWN_EX,
 			  F_OFD_GETLK, F_OFD_SETLK, F_OFD_SETLKW, F_SETLEASE,
 			  F_GETLEASE, F_NOTIFY, F_ADD_SEALS, F_GET_SEALS
+SyS_clone           supported only for flags set by pthread_create():
+			= CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|
+			  CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|
+			  CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID
 
 2. Does not work at all for relative paths:
 --------------------------------------------------------------------------

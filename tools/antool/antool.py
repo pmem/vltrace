@@ -143,6 +143,11 @@ F_GET_SEALS = 1034
 FD_CLOEXEC = 1
 AT_EMPTY_PATH = 0x1000
 
+# clone() flags set by pthread_create():
+# = CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|
+#   CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID
+F_PTHREAD_CREATE = 0x3d0f00
+
 
 ###############################################################################
 # open_file -- open file with error handling
@@ -879,6 +884,11 @@ class ListSyscalls(list):
     def check_if_supported(self, n):
         if self[n].name in ("fork", "vfork"):
             self[n].unsupported = RESULT_UNSUPPORTED
+            return
+
+        if self[n].name == "clone" and self[n].args[0] != F_PTHREAD_CREATE:
+            self[n].unsupported_flag = "flags other than set by pthread_create()"
+            self[n].unsupported = RESULT_UNSUPPORTED_FLAG
             return
 
         if len(self[n].strings) > 0:
