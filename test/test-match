@@ -94,8 +94,8 @@ if [ "$VLTRACE_SKIP" != "1" ]; then
 fi
 
 set +e
-echo "$ $ANTOOL_DIR/antool.py -c -t syscalls_table.dat -b $OUTBIN > $OUT"
-$ANTOOL_DIR/antool.py -c -t syscalls_table.dat -b $OUTBIN > $OUT
+echo "$ $ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUTBIN > $OUT"
+$ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUTBIN > $OUT
 RV=$?
 [ $RV -ne 0 ] \
 	&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \
