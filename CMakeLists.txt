@@ -107,7 +107,8 @@ set(VLTRACE_VERSION
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
-add_executable(check_license EXCLUDE_FROM_ALL utils/check_license/check-license.c)
+add_executable(check_license utils/check_license/check-license.c)
+add_executable(bench_sc tools/bench_sc/bench_sc.c)
 
 # Generates cstyle-$name target and attaches it as a dependency of global
 # "cstyle" target. This target verifies C style of files in current source dir.
@@ -185,5 +186,4 @@ endif(DEVELOPER_MODE)
 enable_testing()
 add_subdirectory(test)
 add_subdirectory(src)
-add_subdirectory(utils)
 add_subdirectory(man)

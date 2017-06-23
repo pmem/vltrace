@@ -31,9 +31,8 @@
  */
 
 /*
- * file_sc_bench.c -- testing benchmark for vltrace. This simple benchmark
- *    allow us to measure and compare different tracing tools. This benchmark
- *    doesn't have any dependencies and will be compiled during 'make run'.
+ * bench_sc.c -- testing benchmark for vltrace. This simple benchmark
+ *               allow us to measure and compare different tracing tools.
  */
 
 #include <fcntl.h>
