@@ -99,15 +99,14 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 {
 	int map_fd = bpf_table_fd(sbcp->module, name);
 	if (map_fd < 0) {
-		ERROR("%s: cannot attach to perf output '%s':%m",
-			__func__, name);
+		ERROR("cannot attach to perf output '%s':%m", name);
 		return -1;
 	}
 
 	size_t map_id = bpf_table_id(sbcp->module, name);
 	int ttype = bpf_table_type_id(sbcp->module, map_id);
 	if (ttype != BPF_MAP_TYPE_PERF_EVENT_ARRAY) {
-		ERROR("%s: unknown table type %d", __func__, ttype);
+		ERROR("unknown table type %d", ttype);
 		return -1;
 	}
 
@@ -122,9 +121,8 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 	}
 
 	if (!pr_arr_check_quota(sbcp, (unsigned)cpu_qty)) {
-		ERROR("%s: number of perf readers would exceed"
-			" global quota: %d",
-			__func__, Args.pr_arr_max);
+		ERROR("number of perf readers would exceed"
+			" global quota: %d", Args.pr_arr_max);
 		return -1;
 	}
 
@@ -136,8 +134,8 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 		reader = bpf_open_perf_buffer(callback, NULL, NULL, -1, cpu,
 						Args.strace_reader_page_cnt);
 		if (reader == NULL) {
-			WARNING("%s: cannot open perf buffer on CPU %d, "
-				"skipping this CPU", __func__, cpu);
+			WARNING("cannot open perf buffer on CPU %d, "
+				"skipping this CPU", cpu);
 			continue;
 		}
 
@@ -149,8 +147,8 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 			 * Cannot create an element in the BPF map on this CPU,
 			 * so the CPU will not be used (skip it).
 			 */
-			WARNING("%s: cannot update BPF map on CPU %d, "
-				"skipping this CPU: %m", __func__, cpu);
+			WARNING("cannot update BPF map on CPU %d, "
+				"skipping this CPU: %m", cpu);
 			perf_reader_free(reader);
 			continue;
 		}
@@ -226,7 +224,7 @@ load_obj_code_into_ebpf_vm(struct bpf_ctx *sbcp, const char *func_name,
 	void *bfs_res = bpf_function_start(sbcp->module, func_name);
 
 	if (bfs_res == NULL) {
-		ERROR("%s: unknown program %s", __func__, func_name);
+		ERROR("unknown program %s", func_name);
 		return -1;
 	}
 
@@ -257,8 +255,7 @@ load_obj_code_into_ebpf_vm(struct bpf_ctx *sbcp, const char *func_name,
 	}
 
 	if (fd < 0) {
-		ERROR("%s: failed to load BPF program %s: %m",
-			__func__, func_name);
+		ERROR("failed to load BPF program %s: %m", func_name);
 		return -1;
 	}
 
@@ -339,8 +336,8 @@ load_fn_and_attach_common(struct bpf_ctx *sbcp,
 
 	int ret = -1;
 	if (!pr_arr_check_quota(sbcp, 1)) {
-		ERROR("%s: number of perf readers would exceed"
-			" global quota: %d", __func__, Args.pr_arr_max);
+		ERROR("number of perf readers would exceed"
+			" global quota: %d", Args.pr_arr_max);
 		goto exit_free;
 	}
 
@@ -362,8 +359,8 @@ load_fn_and_attach_common(struct bpf_ctx *sbcp,
 	}
 
 	if (probe == NULL) {
-		ERROR("%s: failed to attach eBPF function '%s' to %s '%s': %m",
-			__func__, probe_name, fn_name, event);
+		ERROR("failed to attach eBPF function '%s' to %s '%s': %m",
+			probe_name, fn_name, event);
 		goto exit_free;
 	}
 
