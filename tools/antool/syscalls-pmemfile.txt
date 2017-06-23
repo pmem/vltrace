@@ -1,0 +1,122 @@
+PMEMFILE SUPPORT
+--------------------------------------------------------------------------
+
+1. FLAGS - NOT SUPPORTED:
+--------------------------------------------------------------------------
+SYS_renameat2       mostly supported:
+			- RENAME_WHITEOUT - unsupported
+SYS_openat          mostly supported,
+			- O_ASYNC - unsupported,
+			- O_CLOEXEC, O_DIRECT, O_DSYNC, O_NOCTTY, O_SYNC - always enabled,
+			- O_NONBLOCK - ignored
+SYS_open            see openat
+SYS_fallocate       partially supported, unsupported flags:
+			- FALLOC_FL_COLLAPSE_RANGE,
+			- FALLOC_FL_ZERO_RANGE,
+			- FALLOC_FL_INSERT_RANGE
+SYS_fcntl           partially supported:
+			- F_GETFL, F_GETFD - supported,
+			- F_SETFD - not possible to clear FD_CLOEXEC,
+			- rest unsupported: F_GETLK, F_SETLK, F_SETLKW, F_SETOWN,
+			  F_GETOWN, F_SETSIG, F_GETSIG, F_SETOWN_EX, F_GETOWN_EX,
+			  F_OFD_GETLK, F_OFD_SETLK, F_OFD_SETLKW, F_SETLEASE,
+			  F_GETLEASE, F_NOTIFY, F_ADD_SEALS, F_GET_SEALS
+
+2. Does not work at all for relative paths:
+--------------------------------------------------------------------------
+SYS_chroot
+SYS_getxattr
+SYS_lgetxattr
+SYS_setxattr
+SYS_lsetxattr
+
+3. NOT SUPPORTED:
+--------------------------------------------------------------------------
+SYS_chroot          not supported, does not work at all for relative paths
+SYS_setxattr        not supported, does not work at all for relative paths
+SYS_lsetxattr       not supported, does not work at all for relative paths
+SYS_fsetxattr       not supported
+SYS_listxattr       not supported
+SYS_llistxattr      not supported
+SYS_flistxattr      not supported
+SYS_removexattr     not supported
+SYS_lremovexattr    not supported
+SYS_fremovexattr    not supported
+SYS_execve          not supported
+SYS_execveat        not supported
+SYS_readahead       not supported
+SYS_fork            not supported
+SYS_vfork           not supported
+SYS_name_to_handle_at   not supported
+
+4. NOT SUPPORTED _YET_:
+--------------------------------------------------------------------------
+SYS_dup             not supported (yet)
+SYS_dup2            not supported (yet)
+SYS_dup3            not supported (yet)
+SYS_utime           not supported (yet)
+SYS_utimes          not supported (yet)
+SYS_utimensat       not supported (yet)
+SYS_futimesat       not supported (yet)
+SYS_copy_file_range not supported (yet?)
+SYS_flock           not supported (yet?)
+SYS_sendfile        not supported (yet?)
+SYS_splice          not supported (yet?)
+SYS_mmap            not supported (yet), also affects SYS_mprotect, SYS_munmap, SYS_mremap, SYS_msync
+
+5. SUPPORTED
+--------------------------------------------------------------------------
+SYS_getxattr        supported, returns no attributes, does not work at all for relative paths
+SYS_lgetxattr       supported, returns no attributes, does not work at all for relative paths
+SYS_fgetxattr       supported, returns no attributes
+
+SYS_fadvise64       supported, does nothing
+SYS_fdatasync       supported, does nothing
+SYS_fsync           supported, does nothing
+SYS_syncfs          supported, does nothing
+
+SYS_access          fully supported
+SYS_chdir           fully supported
+SYS_chmod           fully supported
+SYS_chown           fully supported
+SYS_close           fully supported
+SYS_faccessat       fully supported
+SYS_fchdir          fully supported
+SYS_fchmodat        fully supported
+SYS_fchmod          fully supported
+SYS_fchownat        fully supported
+SYS_fchown          fully supported
+SYS_fstat           fully supported
+SYS_ftruncate       fully supported
+SYS_getcwd          fully supported
+SYS_getdents64      fully supported
+SYS_getdents        fully supported
+SYS_lchown          fully supported
+SYS_linkat          fully supported
+SYS_link            fully supported
+SYS_lseek           fully supported
+SYS_lstat           fully supported
+SYS_mkdirat         fully supported
+SYS_mkdir           fully supported
+SYS_newfstatat      fully supported
+SYS_preadv          fully supported
+SYS_preadv2         fully supported
+SYS_pread64         fully supported
+SYS_pwritev         fully supported
+SYS_pwritev2        fully supported
+SYS_pwrite64        fully supported
+SYS_read            fully supported
+SYS_readlinkat      fully supported
+SYS_readlink        fully supported
+SYS_readv           fully supported
+SYS_renameat        fully supported
+SYS_rename          fully supported
+SYS_rmdir           fully supported
+SYS_stat            fully supported
+SYS_symlinkat       fully supported
+SYS_symlink         fully supported
+SYS_truncate        fully supported
+SYS_unlinkat        fully supported
+SYS_unlink          fully supported
+SYS_write           fully supported
+SYS_writev          fully supported
