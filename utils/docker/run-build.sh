@@ -49,6 +49,10 @@ ACT_KV=$(format_kernel_version $V_ACT)
 echo
 echo
 
+# temporary workaround for Travis issue with mounting permissions
+ME=$(whoami)
+sudo chown -R $ME $WORKDIR
+
 # Build all and run tests
 cd $WORKDIR
 if [ -n "$COMPILER" ]; then
