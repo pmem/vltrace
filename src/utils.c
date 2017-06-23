@@ -336,7 +336,7 @@ print_sc_list(filter_f filter)
 	FILE *file = fopen(AVAILABLE_FILTERS, "r");
 
 	if (file == NULL) {
-		fprintf(stderr, "%s: ERROR: '%m'\n", __func__);
+		perror("fopen");
 		return;
 	}
 

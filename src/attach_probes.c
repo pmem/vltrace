@@ -102,8 +102,8 @@ attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 			Args.pid, 0, -1);
 
 	if (res == -1) {
-		NOTICE("%s: Can't attach %s to '%s'. Ignoring.",
-			__func__, kretprobe, handler_name);
+		NOTICE("cannot attach %s to '%s'. Ignoring.",
+			kretprobe, handler_name);
 
 		/* Kretprobe fails. There is no reason to try probe */
 		return res;
@@ -114,8 +114,8 @@ attach_single_sc(struct bpf_ctx *b, const char *handler_name)
 			Args.pid, 0, -1);
 
 	if (res == -1) {
-		NOTICE("%s: Can't attach %s to '%s'. Ignoring.",
-			__func__, kprobe, handler_name);
+		NOTICE("cannot attach %s to '%s'. Ignoring.",
+			kprobe, handler_name);
 	}
 
 	return res;
@@ -137,7 +137,7 @@ attach_single_sc_enter(struct bpf_ctx *b, const char *handler)
 
 	res = load_fn_and_attach_to_kp(b, handler, kprobe, Args.pid, 0, -1);
 	if (res == -1) {
-		ERROR("%s: can't attach %s to '%s'", __func__, kprobe, handler);
+		ERROR("cannot attach %s to '%s'", kprobe, handler);
 	}
 
 	return res;
@@ -188,9 +188,8 @@ attach_tp_exit(struct bpf_ctx *b)
 	res = load_fn_and_attach_to_tp(b, tp_all_category, tp_all_exit_name,
 					tp_all_exit_fn, Args.pid, 0, -1);
 	if (res == -1) {
-		ERROR("%s: Can't attach %s to '%s:%s'. Exiting.",
-			__func__, tp_all_exit_fn,
-			tp_all_category, tp_all_exit_name);
+		ERROR("cannot attach %s to '%s:%s'. Exiting.",
+			tp_all_exit_fn, tp_all_category, tp_all_exit_name);
 		return -1;
 	}
 
@@ -239,7 +238,7 @@ attach_probes(struct bpf_ctx *b)
 		return attach_kp_mask(b, attach_single_sc,
 					EM_str_1 | EM_str_2 | EM_fd_1);
 	} else {
-		ERROR("%s: unknown option: '%s'", __func__, Args.expr);
+		ERROR("unknown option: '%s'", Args.expr);
 		return -1;
 	}
 
