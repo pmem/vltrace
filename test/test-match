@@ -69,6 +69,8 @@ fi
 TEST_DIR=$(dirname $0)
 [ "$TEST_DIR" == "." ] && TEST_DIR=$(pwd)
 
+ANTOOL_DIR=$(dirname $TEST_DIR)/tools/antool
+
 FUNCT=$TEST_DIR/helper_functions.sh
 [ ! -f $FUNCT ] \
 	&& echo "Error: missing file: $FUNCT" \
@@ -92,8 +94,8 @@ if [ "$VLTRACE_SKIP" != "1" ]; then
 fi
 
 set +e
-echo "$ $TEST_DIR/antool.py -c -t syscalls_table.dat -b $OUTBIN > $OUT"
-$TEST_DIR/antool.py -c -t syscalls_table.dat -b $OUTBIN > $OUT
+echo "$ $ANTOOL_DIR/antool.py -c -t syscalls_table.dat -b $OUTBIN > $OUT"
+$ANTOOL_DIR/antool.py -c -t syscalls_table.dat -b $OUTBIN > $OUT
 RV=$?
 [ $RV -ne 0 ] \
 	&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \

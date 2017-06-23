@@ -80,6 +80,8 @@ fi
 TEST_DIR=$(dirname $0)
 [ "$TEST_DIR" == "." ] && TEST_DIR=$(pwd)
 
+ANTOOL_DIR=$(dirname $TEST_DIR)/tools/antool
+
 FUNCT=$TEST_DIR/helper_functions.sh
 [ ! -f $FUNCT ] \
 	&& echo "Error: missing file: $FUNCT" \
@@ -112,16 +114,16 @@ fi
 
 set +e
 
-echo "$ $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT"
-$TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT
+echo "$ $ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT"
+$ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM > $OUT
 check_result $?
 
-echo "$ $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -v > $OUTv"
-$TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -v > $OUTv
+echo "$ $ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -v > $OUTv"
+$ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -v > $OUTv
 check_result $?
 
-echo "$ $TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -vv > $OUTvv"
-$TEST_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -vv > $OUTvv
+echo "$ $ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -vv > $OUTvv"
+$ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUTBIN -s -o $OUT_ANTOOL -p $DIR/$PMEM -vv > $OUTvv
 check_result $?
 
 set -e
