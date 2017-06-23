@@ -1,0 +1,62 @@
+Unsupported syscalls detected:
+   chroot
+   setxattr
+   lsetxattr
+   fsetxattr
+   listxattr
+   llistxattr
+   flistxattr
+   removexattr
+   lremovexattr
+   fremovexattr
+   execve
+   execveat
+   readahead
+   name_to_handle_at
+   fork
+   vfork
+
+Unsupported syscall's flag detected:
+   open <O_ASYNC>
+   openat <O_ASYNC>
+   renameat2 <RENAME_WHITEOUT>
+   fallocate <FALLOC_FL_COLLAPSE_RANGE>
+   fallocate <FALLOC_FL_ZERO_RANGE>
+   fallocate <FALLOC_FL_INSERT_RANGE>
+   fcntl <F_SETFD: not possible to clear FD_CLOEXEC flag>
+   fcntl <F_GETLK>
+   fcntl <F_SETLK>
+   fcntl <F_SETLKW>
+   fcntl <F_SETOWN>
+   fcntl <F_GETOWN_EX>
+   fcntl <F_SETSIG>
+   fcntl <F_GETSIG>
+   fcntl <F_SETOWN_EX>
+   fcntl <F_OFD_GETLK>
+   fcntl <F_OFD_SETLK>
+   fcntl <F_OFD_SETLKW>
+   fcntl <F_SETLEASE>
+   fcntl <F_GETLEASE>
+   fcntl <F_NOTIFY>
+   fcntl <F_ADD_SEALS>
+   fcntl <F_GET_SEALS>
+   clone <flags other than set by pthread_create()>
+
+Unsupported syscalls with relative path detected:
+   chroot
+   setxattr
+   lsetxattr
+   getxattr
+   lgetxattr
+
+Yet-unsupported syscalls detected (will be supported):
+   mmap
+   flock
+   utime
+   utimes
+   utimensat
+   futimesat
+   sendfile64
+   splice
+   copy_file_range
+
