@@ -36,6 +36,7 @@
 
 #define _GNU_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#define N_WORKERS 10
 
 #include <stdio.h>
 #include <unistd.h>
@@ -46,6 +47,7 @@
 #include <signal.h>
 #include <utime.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -621,6 +623,254 @@ static void test_14(char *a, char *b, char *c)
 }
 
 /*
+ * worker -- thread worker
+ */
+static void *
+worker(void *arg)
+{
+	return NULL;
+}
+
+/*
+ * test_analyzing_tool -- test unsupported syscalls #2
+ */
+static void
+test_analyzing_tool(char *dir, char *pmem, char *nonp)
+{
+	char buf[BUF_SIZE];
+	char *const argv[2] = {pmem, pmem};
+
+	if (!dir || !pmem || !nonp) {
+		fprintf(stderr, "Error: Not enough parameters:\n");
+		if (!dir)
+			fprintf(stderr, "\t 'dir' is not set\n");
+		if (!pmem)
+			fprintf(stderr, "\t 'pmem' is not set\n");
+		if (!nonp)
+			fprintf(stderr, "\t 'nonp' is not set\n");
+		exit(-1);
+	}
+
+	char *abspmem = calloc(1, strlen(dir) + strlen(pmem) + 2);
+	char *absnonp = calloc(1, strlen(dir) + strlen(nonp) + 2);
+	assert(abspmem && absnonp);
+
+	strcat(abspmem, dir);
+	strcat(abspmem, "/");
+	strcat(abspmem, pmem);
+
+	strcat(absnonp, dir);
+	strcat(absnonp, "/");
+	strcat(absnonp, nonp);
+
+	int dirfd = open(dir, O_RDONLY);
+	if (dirfd == -1)
+		perror(dir);
+	int fdpmem = open(abspmem, O_RDWR);
+	if (fdpmem == -1)
+		perror(abspmem);
+	int fdnonp = open(absnonp, O_RDWR);
+	if (fdnonp == -1)
+		perror(absnonp);
+
+	s(); chroot(nonp);
+	s(); chroot(pmem);
+	s(); chroot(absnonp);
+	s(); chroot(abspmem);
+
+	s(); setxattr(pmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); lsetxattr(pmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); getxattr(pmem, ANY_STR, buf, BUF_SIZE);
+	s(); lgetxattr(pmem, ANY_STR, buf, BUF_SIZE);
+
+	s(); setxattr(absnonp, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); setxattr(abspmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); lsetxattr(absnonp, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); lsetxattr(abspmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); fsetxattr(fdnonp, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	s(); fsetxattr(fdpmem, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+
+	s(); getxattr(absnonp, ANY_STR, buf, BUF_SIZE);
+	s(); getxattr(abspmem, ANY_STR, buf, BUF_SIZE);
+	s(); lgetxattr(absnonp, ANY_STR, buf, BUF_SIZE);
+	s(); lgetxattr(abspmem, ANY_STR, buf, BUF_SIZE);
+	s(); fgetxattr(fdnonp, ANY_STR, buf, BUF_SIZE);
+	s(); fgetxattr(fdpmem, ANY_STR, buf, BUF_SIZE);
+
+	s(); listxattr(absnonp, ANY_STR, 0x101);
+	s(); listxattr(abspmem, ANY_STR, 0x101);
+	s(); llistxattr(absnonp, ANY_STR, 0x102);
+	s(); llistxattr(abspmem, ANY_STR, 0x102);
+	s(); flistxattr(fdnonp, ANY_STR, 0x104);
+	s(); flistxattr(fdpmem, ANY_STR, 0x104);
+
+	s(); removexattr(absnonp, ANY_STR);
+	s(); removexattr(abspmem, ANY_STR);
+	s(); lremovexattr(absnonp, ANY_STR);
+	s(); lremovexattr(abspmem, ANY_STR);
+	s(); fremovexattr(fdnonp, ANY_STR);
+	s(); fremovexattr(fdpmem, ANY_STR);
+
+	s(); dup(fdnonp);
+	s(); dup(fdpmem);
+	s(); dup2(fdnonp, 100);
+	s(); dup2(fdpmem, 101);
+	s(); dup3(fdnonp, 200, O_CLOEXEC);
+	s(); dup3(fdpmem, 201, O_CLOEXEC);
+
+	s(); mmap(NULL, 100, PROT_READ, MAP_SHARED, fdnonp, 0);
+	s(); mmap(NULL, 100, PROT_READ, MAP_SHARED, fdpmem, 0);
+
+	s(); execve(absnonp, argv, NULL);
+	s(); execve(abspmem, argv, NULL);
+	s(); syscall(__NR_execveat, dirfd, nonp, NULL, NULL);
+	s(); syscall(__NR_execveat, dirfd, pmem, NULL, NULL);
+
+	s(); flock(fdnonp, 0);
+	s(); flock(fdpmem, 0);
+
+	s(); utime(absnonp, (const struct utimbuf *)0x101);
+	s(); utime(abspmem, (const struct utimbuf *)0x101);
+
+	s(); utimes(absnonp, (const struct timeval *)0x101);
+	s(); utimes(abspmem, (const struct timeval *)0x101);
+
+	s(); utimensat(dirfd, nonp, (const struct timespec *)0x101, 0);
+	s(); utimensat(dirfd, pmem, (const struct timespec *)0x101, 0);
+
+	s(); futimesat(dirfd, nonp, (const struct timeval *)0x101);
+	s(); futimesat(dirfd, pmem, (const struct timeval *)0x101);
+
+	s(); readahead(fdnonp, 0, 0);
+	s(); readahead(fdpmem, 0, 0);
+
+	s(); sendfile(fdnonp, fdnonp, 0, 0);
+	s(); sendfile(fdpmem, fdnonp, 0, 0);
+	s(); sendfile(fdnonp, fdpmem, 0, 0);
+	s(); sendfile(fdpmem, fdpmem, 0, 0);
+
+	s(); syscall(__NR_splice, fdnonp, 0, fdnonp, 0, 0);
+	s(); syscall(__NR_splice, fdpmem, 0, fdnonp, 0, 0);
+	s(); syscall(__NR_splice, fdnonp, 0, fdpmem, 0, 0);
+	s(); syscall(__NR_splice, fdpmem, 0, fdpmem, 0, 0);
+
+	s(); name_to_handle_at(dirfd, nonp, NULL, NULL, 0);
+	s(); name_to_handle_at(dirfd, pmem, NULL, NULL, 0);
+
+	s(); syscall(__NR_copy_file_range, fdnonp, 0, fdnonp, 0, 1, 0);
+	s(); syscall(__NR_copy_file_range, fdpmem, 0, fdnonp, 0, 1, 0);
+	s(); syscall(__NR_copy_file_range, fdnonp, 0, fdpmem, 0, 1, 0);
+	s(); syscall(__NR_copy_file_range, fdpmem, 0, fdpmem, 0, 1, 0);
+
+
+	s(); open(absnonp, O_RDONLY);
+	s(); open(abspmem, O_RDONLY);
+	s(); open(absnonp, O_RDONLY | O_ASYNC);
+	s(); open(abspmem, O_RDONLY | O_ASYNC);
+
+	s(); openat(dirfd, nonp, O_RDONLY);
+	s(); openat(dirfd, pmem, O_RDONLY);
+	s(); openat(dirfd, nonp, O_RDONLY | O_ASYNC);
+	s(); openat(dirfd, pmem, O_RDONLY | O_ASYNC);
+
+	s(); syscall(__NR_renameat, dirfd, nonp, dirfd, nonp);
+	s(); syscall(__NR_renameat, dirfd, pmem, dirfd, pmem);
+	s(); syscall(__NR_renameat2, dirfd, nonp, dirfd, nonp, 0);
+	s(); syscall(__NR_renameat2, dirfd, pmem, dirfd, pmem, 0);
+	s(); syscall(__NR_renameat2, dirfd, nonp, dirfd, nonp, RENAME_WHITEOUT);
+	s(); syscall(__NR_renameat2, dirfd, pmem, dirfd, pmem, RENAME_WHITEOUT);
+
+	s(); fallocate(fdnonp, FALLOC_FL_COLLAPSE_RANGE, 0, 0);
+	s(); fallocate(fdpmem, FALLOC_FL_COLLAPSE_RANGE, 0, 0);
+	s(); fallocate(fdnonp, FALLOC_FL_ZERO_RANGE, 0, 0);
+	s(); fallocate(fdpmem, FALLOC_FL_ZERO_RANGE, 0, 0);
+	s(); fallocate(fdnonp, FALLOC_FL_INSERT_RANGE, 0, 0);
+	s(); fallocate(fdpmem, FALLOC_FL_INSERT_RANGE, 0, 0);
+
+	s(); int fdfnonp = fcntl(fdnonp, F_GETFD);
+	s(); int fdfpmem = fcntl(fdpmem, F_GETFD);
+
+	s(); fcntl(fdnonp, F_SETFD, fdfnonp & (~FD_CLOEXEC));
+	s(); fcntl(fdpmem, F_SETFD, fdfpmem & (~FD_CLOEXEC));
+
+	s(); fcntl(fdnonp, F_GETLK, 0);
+	s(); fcntl(fdpmem, F_GETLK, 0);
+
+	s(); fcntl(fdnonp, F_SETLK, 0);
+	s(); fcntl(fdpmem, F_SETLK, 0);
+
+	s(); fcntl(fdnonp, F_SETLKW, 0);
+	s(); fcntl(fdpmem, F_SETLKW, 0);
+
+	s(); fcntl(fdnonp, F_SETOWN, 0);
+	s(); fcntl(fdpmem, F_SETOWN, 0);
+
+	s(); fcntl(fdnonp, F_GETOWN, 0);
+	s(); fcntl(fdpmem, F_GETOWN, 0);
+
+	s(); fcntl(fdnonp, F_SETSIG, 0);
+	s(); fcntl(fdpmem, F_SETSIG, 0);
+
+	s(); fcntl(fdnonp, F_GETSIG, 0);
+	s(); fcntl(fdpmem, F_GETSIG, 0);
+
+	s(); fcntl(fdnonp, F_SETOWN_EX, 0);
+	s(); fcntl(fdpmem, F_SETOWN_EX, 0);
+
+	s(); fcntl(fdnonp, F_GETOWN_EX, 0);
+	s(); fcntl(fdpmem, F_GETOWN_EX, 0);
+
+	s(); fcntl(fdnonp, F_OFD_GETLK, 0);
+	s(); fcntl(fdpmem, F_OFD_GETLK, 0);
+
+	s(); fcntl(fdnonp, F_OFD_SETLK, 0);
+	s(); fcntl(fdpmem, F_OFD_SETLK, 0);
+
+	s(); fcntl(fdnonp, F_OFD_SETLKW, 0);
+	s(); fcntl(fdpmem, F_OFD_SETLKW, 0);
+
+	s(); fcntl(fdnonp, F_SETLEASE, 0);
+	s(); fcntl(fdpmem, F_SETLEASE, 0);
+
+	s(); fcntl(fdnonp, F_GETLEASE, 0);
+	s(); fcntl(fdpmem, F_GETLEASE, 0);
+
+	s(); fcntl(fdnonp, F_NOTIFY, 0);
+	s(); fcntl(fdpmem, F_NOTIFY, 0);
+
+	s(); fcntl(fdnonp, F_ADD_SEALS, 0);
+	s(); fcntl(fdpmem, F_ADD_SEALS, 0);
+
+	s(); fcntl(fdnonp, F_GET_SEALS, 0);
+	s(); fcntl(fdpmem, F_GET_SEALS, 0);
+
+	int i;
+	pthread_t workers[N_WORKERS];
+	for (i = 0; i < N_WORKERS; ++i) {
+		s(); pthread_create(&workers[i], NULL, worker, NULL);
+	}
+	for (i = i - 1; i >= 0; --i) {
+		s(); pthread_join(workers[i], NULL);
+	}
+
+	s(); fork();
+	s(); syscall(SYS_fork);
+	s(); if (vfork() == 0) _exit(0);
+
+	s(); close(fdpmem);
+}
+
+/*
+ * test_15 -- test unsupported syscalls
+ */
+static void test_15(char *dir, char *pmem, char *nonp)
+{
+	MARK_START();
+	test_analyzing_tool(dir, pmem, nonp);
+	MARK_END();
+}
+
+/*
  * run_test -- array of tests
  */
 static void (*run_test[])(char *, char *, char *) = {
@@ -638,7 +888,8 @@ static void (*run_test[])(char *, char *, char *) = {
 	test_11,
 	test_12,
 	test_13,
-	test_14
+	test_14,
+	test_15
 };
 
 int

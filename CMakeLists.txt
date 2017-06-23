@@ -107,6 +107,7 @@ set(VLTRACE_VERSION
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 add_executable(check_license utils/check_license/check-license.c)
 add_executable(bench_sc tools/bench_sc/bench_sc.c)
 
