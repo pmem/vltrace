@@ -118,7 +118,11 @@
 #define STRING_1531_2		"START_222_"STRING_1260"_222_END"
 #define STRING_1531_3		"START_333_"STRING_1260"_333_END"
 
-char *strings[5][3] = {
+#define N_ITERATIONS		1000000
+
+static int counter;
+
+static char *strings[5][3] = {
 	{
 		STRING_126_1,
 		STRING_126_2,
@@ -146,18 +150,14 @@ char *strings[5][3] = {
 	},
 };
 
-int counter;
-
 /*
- * s -- sleep a while
+ * s -- busy wait for a while
  */
 static void
 s()
 {
-#define NSLEEP 1000000
-	for (int i = 0; i < NSLEEP; i++)
+	for (int i = 0; i < N_ITERATIONS; i++)
 		counter += rand();
-#undef NSLEEP
 }
 
 /*
