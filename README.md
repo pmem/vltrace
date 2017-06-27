@@ -1,5 +1,5 @@
-vltrace: tool tracing syscalls using eBPF
-=================================
+vltrace: syscall tracer using eBPF
+==================================
 
 [![Build Status](https://travis-ci.org/pmem/vltrace.svg)](https://travis-ci.org/pmem/vltrace)
 
