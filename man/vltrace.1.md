@@ -54,9 +54,7 @@ and Tracepoint technologies.
 
 # SYNOPSIS #
 
-```
-$ vltrace [options] [command [arg ...]]
-```
+```vltrace [options] [command [arg ...]]```
 
 
 # DESCRIPTION #
