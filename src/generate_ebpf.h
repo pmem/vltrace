@@ -37,10 +37,9 @@
 #ifndef GENERATE_EBPF_H
 #define GENERATE_EBPF_H
 
-
 char *generate_ebpf(void);
 
-void apply_process_attach_code(char **const pbpf_str);
+int apply_process_attach_code(char **const pbpf_str);
 int fprint_ebpf_code_with_debug_marks(FILE *f, const char *bpf_str);
 
 #endif

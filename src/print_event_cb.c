@@ -105,10 +105,9 @@ print_header_hex(int argc, char *const argv[])
 	if (Args.timestamp)
 		fprintf(OutputFile, "%s%c", "TIME(nsec)", Args.separator);
 
-	fprintf(OutputFile, "%s%c",  "ERR",	 Args.separator);
-	fprintf(OutputFile, "%s%c",  "RES",	 Args.separator);
+	fprintf(OutputFile, "%s%c", "ERR", Args.separator);
+	fprintf(OutputFile, "%s%c", "RES", Args.separator);
 	fprintf(OutputFile, "%s%c", "SYSCALL", Args.separator);
-
 	fprintf(OutputFile, "%s%c", "ARG1", Args.separator);
 	fprintf(OutputFile, "%s%c", "ARG2", Args.separator);
 	fprintf(OutputFile, "%s%c", "ARG3", Args.separator);
@@ -587,28 +586,28 @@ print_header_bin(int argc, char *const argv[])
 
 	/* save BUF_SIZE */
 	int buf_size = BUF_SIZE;
-	if (1 != fwrite(&buf_size, sizeof(int), 1, OutputFile)) {
+	if (fwrite(&buf_size, sizeof(int), 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save CWD's size */
 	buf_size = strlen(cwd);
-	if (1 != fwrite(&buf_size, sizeof(int), 1, OutputFile)) {
+	if (fwrite(&buf_size, sizeof(int), 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save CWD */
-	if (1 != fwrite(cwd, buf_size, 1, OutputFile)) {
+	if (fwrite(cwd, buf_size, 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save header's size */
-	if (1 != fwrite(&data_size, sizeof(int), 1, OutputFile)) {
+	if (fwrite(&data_size, sizeof(int), 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save header */
-	if (1 != fwrite(&header, data_size, 1, OutputFile)) {
+	if (fwrite(&header, data_size, 1, OutputFile) != 1) {
 		return -1;
 	}
 
@@ -623,7 +622,7 @@ print_event_bin(void *cb_cookie, void *data, int size)
 {
 	(void) cb_cookie;
 
-	if (1 != fwrite(data, (size_t)size, 1, OutputFile)) {
+	if (fwrite(data, (size_t)size, 1, OutputFile) != 1) {
 		OutputError = 1;
 	}
 }

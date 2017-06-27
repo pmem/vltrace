@@ -278,12 +278,17 @@ main(const int argc, char *const argv[])
 		return EXIT_FAILURE;
 	}
 
-	apply_process_attach_code(&bpf_str);
+	if (apply_process_attach_code(&bpf_str)) {
+		ERROR("error during generatings eBPF code");
+		free(bpf_str);
+		return EXIT_FAILURE;
+	}
 
 	/* print resulting code in debug mode */
 	if (Args.debug)
 		fprint_ebpf_code_with_debug_marks(stderr, bpf_str);
 
+	/* save trace.h for the eBPF compiler */
 	save_trace_h();
 
 	/* initialize BPF */
