@@ -31,20 +31,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# run-build.sh - is called inside a Docker container,
-#                starts a build of vltrace
+# run-build.sh - is called inside a Docker container, starts a build of vltrace
 #
 
-[ "$1" == "" ] \
-	&& echo "Usage: $0 <required-kernel-version>" \
-	&& exit 1
+VLTRACE_MINIMUM_KERNEL_VERSION="4.7"
 
 source ../functions.sh
 
-V_REQ=$1
-V_ACT=$(uname -r)
-REQ_KV=$(format_kernel_version $V_REQ)
-ACT_KV=$(format_kernel_version $V_ACT)
+ACTUAL_KERNEL_VERSION=$(uname -r)
+REQ_KV=$(format_kernel_version $VLTRACE_MINIMUM_KERNEL_VERSION)
+ACT_KV=$(format_kernel_version $ACTUAL_KERNEL_VERSION)
 
 echo
 echo
@@ -109,7 +105,9 @@ for release in Debug Release; do
 		echo "$ sudo bash -c \"$VLTRACE $DATE\""
 		sudo bash -c "$VLTRACE -s 126 $DATE"
 	else
-		echo "Notice: skipping tests (too old kernel: required >= $V_REQ, actual = $V_ACT)"
+		echo "Notice: skipping tests (too old kernel: "\
+			"required >= $VLTRACE_MINIMUM_KERNEL_VERSION, "\
+			"actual = $ACTUAL_KERNEL_VERSION)"
 	fi
 
 	echo

@@ -50,9 +50,7 @@ fi
 imageName=pmem/vltrace:${OS}-${OS_VER}
 containerName=vltrace-${OS}-${OS_VER}
 
-REQUIRED_KERNEL=$(../get-required-kernel.sh ../../README.md)
-
-if [[ $MAKE_PKG -eq 0 ]] ; then command="./run-build.sh $REQUIRED_KERNEL"; fi
+if [[ $MAKE_PKG -eq 0 ]] ; then command="./run-build.sh"; fi
 if [[ $MAKE_PKG -eq 1 ]] ; then command="./run-build-package.sh"; fi
 
 if [ -n "$DNS_SERVER" ]; then DNS_SETTING=" --dns=$DNS_SERVER "; fi

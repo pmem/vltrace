@@ -32,26 +32,14 @@
 cmake_minimum_required(VERSION 2.8.7)
 project(vltrace)
 
-if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+set(VLTRACE_MINIMUM_KERNEL_VERSION "4.7")
+
+if ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
 	message(SEND_ERROR "In-source builds are not allowed.")
-endif("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+endif ()
 
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Release")
-endif (NOT CMAKE_BUILD_TYPE)
-
-# read required kernel version from README.md
-set(README_FILE "README.md")
-execute_process(COMMAND utils/get-required-kernel.sh ${README_FILE}
-		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-		OUTPUT_VARIABLE VLTRACE_MINIMUM_KERNEL_VERSION
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-		RESULT_VARIABLE KERNEL_RESULT)
-
-if (NOT ${KERNEL_RESULT} EQUAL 0)
-	execute_process(COMMAND echo "${VLTRACE_MINIMUM_KERNEL_VERSION}")
-	message(FATAL_ERROR
-		"Error: cannot read required kernel version from the file ${README_FILE}")
 endif ()
 
 include(GNUInstallDirs)
