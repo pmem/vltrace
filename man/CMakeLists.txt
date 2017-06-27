@@ -38,15 +38,15 @@ add_custom_target(manpages)
 
 function(generate_manpage name)
 	add_custom_command(
-		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/${name}
+		OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/generated/${name}
 		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}.md
 		COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/generated/
 		COMMAND ${CMAKE_SOURCE_DIR}/utils/md2man.sh
 			${CMAKE_CURRENT_SOURCE_DIR}/${name}.md
 			${CMAKE_CURRENT_SOURCE_DIR}/default.man
-			${CMAKE_CURRENT_BINARY_DIR}/generated/${name}
+			${CMAKE_CURRENT_SOURCE_DIR}/generated/${name}
 	)
-	add_custom_target(manpage-${name} DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/generated/${name})
+	add_custom_target(manpage-${name} DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/generated/${name})
 	add_dependencies(manpages manpage-${name})
 endfunction()
 
