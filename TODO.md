@@ -26,21 +26,11 @@ is a libbcc bug. A backtrace for one of that poll() syscalls:_
 
 GitHub issue: https://github.com/iovisor/bcc/issues/779
 
-1.2 Tracepoints support
------------------------
-
-Currently kernel provides a way for fast intercepting of all syscalls together.
-But we temporarily can't use it because of this bug:
-
-    - https://github.com/iovisor/bcc/issues/748
-
-As soon as this bug will be fixed we should try it one more time.
-
-1.3 Output buffering
+1.2 Output buffering
 --------------------
 
 Optimization of this place is critical to achieve maximum possible log
-bandwidth. Most likely we should use fd directly.
+bandwidth.
 
 
 2. Debugging

@@ -89,19 +89,24 @@ get_template(unsigned sc_num)
 
 	/* replace STRX */
 	for (int i = 0; i < nstr; i++) {
-		str_replace_with_char(text, Tmpl_str[i],
-					Syscall_array[sc_num].positions[i]);
+		if (str_replace_with_char(text, Tmpl_str[i],
+					Syscall_array[sc_num].positions[i]))
+			goto exit_on_error;
 	}
 
 replace_skip_STRX:
+	if (str_replace_all(&text, "SYSCALL_NR", Syscall_array[sc_num].num_str))
+		goto exit_on_error;
 
-	str_replace_all(&text, "SYSCALL_NR",
-			Syscall_array[sc_num].num_str);
-
-	str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
-			Syscall_array[sc_num].syscall_name);
+	if (str_replace_all(&text, "SYSCALL_NAME_filled_for_replace",
+			Syscall_array[sc_num].syscall_name))
+		goto exit_on_error;
 
 	return text;
+
+exit_on_error:
+	free(text);
+	return NULL;
 }
 
 /*
@@ -205,15 +210,15 @@ generate_ebpf()
 	if (Args.expr == NULL) {
 		NOTICE("defaulting to 'all'");
 		ret = generate_ebpf_all_kp_tp(ts);
-	} else if (!strcasecmp(Args.expr, "all")) {
+	} else if (strcasecmp(Args.expr, "all") == 0) {
 		ret = generate_ebpf_all_kp_tp(ts);
-	} else if (!strcasecmp(Args.expr, "kp-all")) {
+	} else if (strcasecmp(Args.expr, "kp-all") == 0) {
 		ret = generate_ebpf_kp_mask(ts, 0);
-	} else if (!strcasecmp(Args.expr, "kp-file")) {
+	} else if (strcasecmp(Args.expr, "kp-file") == 0) {
 		ret = generate_ebpf_kp_mask(ts, EM_str_1);
-	} else if (!strcasecmp(Args.expr, "kp-desc")) {
+	} else if (strcasecmp(Args.expr, "kp-desc") == 0) {
 		ret = generate_ebpf_kp_mask(ts, EM_fd_1);
-	} else if (!strcasecmp(Args.expr, "kp-fileio")) {
+	} else if (strcasecmp(Args.expr, "kp-fileio") == 0) {
 		ret = generate_ebpf_kp_mask(ts, EM_str_1 | EM_str_2 | EM_fd_1);
 	} else {
 		ERROR("unknown option: '%s'", Args.expr);
@@ -233,13 +238,14 @@ generate_ebpf()
  * apply_process_attach_code -- apply process-attach code
  *                              to generated code with handlers
  */
-void
+int
 apply_process_attach_code(char **const pbpf_str)
 {
 	char strpid[64];
 	int snp_res;
 	char *loaded_file;
 	int pid;
+	int ret = -1;
 
 	if (0 < Args.pid) {
 		/* traced pid */
@@ -250,9 +256,11 @@ apply_process_attach_code(char **const pbpf_str)
 		(void) snp_res;
 
 		loaded_file = load_pid_check_hook(Args.ff_mode);
-		assert(loaded_file != NULL);
+		if (loaded_file == NULL)
+			return -1;
 
-		str_replace_all(&loaded_file, "TRACED_PID", strpid);
+		if (str_replace_all(&loaded_file, "TRACED_PID", strpid))
+			goto exit_free;
 	} else {
 		/* my own pid */
 		pid = getpid();
@@ -263,33 +271,52 @@ apply_process_attach_code(char **const pbpf_str)
 		(void) snp_res;
 
 		loaded_file = load_file_no_cr(ebpf_pid_own_file);
-		assert(loaded_file != NULL);
+		if (loaded_file == NULL)
+			return -1;
 
-		str_replace_all(&loaded_file, "MY_OWN_PID", strpid);
+		if (str_replace_all(&loaded_file, "MY_OWN_PID", strpid))
+			goto exit_free;
 	}
-	str_replace_all(pbpf_str, "PID_CHECK_HOOK", loaded_file);
+
+	if (str_replace_all(pbpf_str, "PID_CHECK_HOOK", loaded_file))
+		goto exit_free;
+
 	free(loaded_file);
+	loaded_file = NULL;
 
 	if (Args.fnr_mode == E_STR_FULL_CONST_N && Args.n_str_packets > 2) {
 		loaded_file = load_file_no_cr(ebpf_const_string_mode);
-		assert(loaded_file != NULL);
-		str_replace_many(pbpf_str, "READ_AND_SUBMIT_N_MINUS_2_PACKETS",
-					loaded_file, Args.n_str_packets - 2);
+		if (loaded_file == NULL)
+			return -1;
+		if (str_replace_many(pbpf_str,
+					"READ_AND_SUBMIT_N_MINUS_2_PACKETS",
+					loaded_file, Args.n_str_packets - 2))
+			goto exit_free;
 	}
 
 	if (Args.fnr_mode == E_STR_FULL && Args.n_str_packets > 2) {
 		loaded_file = load_file_no_cr(ebpf_full_string_mode);
-		assert(loaded_file != NULL);
-		str_replace_many(pbpf_str, "READ_AND_SUBMIT_N_MINUS_2_PACKETS",
-					loaded_file, Args.n_str_packets - 2);
+		if (loaded_file == NULL)
+			return -1;
+		if (str_replace_many(pbpf_str,
+					"READ_AND_SUBMIT_N_MINUS_2_PACKETS",
+					loaded_file, Args.n_str_packets - 2))
+			goto exit_free;
 	}
 
+	ret = 0;
+
+exit_free:
+	if (loaded_file)
+		free(loaded_file);
+	return ret;
 }
 
 /*
- * Print ebpf code with marks for debug reason
+ * fprint_ebpf_code_with_debug_marks - print ebpf code with marks
+ *                                     for debug reason
  */
-int
+void
 fprint_ebpf_code_with_debug_marks(FILE *f, const char *bpf_str)
 {
 	fprintf(f, "\t>>>>> Generated eBPF code <<<<<\n");
@@ -300,10 +327,8 @@ fprint_ebpf_code_with_debug_marks(FILE *f, const char *bpf_str)
 		fw_res = fwrite(bpf_str, strlen(bpf_str), 1, f);
 		if (fw_res < 1) {
 			perror("fwrite");
-			return -1;
 		}
 	}
 
 	fprintf(f, "\t>>>>> EndOf generated eBPF code <<<<<<\n");
-	return 0;
 }

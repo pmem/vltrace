@@ -63,19 +63,15 @@ link_directories(${LIBBCC_LIBRARY_DIRS})
 
 add_executable(vltrace ${SOURCES})
 
-# XXX libbcc expects multi-treading safety. Currently it's required for
-# print_event_cb.o only, although we will apply it for overall application.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
+add_c_flag(-D_GNU_SOURCE)
+add_c_flag(-Wextra)
 
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
-# using Clang
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-initializer-overrides")
+	# using Clang
+	add_c_flag(-Wno-initializer-overrides)
 else()
-# using GCC
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-override-init")
+	# using GCC
+	add_c_flag(-Wno-override-init)
 endif()
 
 add_subdirectory(ebpf)

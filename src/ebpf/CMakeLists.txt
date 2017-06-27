@@ -72,15 +72,10 @@ foreach(FILE_SRC ${BIN_SRCS})
 			${FILENAME})
 	list(APPEND BIN_OBJS
 		${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${FILENAME}.o)
-	#message(STATUS "Linking ${FILE_SRC}")
 endforeach(FILE_SRC)
 
 
 add_library(ebpf STATIC ${BIN_OBJS} ebpf_file_set.c)
 
-# XXX libbcc expects multi-treading safety. Currently it's required for
-# print_event_cb.o only, although we will apply it for overall application.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
+add_c_flag(-D_GNU_SOURCE)
+add_c_flag(-Wextra)

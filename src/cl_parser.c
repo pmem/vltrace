@@ -127,8 +127,8 @@ cl_parser(struct cl_options *const clo,
 			check_optarg(optarg);
 			clo->pid = atoi(optarg);
 			if (clo->pid < 1) {
-				ERROR("wrong value for pid option is"
-					" provided: '%s' => '%d'",
+				ERROR(
+					"wrong value for pid option is provided: '%s' => '%d'",
 					optarg, clo->pid);
 				exit(EXIT_FAILURE);
 			}
@@ -194,9 +194,6 @@ cl_parser(struct cl_options *const clo,
 
 		case 'f':
 			clo->ff_mode = E_FF_FULL;
-			if (optarg) {
-				clo->ff_separate_logs = true;
-			}
 			break;
 
 		case ':':

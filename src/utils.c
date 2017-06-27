@@ -66,22 +66,22 @@ load_file_from_disk(const char *const fn)
 	struct stat st;
 
 	fd = open(fn, O_RDONLY);
-
 	if (fd == -1)
 		return NULL;
 
 	res = fstat(fd, &st);
-
 	if (res == -1)
 		goto out;
 
-	buf = calloc(1, (size_t)st.st_size + 1);
-
-	if (buf == NULL)
+	buf = malloc((size_t)st.st_size + 1);
+	if (buf == NULL) {
+		ERROR("out of memory");
 		goto out;
+	}
+
+	buf[st.st_size] = 0;
 
 	res = read(fd, buf, (size_t)st.st_size);
-
 	if (st.st_size != res) {
 		free(buf);
 		buf = NULL;
@@ -89,12 +89,12 @@ load_file_from_disk(const char *const fn)
 
 out:
 	close(fd);
-
 	return buf;
 }
 
 /*
- * save_trace_h -- export embedded trace.h to file
+ * save_trace_h -- export embedded trace.h to file for the eBPF compiler,
+ *                 eBPF expects this file to be in the current directory
  */
 void
 save_trace_h(void)
@@ -139,8 +139,8 @@ load_file(const char *const fn)
 
 		res = snprintf(path, sizeof(path), "%s/%s",
 				Args.ebpf_src_dir, fn);
-
 		assert(res > 0);
+		assert(res <= (int)sizeof(path));
 		(void) res;
 
 		f = load_file_from_disk(path);
@@ -363,8 +363,10 @@ str_replace_all(char **const text, const char *templt, const char *str)
 
 	if (str_len <= templt_len) {
 		char *new_str = malloc(templt_len);
-		if (new_str == NULL)
+		if (new_str == NULL) {
+			ERROR("out of memory");
 			return -1;
+		}
 
 		memcpy(new_str, str, str_len);
 
@@ -392,6 +394,7 @@ str_replace_all(char **const text, const char *templt, const char *str)
 
 			*text = calloc(1, text_len - templt_len + str_len + 1);
 			if (*text == NULL) {
+				ERROR("out of memory");
 				free(old_text);
 				return -1;
 			}
@@ -428,6 +431,7 @@ str_replace_many(char **const text, const char *templt, const char *str, int n)
 
 		*text = calloc(1, text_len - templt_len + (n * str_len) + 1);
 		if (*text == NULL) {
+			ERROR("out of memory");
 			free(old_text);
 			return -1;
 		}
@@ -456,8 +460,10 @@ str_replace_with_char(char *const text, const char *templt, const char c)
 	size_t len = strlen(templt);
 
 	char *new_str = malloc(len);
-	if (new_str == NULL)
+	if (new_str == NULL) {
+		ERROR("out of memory");
 		return -1;
+	}
 
 	new_str[0] = c;
 
@@ -553,10 +559,10 @@ sig_abort_handler(int sig, siginfo_t *si, void *unused)
 }
 
 /*
- * attach_signals_handlers -- attach signal handlers
+ * attach_signal_handlers -- attach signal handlers
  */
 void
-attach_signals_handlers(void)
+attach_signal_handlers(void)
 {
 	struct sigaction sa;
 
