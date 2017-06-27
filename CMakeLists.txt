@@ -30,9 +30,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 2.8.7)
-project(vltrace)
+project(vltrace C)
 
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 1)
+set(VERSION_PATCH 0)
+set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+
+set(CMAKE_C_STANDARD 99)
 set(VLTRACE_MINIMUM_KERNEL_VERSION "4.7")
+
+include(GNUInstallDirs)
+include(CheckCCompilerFlag)
 
 if ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
 	message(SEND_ERROR "In-source builds are not allowed.")
@@ -42,19 +51,17 @@ if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Release")
 endif ()
 
-include(GNUInstallDirs)
-include(CheckCCompilerFlag)
-set(CMAKE_C_STANDARD 99)
-
+# Checks whether flag is supported by current C compiler and appends
+# it to the relevant cmake variable.
+# 1st argument is a flag
+# 2nd (optional) argument is a build type (debug, release, relwithdebinfo)
 macro(add_c_flag flag)
-	if(${ARGC} GREATER 2)
-		set(check_name ${ARGV2})
-	else()
-		string(REPLACE - _ flag2 ${flag})
-		set(check_name C_HAS_${flag2})
-	endif()
+	string(REPLACE - _ flag2 ${flag})
+	string(REPLACE " " _ flag2 ${flag2})
+	string(REPLACE = "_" flag2 ${flag2})
+	set(check_name "C_HAS_${flag2}")
 
-	check_c_compiler_flag("${flag}" ${check_name})
+	check_c_compiler_flag("${flag}" "${check_name}")
 
 	if (${${check_name}})
 		if (${ARGC} EQUAL 1)
@@ -80,17 +87,6 @@ configure_file(
 
 add_custom_target(uninstall
 	COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-
-# read ChangeLog and parse the version
-FILE (READ "${CMAKE_CURRENT_SOURCE_DIR}/ChangeLog" CHANGELOG)
-
-STRING (REGEX MATCH "([0-9]+)\\.([0-9]+)" FULLVERSION "${CHANGELOG}")
-
-set(VLTRACE_VERSION_MAJOR ${CMAKE_MATCH_1} CACHE INTERNAL "Major." FORCE)
-set(VLTRACE_VERSION_MINOR ${CMAKE_MATCH_2} CACHE INTERNAL "Minor." FORCE)
-set(VLTRACE_VERSION
-	${VLTRACE_VERSION_MAJOR}.${VLTRACE_VERSION_MINOR} CACHE INTERNAL
-	"Version." FORCE)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
