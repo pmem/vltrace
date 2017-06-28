@@ -104,11 +104,6 @@ struct cl_options {
 	unsigned pr_arr_max;
 	/* follow-fork mode */
 	enum ff_mode ff_mode;
-	/*
-	 * Split logs in per-pid way or, may be, in per pid_tid way,
-	 * like strace does.
-	 */
-	bool ff_separate_logs;
 
 	/* filenames reading mode */
 	enum fnr_mode fnr_mode;

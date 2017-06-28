@@ -654,9 +654,9 @@ main(int argc, char *argv[])
 
 	int n = atoi(argv[1]);
 	if (n > max) {
-		fprintf(stderr, "Error: test number can take only following"
-				" values: 0..%i (%i is not allowed)\n",
-				max, n);
+		fprintf(stderr,
+			"Error: test number can take only following values: 0..%i (%i is not allowed)\n",
+			max, n);
 		return -1;
 	}
 

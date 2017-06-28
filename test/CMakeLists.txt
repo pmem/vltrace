@@ -29,7 +29,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-result")
+add_c_flag(-Wno-unused-result)
+include_directories(${PROJECT_BINARY_DIR})
 add_executable(test_syscalls test_syscalls.c)
 
 # check if the running kernel meets version requirements

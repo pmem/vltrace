@@ -77,8 +77,6 @@ char *load_pid_check_hook(enum ff_mode ff_mode);
 char *load_file_from_disk(const char *const fn);
 void check_bpf_jit_status();
 
-void save_trace_h(void);
-
 typedef bool (*filter_f)(const char *line, ssize_t size);
 bool is_a_sc(const char *const line, const ssize_t size);
 void print_sc_list(filter_f filter);
@@ -90,7 +88,7 @@ int str_replace_many(char **text, const char *templt, const char *str, int n);
 pid_t start_command(char *const argv[]);
 pid_t start_command_with_signals(int argc, char *const argv[]);
 
-void attach_signals_handlers(void);
+void attach_signal_handlers(void);
 
 FILE *setup_output(void);
 

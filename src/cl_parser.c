@@ -127,8 +127,8 @@ cl_parser(struct cl_options *const clo,
 			check_optarg(optarg);
 			clo->pid = atoi(optarg);
 			if (clo->pid < 1) {
-				ERROR("wrong value for pid option is"
-					" provided: '%s' => '%d'",
+				ERROR(
+					"wrong value for pid option is provided: '%s' => '%d'",
 					optarg, clo->pid);
 				exit(EXIT_FAILURE);
 			}
@@ -158,10 +158,8 @@ cl_parser(struct cl_options *const clo,
 			check_optarg(optarg);
 			if (!strcasecmp(optarg, "list") ||
 			    !strcasecmp(optarg, "help")) {
-				INFO("List of supported formats: "
-					"'bin', 'binary', 'hex', 'hex_raw', "
-					"'hex_sl', 'strace', "
-					"'list' & 'help'");
+				INFO(
+					"List of supported formats: 'bin', 'binary', 'hex', 'hex_raw', 'hex_sl', 'strace', 'list' & 'help'");
 				exit(EXIT_SUCCESS);
 			}
 			clo->out_fmt_str = optarg;
@@ -194,9 +192,6 @@ cl_parser(struct cl_options *const clo,
 
 		case 'f':
 			clo->ff_mode = E_FF_FULL;
-			if (optarg) {
-				clo->ff_separate_logs = true;
-			}
 			break;
 
 		case ':':
