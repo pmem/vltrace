@@ -41,7 +41,8 @@
 /* define it as empty for case when Args.n_str_packets <= 2 */
 #define READ_AND_SUBMIT_N_MINUS_2_PACKETS
 
-#define MAX_STR_ARG	3 /* max supported number of string arguments */
+#define ALL_ARGUMENTS	7 /* packet contains all arguments */
+#define MAX_STR_ARG	3 /* max number of supported string arguments */
 
 #define BUF_SIZE	384 /* size of buffer for string arguments */
 #define STR_MAX_1	(BUF_SIZE - 2)
@@ -72,9 +73,19 @@ struct data_entry_s {
 	 *            - next packets will be sent
 	 *      9     the syscall has not finished and this is a continuation
 	 *
-	 * bit 31 - bpf_probe_read error occurred
+	 * bit 10 - bpf_probe_read error occurred
 	 */
-	uint32_t packet_type;
+	union {
+		uint32_t info_all;
+		struct {
+			uint32_t packet_type : 2;
+			uint32_t arg_first : 3;
+			uint32_t arg_last : 3;
+			uint32_t will_be_cont : 1;
+			uint32_t is_cont : 1;
+			uint32_t bpf_read_error : 1;
+		} info;
+	};
 
 	/* PID and TID */
 	uint64_t pid_tid;
