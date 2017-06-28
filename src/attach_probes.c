@@ -223,25 +223,22 @@ attach_all_kp_tp(struct bpf_ctx *b)
 int
 attach_probes(struct bpf_ctx *b)
 {
-	if (Args.expr == NULL)
-		goto default_option;
-
-	if (!strcasecmp(Args.expr, "all")) {
+	if (Args.expr == NULL || strcasecmp(Args.expr, "all") == 0)
 		return attach_all_kp_tp(b);
-	} else if (!strcasecmp(Args.expr, "kp-all")) {
+
+	if (strcasecmp(Args.expr, "kp-all") == 0)
 		return attach_kp_mask(b, attach_single_sc, 0);
-	} else if (!strcasecmp(Args.expr, "kp-file")) {
+
+	if (strcasecmp(Args.expr, "kp-file") == 0)
 		return attach_kp_mask(b, attach_single_sc, EM_str_1);
-	} else if (!strcasecmp(Args.expr, "kp-desc")) {
+
+	if (strcasecmp(Args.expr, "kp-desc") == 0)
 		return attach_kp_mask(b, attach_single_sc, EM_fd_1);
-	} else if (!strcasecmp(Args.expr, "kp-fileio")) {
+
+	if (strcasecmp(Args.expr, "kp-fileio") == 0)
 		return attach_kp_mask(b, attach_single_sc,
 					EM_str_1 | EM_str_2 | EM_fd_1);
-	} else {
-		ERROR("unknown option: '%s'", Args.expr);
-		return -1;
-	}
 
-default_option:
-	return attach_all_kp_tp(b);
+	ERROR("unknown option: '%s'", Args.expr);
+	return -1;
 }

@@ -51,6 +51,22 @@ if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Release")
 endif ()
 
+# generate headers
+set(GENERATE_HEADER ${PROJECT_SOURCE_DIR}/utils/generate_headers.sh)
+execute_process(COMMAND ${GENERATE_HEADER}
+		RESULT_VARIABLE KERNEL_HEADER)
+if (NOT ${KERNEL_HEADER} EQUAL 0)
+	message(FATAL_ERROR "ERROR: missing kernel header. Aborting...")
+endif ()
+add_custom_target(syscalls_64 ALL ${GENERATE_HEADER} make)
+
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
+		${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
+
+# copy trace.h to build directory
+set(TRACE_H ${PROJECT_SOURCE_DIR}/src/ebpf/trace.h)
+execute_process(COMMAND cp -n ${TRACE_H} ${PROJECT_BINARY_DIR})
+
 # Checks whether flag is supported by current C compiler and appends
 # it to the relevant cmake variable.
 # 1st argument is a flag
@@ -71,28 +87,6 @@ macro(add_c_flag flag)
 		endif()
 	endif()
 endmacro()
-
-# DEBUG configuration
-add_c_flag(-ggdb DEBUG)
-add_c_flag(-DDEBUG DEBUG)
-
-# RelWithDebInfo configuration
-add_c_flag(-ggdb RELWITHDEBINFO)
-add_c_flag(-fno-omit-frame-pointer RELWITHDEBINFO)
-
-configure_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-	"${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-	IMMEDIATE @ONLY)
-
-add_custom_target(uninstall
-	COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
-	${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
-
-add_executable(check_license utils/check_license/check-license.c)
-add_executable(bench_sc tools/bench_sc/bench_sc.c)
 
 # Generates cstyle-$name target and attaches it as a dependency of global
 # "cstyle" target. This target verifies C style of files in current source dir.
@@ -135,6 +129,17 @@ function(add_check_whitespace name)
 	add_dependencies(check-whitespace check-whitespace-${name})
 endfunction()
 
+# DEBUG configuration
+add_c_flag(-ggdb DEBUG)
+add_c_flag(-DDEBUG DEBUG)
+
+# RelWithDebInfo configuration
+add_c_flag(-ggdb RELWITHDEBINFO)
+add_c_flag(-fno-omit-frame-pointer RELWITHDEBINFO)
+
+add_executable(check_license utils/check_license/check-license.c)
+add_executable(bench_sc tools/bench_sc/bench_sc.c)
+
 add_custom_target(checkers ALL)
 add_custom_target(cstyle)
 add_custom_target(check-whitespace)
@@ -171,3 +176,11 @@ enable_testing()
 add_subdirectory(test)
 add_subdirectory(src)
 add_subdirectory(man)
+
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+	IMMEDIATE @ONLY)
+
+add_custom_target(uninstall
+	COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
