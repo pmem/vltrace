@@ -31,9 +31,8 @@
  */
 
 /*
- * txt.h -- Text messages
+ * txt.h -- text messages
  */
-
 
 #ifndef TXT_H
 #define TXT_H

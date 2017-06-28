@@ -41,7 +41,6 @@
 
 /* names */
 
-extern const char *ebpf_trace_h_file;
 extern const char *ebpf_head_file;
 
 extern const char *ebpf_0_str_file;

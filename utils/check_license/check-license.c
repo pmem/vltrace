@@ -236,12 +236,12 @@ analyze_license(const char *path_to_check,
 	if (strstr2(buffer, LICENSE_BEG, LICENSE_END,
 				&beg_str, &end_str)) {
 		if (!beg_str)
-			ERROR2("%s:1: error: incorrect license"
-				" (license should start with the string '%s')",
+			ERROR2(
+				"%s:1: error: incorrect license (license should start with the string '%s')",
 				path_to_check, LICENSE_BEG);
 		else
-			ERROR2("%s:1: error: incorrect license"
-				" (license should end with the string '%s')",
+			ERROR2(
+				"%s:1: error: incorrect license (license should end with the string '%s')",
 				path_to_check, LICENSE_END);
 		return -1;
 	}

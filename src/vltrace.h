@@ -97,18 +97,10 @@ struct cl_options {
 	/* Expression */
 	const char *expr;
 
-	/*
-	 * XXX Set this variable using Args and
-	 *    command line options
-	 */
+	/* maximum number of perf readers */
 	unsigned pr_arr_max;
 	/* follow-fork mode */
 	enum ff_mode ff_mode;
-	/*
-	 * Split logs in per-pid way or, may be, in per pid_tid way,
-	 * like strace does.
-	 */
-	bool ff_separate_logs;
 
 	/* filenames reading mode */
 	enum fnr_mode fnr_mode;
@@ -116,9 +108,10 @@ struct cl_options {
 	/* number of packets per one string argument */
 	unsigned n_str_packets;
 
-	/* XXX Should be configurable through command line */
+	/* size of output buffer passed to setvbuf() */
 	unsigned out_buf_size;
 
+	/* directory containing updated ebpf templates */
 	const char *ebpf_src_dir;
 
 	/*
