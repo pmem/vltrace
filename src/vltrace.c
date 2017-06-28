@@ -76,10 +76,10 @@ int OutputError;		/* I/O error in perf callback occured */
 int AbortTracing;		/* terminating signal received */
 
 pid_t PidToBeKilled;		/* PID of started traced process */
-struct bpf_ctx *Bpf;		/* BPF handle */
+static struct bpf_ctx *Bpf;	/* BPF handle */
 
 /* what are we tracing ? */
-enum {
+enum tracing_type {
 	TRACING_ALL = 0,	/* all syscalls in the system */
 	TRACING_CMD = 1,	/* a process given by the command */
 	TRACING_PID = 2,	/* a process given by the PID */
@@ -88,7 +88,7 @@ enum {
 /*
  * check_args -- check input arguments
  */
-int
+static enum tracing_type
 check_args(struct cl_options const *args)
 {
 	if (args->command && args->pid > 0) {
@@ -118,12 +118,13 @@ check_args(struct cl_options const *args)
 /*
  * do_perf_reader_poll -- poll perf reader events
  */
-void
-do_perf_reader_poll(int tracing, struct bpf_ctx *bpf,
+static void
+do_perf_reader_poll(enum tracing_type tracing, struct bpf_ctx *bpf,
 			struct perf_reader **readers)
 {
 	while (1) {
 
+		/* ignore return value, because it always returns 0 */
 		(void) perf_reader_poll((int)bpf->pr_arr_qty, readers, -1);
 
 		if (OutputError) {
@@ -160,8 +161,9 @@ do_perf_reader_poll(int tracing, struct bpf_ctx *bpf,
 			case TRACING_PID:
 				/* check if the process traced by PID exists */
 				if (kill(Args.pid, 0) == -1) {
-					ERROR("traced process with PID '%d' "
-						"disappeared", Args.pid);
+					ERROR(
+						"traced process with PID '%d' disappeared",
+						Args.pid);
 					return;
 				}
 				break;
@@ -170,10 +172,10 @@ do_perf_reader_poll(int tracing, struct bpf_ctx *bpf,
 }
 
 /*
- * cleanup_on_error -- do clean-up on error
+ * do_clean_up -- do clean-up on error
  */
-void
-cleanup_on_error(void)
+static void
+do_clean_up(void)
 {
 	if (Bpf) {
 		detach_all(Bpf);
@@ -189,7 +191,7 @@ int
 main(const int argc, char *const argv[])
 {
 	struct perf_reader **readers;
-	int tracing = TRACING_ALL; /* what are we tracing ? */
+	enum tracing_type tracing = TRACING_ALL; /* what are we tracing ? */
 	int st_optind;
 	int ret = EXIT_FAILURE;
 
@@ -214,7 +216,7 @@ main(const int argc, char *const argv[])
 	/* check input arguments */
 	tracing = check_args(&Args);
 
-	if (atexit(cleanup_on_error)) {
+	if (atexit(do_clean_up)) {
 		perror("atexit");
 		ERROR("failed to register at-exit function");
 		return EXIT_FAILURE;
@@ -245,20 +247,10 @@ main(const int argc, char *const argv[])
 		}
 	}
 
-	attach_signals_handlers();
+	attach_signal_handlers();
 
 	if (Args.command) {
 		/* run the command */
-		if (access(argv[st_optind], F_OK)) {
-			perror(argv[st_optind]);
-			ERROR("cannot access the file: %s", argv[st_optind]);
-			return EXIT_FAILURE;
-		}
-		if (access(argv[st_optind], X_OK)) {
-			perror(argv[st_optind]);
-			ERROR("file is not executable: %s", argv[st_optind]);
-			return EXIT_FAILURE;
-		}
 		Args.pid = start_command(argv + st_optind);
 		if (Args.pid == -1) {
 			ERROR("failed to start the command");
@@ -278,13 +270,15 @@ main(const int argc, char *const argv[])
 		return EXIT_FAILURE;
 	}
 
-	apply_process_attach_code(&bpf_str);
+	if (apply_process_attach_code(&bpf_str)) {
+		ERROR("error during generatings eBPF code");
+		free(bpf_str);
+		return EXIT_FAILURE;
+	}
 
 	/* print resulting code in debug mode */
 	if (Args.debug)
 		fprint_ebpf_code_with_debug_marks(stderr, bpf_str);
-
-	save_trace_h();
 
 	/* initialize BPF */
 	Bpf = calloc(1, sizeof(*Bpf));
@@ -312,13 +306,13 @@ main(const int argc, char *const argv[])
 	/* if printing in binary format, dump syscalls table */
 	if (OutputFormat == EOF_BIN) {
 		if (dump_syscalls_table(FILE_SYSCALLS_TABLE)) {
-			ERROR("error during saving syscalls table "
-				"to the file: '%s'", FILE_SYSCALLS_TABLE);
-			return EXIT_FAILURE;
-		} else {
-			NOTICE("saved syscalls table to the file: '%s'",
+			ERROR(
+				"error during saving syscalls table to the file: '%s'",
 				FILE_SYSCALLS_TABLE);
+			return EXIT_FAILURE;
 		}
+		NOTICE("saved syscalls table to the file: '%s'",
+			FILE_SYSCALLS_TABLE);
 	}
 
 	INFO("Attaching probes...");
@@ -343,15 +337,15 @@ main(const int argc, char *const argv[])
 #define PERF_OUTPUT_NAME "events"
 	int res = attach_callback_to_perf_output(Bpf, PERF_OUTPUT_NAME,
 						Print_event_cb[OutputFormat]);
-	if (res == 0) {
-		if (Args.command) {
-			/* let child go */
-			kill(Args.pid, SIGCONT);
-		}
-	} else {
+	if (res != 0) {
 		ERROR("cannot attach callbacks to perf output '%s'",
 			PERF_OUTPUT_NAME);
 		return EXIT_FAILURE;
+	}
+
+	if (Args.command) {
+		/* let child go */
+		kill(Args.pid, SIGCONT);
 	}
 
 	readers = calloc(Bpf->pr_arr_qty, sizeof(struct perf_reader *));
