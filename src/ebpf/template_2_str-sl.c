@@ -54,7 +54,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		char _pad[_pad_size];
 	} u;
 
-	u.ev.packet_type = E_KP_ENTRY;
+	u.ev.info_all = E_KP_ENTRY;
 	u.ev.size = _pad_size;
 	u.ev.start_ts_nsec = bpf_ktime_get_ns();
 
@@ -74,7 +74,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	char *src = (char *)u.ev.args[STR1];
 	if (bpf_probe_read(dest, length, (void *)src)) {
-		u.ev.packet_type |= READ_ERROR;
+		u.ev.info.bpf_read_error = 1;
 	}
 
 	dest[length] = 0; /* make it null-terminated */
@@ -82,7 +82,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	src = (char *)u.ev.args[STR2];
 	if (bpf_probe_read(dest, length, (void *)src)) {
-		u.ev.packet_type |= READ_ERROR;
+		u.ev.info.bpf_read_error = 1;
 	}
 
 	dest[length] = 0; /* make it null-terminated */

@@ -34,7 +34,7 @@ from sys import exc_info, stderr, stdout
 import argparse
 import struct
 
-READ_ERROR = 1 << 31
+READ_ERROR = 1 << 10
 
 STATE_INIT = 0
 STATE_IN_ENTRY = 1

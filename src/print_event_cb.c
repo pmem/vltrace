@@ -208,7 +208,7 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 
 	unsigned nstrings = Syscall_array[event->sc_id].nstrings;
 
-	if (event->packet_type >> 2) {
+	if (event->info_all >> 2) {
 		max_len = STR_MAX_1;
 		str = event->aux_str;
 	} else {
@@ -263,12 +263,7 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 	len = strnlen(str, (max_len + 1)); /* + 1 for terminating '\0' */
 	/* check if string is truncated */
 	if (len == (max_len + 1)) {
-		int str_will_be_continued = 0;
-		if (event->packet_type >> 2) {
-			/* bit 8 of type = string will be continued */
-			str_will_be_continued = (event->packet_type >> 8) & 0x1;
-		}
-		if (!str_will_be_continued) {
+		if (!event->info.will_be_cont) {
 			/* print warning that string is truncated */
 			fwrite(Warning, Len_Warning, 1, f);
 		}
@@ -343,17 +338,9 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 	if (start_ts_nsec == 0)
 		start_ts_nsec = event->start_ts_nsec;
 
-	int arg_begin = 0;
-	int arg_end = 7;
-	int arg_cont = 0;
-
-	/* multi-packet: read arg_begin and arg_end */
-	unsigned packets = event->packet_type >> 2;
-	if (packets) {
-		arg_begin = packets & 0x7;	 /* bits 0-2 */
-		arg_end =  (packets >> 3) & 0x7; /* bits 3-5 */
-		arg_cont = (packets >> 7) & 0x1; /* bit 7 (is a continuation) */
-	}
+	int arg_begin = event->info.arg_first;
+	int arg_end = event->info.arg_last;
+	int arg_cont = event->info.is_cont;
 
 	/* is it a continuation of a string ? */
 	if (arg_begin == arg_end) {

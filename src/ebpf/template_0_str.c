@@ -47,7 +47,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	PID_CHECK_HOOK
 
-	ev.packet_type = E_KP_ENTRY;
+	ev.info_all = E_KP_ENTRY;
 	ev.size = offsetof(struct data_entry_s, aux_str);
 	ev.start_ts_nsec = bpf_ktime_get_ns();
 
