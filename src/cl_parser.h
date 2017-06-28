@@ -30,9 +30,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /*
- * cl_parser.h -- Command-line parser for vltrace
+ * cl_parser.h -- command-line parser for vltrace
  */
 
 #ifndef CL_PARSER_H

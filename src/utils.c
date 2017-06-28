@@ -66,22 +66,22 @@ load_file_from_disk(const char *const fn)
 	struct stat st;
 
 	fd = open(fn, O_RDONLY);
-
 	if (fd == -1)
 		return NULL;
 
 	res = fstat(fd, &st);
-
 	if (res == -1)
 		goto out;
 
-	buf = calloc(1, (size_t)st.st_size + 1);
-
-	if (buf == NULL)
+	buf = malloc((size_t)st.st_size + 1);
+	if (buf == NULL) {
+		ERROR("out of memory");
 		goto out;
+	}
+
+	buf[st.st_size] = 0;
 
 	res = read(fd, buf, (size_t)st.st_size);
-
 	if (st.st_size != res) {
 		free(buf);
 		buf = NULL;
@@ -89,41 +89,7 @@ load_file_from_disk(const char *const fn)
 
 out:
 	close(fd);
-
 	return buf;
-}
-
-/*
- * save_trace_h -- export embedded trace.h to file
- */
-void
-save_trace_h(void)
-{
-	int res, fd;
-
-	res = access(ebpf_trace_h_file, R_OK);
-	if (res == 0) {
-		/* file exists, exiting */
-		return;
-	}
-
-	fd = open(ebpf_trace_h_file, O_WRONLY | O_CREAT, 0666);
-	if (fd == -1) {
-		perror("open");
-		WARNING("cannot create the file: %s", ebpf_trace_h_file);
-		return;
-	}
-
-	res = write(fd, _binary_trace_h_start, BINARY_FILE_SIZE(trace_h));
-	if (res != (int)BINARY_FILE_SIZE(trace_h)) {
-		perror("write");
-		WARNING("error while saving the file: %s", ebpf_trace_h_file);
-		close(fd);
-		unlink(ebpf_trace_h_file);
-		return;
-	}
-
-	close(fd);
 }
 
 /*
@@ -133,17 +99,16 @@ char *
 load_file(const char *const fn)
 {
 	if (Args.ebpf_src_dir != NULL) {
-		char path[4096];
+		char *path;
 		char *f;
 		int res;
 
-		res = snprintf(path, sizeof(path), "%s/%s",
-				Args.ebpf_src_dir, fn);
-
-		assert(res > 0);
-		(void) res;
+		res = asprintf(&path, "%s/%s", Args.ebpf_src_dir, fn);
+		if (res == -1)
+			return NULL;
 
 		f = load_file_from_disk(path);
+		free(path);
 
 		if (f != NULL)
 			return f;
@@ -160,8 +125,8 @@ char *
 load_file_no_cr(const char *const fn)
 {
 	static const char *const eofcr_sep = " */\n";
-	char *f = load_file(fn);
 
+	char *f = load_file(fn);
 	if (f == NULL)
 		return NULL;
 
@@ -280,10 +245,8 @@ check_bpf_jit_status()
 
 	case  0:
 		WARNING("eBPF JIT compiler is DISABLED.\n"
-			"\tPlease refer to `man vltrace`,"
-			" section 'Configuration'.\n"
-			"\tEnabling this will improve performance\n"
-			"\tsignificantly and fix some problems.");
+			"\tPlease refer to `man vltrace`, section 'Configuration'.\n"
+			"\tEnabling this will improve performance significantly and fix some problems.");
 		return;
 
 	case  1:
@@ -295,8 +258,8 @@ check_bpf_jit_status()
 		return;
 
 	default:
-		WARNING("unknown status of eBPF JIT compiler. "
-			"Please notify the author.");
+		WARNING(
+			"unknown status of eBPF JIT compiler. Please notify the author.");
 		return;
 	}
 }
@@ -363,8 +326,10 @@ str_replace_all(char **const text, const char *templt, const char *str)
 
 	if (str_len <= templt_len) {
 		char *new_str = malloc(templt_len);
-		if (new_str == NULL)
+		if (new_str == NULL) {
+			ERROR("out of memory");
 			return -1;
+		}
 
 		memcpy(new_str, str, str_len);
 
@@ -392,7 +357,7 @@ str_replace_all(char **const text, const char *templt, const char *str)
 
 			*text = calloc(1, text_len - templt_len + str_len + 1);
 			if (*text == NULL) {
-				free(old_text);
+				ERROR("out of memory");
 				return -1;
 			}
 
@@ -428,7 +393,7 @@ str_replace_many(char **const text, const char *templt, const char *str, int n)
 
 		*text = calloc(1, text_len - templt_len + (n * str_len) + 1);
 		if (*text == NULL) {
-			free(old_text);
+			ERROR("out of memory");
 			return -1;
 		}
 
@@ -456,8 +421,10 @@ str_replace_with_char(char *const text, const char *templt, const char c)
 	size_t len = strlen(templt);
 
 	char *new_str = malloc(len);
-	if (new_str == NULL)
+	if (new_str == NULL) {
+		ERROR("out of memory");
 		return -1;
+	}
 
 	new_str[0] = c;
 
@@ -482,37 +449,12 @@ str_replace_with_char(char *const text, const char *templt, const char c)
 pid_t
 start_command(char *const argv[])
 {
-	struct stat buf;
-	int error = 0;
-
 	pid_t pid = fork();
 	switch (pid) {
 	case -1:
 		break;
 
 	case 0:
-		if (stat(argv[0], &buf) == 0) {
-			if (setgid(buf.st_gid)) {
-				error = errno;
-				perror("setgid");
-			}
-			if (setegid(buf.st_gid)) {
-				error = errno;
-				perror("setegid");
-			}
-			if (setuid(buf.st_uid)) {
-				error = errno;
-				perror("setuid");
-			}
-			if (seteuid(buf.st_uid)) {
-				error = errno;
-				perror("seteuid");
-			}
-		} else {
-			error = errno;
-			perror(argv[0]);
-		}
-
 		/*
 		 * Wait until the parent will be ready.
 		 * For unknown reasons sigwait(SIGCONT) and pause()
@@ -520,12 +462,8 @@ start_command(char *const argv[])
 		 */
 		raise(SIGSTOP);
 
-		if (!error) {
-			execvp(argv[0], argv);
-			exit(errno);
-		} else {
-			exit(error);
-		}
+		execvp(argv[0], argv);
+		exit(errno);
 
 		break;
 
@@ -553,10 +491,10 @@ sig_abort_handler(int sig, siginfo_t *si, void *unused)
 }
 
 /*
- * attach_signals_handlers -- attach signal handlers
+ * attach_signal_handlers -- attach signal handlers
  */
 void
-attach_signals_handlers(void)
+attach_signal_handlers(void)
 {
 	struct sigaction sa;
 

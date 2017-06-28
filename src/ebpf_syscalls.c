@@ -605,7 +605,7 @@ mark_available(const char *sc_name)
 /*
  * mark_available_syscalls -- mark available syscalls
  */
-static int
+static void
 mark_available_syscalls()
 {
 	char *line = NULL;
@@ -636,7 +636,6 @@ mark_available_syscalls()
 
 	free(line);
 	fclose(file);
-	return 0;
 }
 
 /*
@@ -676,8 +675,8 @@ print_syscalls_table(FILE *f)
 
 	for (unsigned i = 0; i < SC_TBL_SIZE; i++) {
 		if (i == __NR_FIRST_UNKNOWN)
-			fprintf(f, "\nSyscalls with unknown "
-					"or duplicated number:\n");
+			fprintf(f,
+				"\nSyscalls with unknown or duplicated number:\n");
 
 		if (Syscall_array[i].available) {
 			res = fprintf(f, "%03d:\t%s\n",
@@ -700,6 +699,7 @@ int
 dump_syscalls_table(const char *path)
 {
 	int size = sizeof(struct syscall_descriptor);
+	int ret = 0;
 
 	FILE *file = fopen(path, "w");
 	if (!file) {
@@ -707,17 +707,12 @@ dump_syscalls_table(const char *path)
 		return -1;
 	}
 
-	if (fwrite(&size, sizeof(int), 1, file) != 1) {
+	if (fwrite(&size, sizeof(int), 1, file) != 1 ||
+	    fwrite(Syscall_array, sizeof(Syscall_array), 1, file) != 1) {
 		perror("fwrite");
-		return -1;
-	}
-
-	if (fwrite(Syscall_array, sizeof(Syscall_array), 1, file) != 1) {
-		perror("fwrite");
-		return -1;
+		ret = -1;
 	}
 
 	fclose(file);
-
-	return 0;
+	return ret;
 }
