@@ -80,7 +80,7 @@ fi
 TEST_DIR=$(dirname $0)
 [ "$TEST_DIR" == "." ] && TEST_DIR=$(pwd)
 
-ANTOOL_DIR=$(dirname $TEST_DIR)/tools/antool
+BIN2TXT=$(dirname $TEST_DIR)/tools/bin2txt/bin2txt.py
 
 FUNCT=$TEST_DIR/helper_functions.sh
 [ ! -f $FUNCT ] \
@@ -114,8 +114,8 @@ fi
 set +e
 if [ "$OUTPUT_FORMAT" == "-l bin" ]; then
 	# binary output format
-	echo "$ $ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUT_VLT > $OUT_TXT"
-	$ANTOOL_DIR/antool.py -t syscalls_table.dat -b $OUT_VLT > $OUT_TXT
+	echo "$ $BIN2TXT -t syscalls_table.dat -b $OUT_VLT > $OUT_TXT"
+	$BIN2TXT -t syscalls_table.dat -b $OUT_VLT > $OUT_TXT
 	RV=$?
 	[ $RV -ne 0 ] \
 		&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \
