@@ -30,11 +30,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from sys import exc_info, stderr, stdout
+from sys import exc_info, stderr
 import argparse
 import struct
 
-READ_ERROR = 1 << 31
+FIRST_PACKET = 0  # this is the first packet for this syscall
+LAST_PACKET = 7   # this is the last packet for this syscall
+READ_ERROR = 1 << 10  # bpf_probe_read error occurred
 
 STATE_INIT = 0
 STATE_IN_ENTRY = 1
@@ -258,12 +260,13 @@ class Syscall:
         self.num_str = 0
         self.str_fini = -1
 
+        self.info_all = 0
+        self.arg_first = FIRST_PACKET
+        self.arg_last = LAST_PACKET
+        self.is_cont = 0
+        self.will_be_cont = 0
         self.read_error = 0
-        self.packet = 0
-        self.arg_begin = 0
-        self.arg_end = 7
-        self.arg_is_cont = 0
-        self.arg_will_cont = 0
+
         self.truncated = 0
 
         self.strings = []
@@ -295,8 +298,8 @@ class Syscall:
     def has_mask(self, mask):
         return self.mask & mask
 
-    def is_cont(self):
-        return self.arg_begin == self.arg_end
+    def check_if_is_cont(self):
+        return self.arg_first == self.arg_last
 
     ###############################################################################
     def is_string(self, n):
@@ -310,11 +313,7 @@ class Syscall:
         string = ""
         max_len = 0
 
-        if self.packet:
-            max_len = self.str_max_1
-            string = aux_str
-
-        elif self.sc.nstrargs == 1:
+        if self.sc.nstrargs == 1:
             max_len = self.str_max_1
             string = aux_str
 
@@ -352,7 +351,7 @@ class Syscall:
         if len(str_p) == (max_len + 1):
             # string did not ended
             self.str_fini = 0
-            if self.arg_will_cont == 0:
+            if self.will_be_cont == 0:
                 # error: string is truncated
                 self.truncated = n + 1
                 self.str_fini = 1
@@ -442,9 +441,9 @@ class Syscall:
               .format(pid_tid, name, sc_id, etype))
 
     ###############################################################################
-    def do_check(self, packet_type, pid_tid, sc_id, name, retval):
+    def do_check(self, info_all, pid_tid, sc_id, name, retval):
 
-        etype = packet_type & 0x03
+        etype = info_all & 0x03
         ret = CHECK_OK
 
         if pid_tid != self.pid_tid or sc_id != self.sc_id:
@@ -475,13 +474,13 @@ class Syscall:
         return ret
 
     ###############################################################################
-    def add_data(self, packet_type, bdata, timestamp):
-        etype = packet_type & 0x03
+    def add_data(self, info_all, bdata, timestamp):
+        etype = info_all & 0x03
         if etype == E_KP_ENTRY:
             if self.state not in (STATE_INIT, STATE_IN_ENTRY):
                 print("Error: wrong state for etype == E_KP_ENTRY:", self.state, file=stderr)
             # kprobe entry handler
-            return self.add_kprobe_entry(packet_type, bdata, timestamp)
+            return self.add_kprobe_entry(info_all, bdata, timestamp)
         elif (etype == E_KP_EXIT) or (etype == E_TP_EXIT):
             # kprobe exit handler or raw tracepoint sys_exit
             return self.add_exit(bdata, timestamp)
@@ -489,29 +488,30 @@ class Syscall:
             return STATE_UNKNOWN_EVENT
 
     ###############################################################################
-    def add_kprobe_entry(self, packet, bdata, timestamp):
+    def add_kprobe_entry(self, info_all, bdata, timestamp):
         self.time_start = timestamp
 
-        if packet & READ_ERROR:
+        if info_all & READ_ERROR:
             self.read_error = 1
 
-        if packet & ~READ_ERROR:
-            self.packet = packet
-            self.arg_begin = (packet >> 2) & 0x7  # bits 2-4
-            self.arg_end = (packet >> 5) & 0x7  # bits 5-7
-            self.arg_will_cont = (packet >> 8) & 0x1  # bit 8 (will be continued)
-            self.arg_is_cont = (packet >> 9) & 0x1  # bit 9 (is a continuation)
+        if info_all & ~READ_ERROR:
+            self.info_all = info_all
+            self.arg_first = (info_all >> 2) & 0x7  # bits 2-4
+            self.arg_last = (info_all >> 5) & 0x7  # bits 5-7
+            self.will_be_cont = (info_all >> 8) & 0x1  # bit 8 (will be continued)
+            self.is_cont = (info_all >> 9) & 0x1  # bit 9 (is a continuation)
 
-        if self.state == STATE_INIT and self.arg_begin > 0:
+        if self.state == STATE_INIT and self.arg_first > FIRST_PACKET:
             print("Error: missed first packet of syscall :", self.name, file=stderr)
-            print("       packet :", self.packet, file=stderr)
-            print("       arg_begin :", self.arg_begin, file=stderr)
-            print("       arg_end :", self.arg_end, file=stderr)
-            print("       arg_will_cont :", self.arg_will_cont, file=stderr)
-            print("       arg_is_cont :", self.arg_is_cont, file=stderr)
+            print("       packet :", self.info_all, file=stderr)
+            print("       arg_first :", self.arg_first, file=stderr)
+            print("       arg_last :", self.arg_last, file=stderr)
+            print("       will_be_cont :", self.will_be_cont, file=stderr)
+            print("       is_cont :", self.is_cont, file=stderr)
 
         # is it a continuation of a string ?
-        if self.is_cont():
+        if self.check_if_is_cont():
+            assert(self.is_cont == 1)
             if self.str_fini:
                 return self.state
             if len(bdata) <= self.size_fmt_args:
@@ -529,7 +529,7 @@ class Syscall:
             if len(str_p) == (max_len + 1):
                 # string did not ended
                 self.str_fini = 0
-                if self.arg_will_cont == 0:
+                if self.will_be_cont == 0:
                     # error: string is truncated
                     self.truncated = len(self.args) + 1
                     self.str_fini = 1
@@ -545,22 +545,22 @@ class Syscall:
             return self.state
 
         # is it a continuation of last argument (full name mode)?
-        if self.arg_is_cont:
+        if self.is_cont:
             # it is a continuation of the last string argument
             if self.str_fini:
                 # printing string was already finished, so skip it
-                self.arg_begin += 1
-                self.arg_is_cont = 0
+                self.arg_first += 1
+                self.is_cont = 0
                 self.str_fini = 0
         else:
-            # syscall.arg_begin argument was printed in the previous packet
-            self.arg_begin += 1
+            # syscall.arg_first argument was printed in the previous packet
+            self.arg_first += 1
 
         # is it the last packet of this syscall (end of syscall) ?
-        if self.arg_end == 7:
+        if self.arg_last == LAST_PACKET:
             end_of_syscall = 1
             # and set the true number of the last argument
-            self.arg_end = self.sc.nargs
+            self.arg_last = self.sc.nargs
         else:
             end_of_syscall = 0
 
@@ -577,7 +577,7 @@ class Syscall:
 
         args = struct.unpack(self.fmt_args, data_args)
 
-        for n in range((self.arg_begin - 1), self.arg_end):
+        for n in range((self.arg_first - 1), self.arg_last):
             if self.is_string(n):
                 index = self.get_str_arg(n, aux_str)
                 if index >= 0:
@@ -694,10 +694,10 @@ class ListSyscalls(list):
         for n in range(len(self)):
             self[n].print_always()
 
-    def search(self, packet_type, pid_tid, sc_id, name, retval):
+    def search(self, info_all, pid_tid, sc_id, name, retval):
         for n in range(len(self)):
             syscall = self[n]
-            check = syscall.do_check(packet_type, pid_tid, sc_id, name, retval)
+            check = syscall.do_check(info_all, pid_tid, sc_id, name, retval)
             if check == CHECK_OK:
                 del self[n]
                 return syscall
@@ -747,7 +747,7 @@ class AnalyzingTool:
     ###############################################################################
     # analyze_check - analyze check result
     ###############################################################################
-    def analyze_check(self, check, packet_type, pid_tid, sc_id, name, retval):
+    def analyze_check(self, check, info_all, pid_tid, sc_id, name, retval):
 
         if CHECK_IGNORE == check:
             return DO_CONTINUE
@@ -755,7 +755,7 @@ class AnalyzingTool:
         elif CHECK_SKIP == check:
             if self.debug_mode:
                 print("Warning: skipping wrong packet type {0:d} of {1:s} ({2:d})"
-                      .format(packet_type, self.syscall_table.name(sc_id), sc_id))
+                      .format(info_all, self.syscall_table.name(sc_id), sc_id))
             return DO_CONTINUE
 
         elif CHECK_NO_EXIT == check:
@@ -767,7 +767,7 @@ class AnalyzingTool:
             if CHECK_SAVE_IN_ENTRY == check:
                 self.list_others.append(self.syscall)
             if retval != 0 or name not in ("clone", "fork", "vfork"):
-                self.syscall = self.list_no_exit.search(packet_type, pid_tid, sc_id, name, retval)
+                self.syscall = self.list_no_exit.search(info_all, pid_tid, sc_id, name, retval)
             if CHECK_WRONG_EXIT == check:
                 self.list_no_exit.append(old_syscall)
             if retval == 0 and name in ("clone", "fork", "vfork"):
@@ -837,7 +837,7 @@ class AnalyzingTool:
                         break
                     state = STATE_INIT
 
-                data_size, packet_type, pid_tid, sc_id, timestamp = read_fmt_data(fh, 'IIQQQ')
+                data_size, info_all, pid_tid, sc_id, timestamp = read_fmt_data(fh, 'IIQQQ')
                 data_size = data_size - (sizeI + 3 * sizeQ)
 
                 # read the rest of data
@@ -849,14 +849,14 @@ class AnalyzingTool:
                 name = self.syscall_table.name(sc_id)
                 retval = self.syscall.get_ret(bdata)
 
-                check = self.syscall.do_check(packet_type, pid_tid, sc_id, name, retval)
-                result = self.analyze_check(check, packet_type, pid_tid, sc_id, name, retval)
+                check = self.syscall.do_check(info_all, pid_tid, sc_id, name, retval)
+                result = self.analyze_check(check, info_all, pid_tid, sc_id, name, retval)
                 if result == DO_CONTINUE:
                     continue
                 elif result == DO_REINIT:
                     self.syscall = Syscall(pid_tid, sc_id, self.syscall_table.get(sc_id), buf_size, self.debug_mode)
 
-                state = self.syscall.add_data(packet_type, bdata, timestamp)
+                state = self.syscall.add_data(info_all, bdata, timestamp)
 
                 if state == STATE_COMPLETED:
                     self.list_ok.append(self.syscall)

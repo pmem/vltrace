@@ -41,14 +41,15 @@
 /* define it as empty for case when Args.n_str_packets <= 2 */
 #define READ_AND_SUBMIT_N_MINUS_2_PACKETS
 
-#define MAX_STR_ARG	3 /* max supported number of string arguments */
+#define MAX_STR_ARG	3 /* max number of supported string arguments */
+
+#define FIRST_PACKET	0 /* this is the first packet for this syscall */
+#define LAST_PACKET	7 /* this is the last packet for this syscall */
 
 #define BUF_SIZE	384 /* size of buffer for string arguments */
 #define STR_MAX_1	(BUF_SIZE - 2)
 #define STR_MAX_2	((BUF_SIZE / 2) - 2)
 #define STR_MAX_3	((BUF_SIZE / 3) - 2)
-
-#define READ_ERROR	(1 << 31)
 
 /* types of data packets */
 enum data_packet_types {
@@ -62,19 +63,35 @@ struct data_entry_s {
 	/* size of the rest of data (except this field) */
 	uint32_t size;
 
-	/*
-	 * bits 0-1 type of data packet (enum data_packet_types)
-	 *
-	 * bits 2-9 describe a series of packets for every syscall:
-	 *      2-4   number of the first saved argument in the packet
-	 *      5-7   number of the last saved argument in the packet
-	 *      8     the syscall is not finished and will be continued -
-	 *            - next packets will be sent
-	 *      9     the syscall has not finished and this is a continuation
-	 *
-	 * bit 31 - bpf_probe_read error occurred
-	 */
-	uint32_t packet_type;
+	/* union containing information about the packet */
+	union {
+		uint32_t info_all;
+		struct {
+			/* type of data packet (enum data_packet_types) */
+			uint32_t packet_type : 2;
+
+			/* number of the first saved argument in the packet */
+			uint32_t arg_first : 3;
+
+			/* number of the last saved argument in the packet */
+			uint32_t arg_last : 3;
+
+			/*
+			 * flag: syscall is not finished and will be continued
+			 *       - next packets will be sent
+			 */
+			uint32_t will_be_cont : 1;
+
+			/*
+			 * flag: syscall has not finished
+			 * and this is a continuation
+			 */
+			uint32_t is_cont : 1;
+
+			/* flag: bpf_probe_read error occurred */
+			uint32_t bpf_read_error : 1;
+		} info;
+	};
 
 	/* PID and TID */
 	uint64_t pid_tid;

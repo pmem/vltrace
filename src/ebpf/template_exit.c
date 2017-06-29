@@ -52,7 +52,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 #undef  TRACE_IN_SYS_EXIT
 
-	ev.packet_type = E_KP_ENTRY;
+	ev.info_all = E_KP_ENTRY;
+	ev.info.arg_last = LAST_PACKET;
 	ev.size = offsetof(struct data_entry_s, aux_str);
 	ev.start_ts_nsec = bpf_ktime_get_ns();
 
