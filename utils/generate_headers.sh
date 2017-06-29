@@ -32,7 +32,8 @@
 #
 
 #
-# copy_syscalls_64.sh -- shell script for finding and coping syscalls_64.sh header
+# generate_headers.sh -- shell script for generating headers
+#                        from the syscalls_64.h kernel header
 #
 
 HEADER_MOD="syscalls_64_mod.h_gen"

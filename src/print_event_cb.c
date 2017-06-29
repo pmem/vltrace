@@ -105,10 +105,9 @@ print_header_hex(int argc, char *const argv[])
 	if (Args.timestamp)
 		fprintf(OutputFile, "%s%c", "TIME(nsec)", Args.separator);
 
-	fprintf(OutputFile, "%s%c",  "ERR",	 Args.separator);
-	fprintf(OutputFile, "%s%c",  "RES",	 Args.separator);
+	fprintf(OutputFile, "%s%c", "ERR", Args.separator);
+	fprintf(OutputFile, "%s%c", "RES", Args.separator);
 	fprintf(OutputFile, "%s%c", "SYSCALL", Args.separator);
-
 	fprintf(OutputFile, "%s%c", "ARG1", Args.separator);
 	fprintf(OutputFile, "%s%c", "ARG2", Args.separator);
 	fprintf(OutputFile, "%s%c", "ARG3", Args.separator);
@@ -130,26 +129,7 @@ print_header_hex(int argc, char *const argv[])
 static inline char
 b2hex(char b)
 {
-	switch (b & 0xF) {
-	case   0: return '0';
-	case   1: return '1';
-	case   2: return '2';
-	case   3: return '3';
-	case   4: return '4';
-	case   5: return '5';
-	case   6: return '6';
-	case   7: return '7';
-	case   8: return '8';
-	case   9: return '9';
-	case 0xA: return 'A';
-	case 0xB: return 'B';
-	case 0xC: return 'C';
-	case 0xD: return 'D';
-	case 0xE: return 'E';
-	case 0xF: return 'F';
-	}
-
-	return '?';
+	return "0123456789ABCDEF"[b & 0xf];
 }
 
 /*
@@ -582,28 +562,28 @@ print_header_bin(int argc, char *const argv[])
 
 	/* save BUF_SIZE */
 	int buf_size = BUF_SIZE;
-	if (1 != fwrite(&buf_size, sizeof(int), 1, OutputFile)) {
+	if (fwrite(&buf_size, sizeof(int), 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save CWD's size */
 	buf_size = strlen(cwd);
-	if (1 != fwrite(&buf_size, sizeof(int), 1, OutputFile)) {
+	if (fwrite(&buf_size, sizeof(int), 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save CWD */
-	if (1 != fwrite(cwd, buf_size, 1, OutputFile)) {
+	if (fwrite(cwd, buf_size, 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save header's size */
-	if (1 != fwrite(&data_size, sizeof(int), 1, OutputFile)) {
+	if (fwrite(&data_size, sizeof(int), 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save header */
-	if (1 != fwrite(&header, data_size, 1, OutputFile)) {
+	if (fwrite(&header, data_size, 1, OutputFile) != 1) {
 		return -1;
 	}
 
@@ -618,7 +598,7 @@ print_event_bin(void *cb_cookie, void *data, int size)
 {
 	(void) cb_cookie;
 
-	if (1 != fwrite(data, (size_t)size, 1, OutputFile)) {
+	if (fwrite(data, (size_t)size, 1, OutputFile) != 1) {
 		OutputError = 1;
 	}
 }
@@ -672,16 +652,16 @@ choose_fnr_mode(const char *str_len,
 	if (len <= STR_MAX_3) {
 		*mode = E_STR_FAST;
 		*n_str_packets = 1;
-		NOTICE("FAST string read mode "
-			"(1 packet per syscall, "
-			"max string length = %i)", STR_MAX_3);
+		NOTICE(
+			"FAST string read mode (1 packet per syscall, max string length = %i)",
+			STR_MAX_3);
 
 	} else if (len <= STR_MAX_1) {
 		*mode = E_STR_STR_MAX;
 		*n_str_packets = 1;
-		NOTICE("PACKET string read mode "
-			"(1 packet per string argument, "
-			"max string length = %i)", STR_MAX_1);
+		NOTICE(
+			"PACKET string read mode (1 packet per string argument, max string length = %i)",
+			STR_MAX_1);
 
 	} else {
 		unsigned np = (len + 1) / (BUF_SIZE - 1);
@@ -690,15 +670,13 @@ choose_fnr_mode(const char *str_len,
 		*n_str_packets = np;
 		if (available_bpf_probe_read_str()) {
 			*mode = E_STR_FULL;
-			NOTICE("FULL string read mode "
-				"(maximum %i packets per string argument, "
-				"max string length = %i)",
+			NOTICE(
+				"FULL string read mode (maximum %i packets per string argument, max string length = %i)",
 				np, np * (BUF_SIZE - 1) - 1);
 		} else {
 			*mode = E_STR_FULL_CONST_N;
-			NOTICE("CONST string read mode "
-				"(always %i packets per string argument, "
-				"max string length = %i)",
+			NOTICE(
+				"CONST string read mode (always %i packets per string argument, max string length = %i)",
 				np, np * (BUF_SIZE - 1) - 1);
 		}
 	}
