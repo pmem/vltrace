@@ -208,7 +208,7 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 
 	unsigned nstrings = Syscall_array[event->sc_id].nstrings;
 
-	if (event->packet_type >> 2) {
+	if (event->info_all & ARG_MASK) {
 		max_len = STR_MAX_1;
 		str = event->aux_str;
 	} else {
@@ -263,12 +263,7 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 	len = strnlen(str, (max_len + 1)); /* + 1 for terminating '\0' */
 	/* check if string is truncated */
 	if (len == (max_len + 1)) {
-		int str_will_be_continued = 0;
-		if (event->packet_type >> 2) {
-			/* bit 8 of type = string will be continued */
-			str_will_be_continued = (event->packet_type >> 8) & 0x1;
-		}
-		if (!str_will_be_continued) {
+		if (!event->info.will_be_cont) {
 			/* print warning that string is truncated */
 			fwrite(Warning, Len_Warning, 1, f);
 		}
@@ -343,21 +338,20 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 	if (start_ts_nsec == 0)
 		start_ts_nsec = event->start_ts_nsec;
 
-	int arg_begin = 0;
-	int arg_end = 7;
-	int arg_cont = 0;
+	int arg_first = 0;
+	int arg_last = 7;
+	int is_cont = 0;
 
-	/* multi-packet: read arg_begin and arg_end */
-	unsigned packets = event->packet_type >> 2;
-	if (packets) {
-		arg_begin = packets & 0x7;	 /* bits 0-2 */
-		arg_end =  (packets >> 3) & 0x7; /* bits 3-5 */
-		arg_cont = (packets >> 7) & 0x1; /* bit 7 (is a continuation) */
+	if (event->info_all & ARG_MASK) {
+		/* multi-packet: read arg_first and arg_last */
+		arg_first = event->info.arg_first;
+		arg_last = event->info.arg_last;
+		is_cont = event->info.is_cont;
 	}
 
 	/* is it a continuation of a string ? */
-	if (arg_begin == arg_end) {
-		assert(arg_cont == 1);
+	if (arg_first == arg_last) {
+		assert(is_cont == 1);
 		if (str_fini == 0) {
 			unsigned max_len = BUF_SIZE - 1;
 			unsigned len = strnlen(event->aux_str, max_len);
@@ -369,7 +363,7 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 	}
 
 	/* print timestamp, PID_TID and syscall's name */
-	if (arg_begin == 0) {
+	if (arg_first == 0) {
 		if (Args.timestamp) {
 			unsigned long long delta_nsec =
 				event->start_ts_nsec - start_ts_nsec;
@@ -388,38 +382,39 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 	}
 
 	/* is it a continuation of last argument (full name mode)? */
-	if (arg_cont) {
+	if (is_cont) {
 		/* it is a continuation of last argument */
 		if (str_fini) {
 			/* printing string was already finished, so skip it */
-			arg_begin++;
-			arg_cont = 0;
+			arg_first++;
+			is_cont = 0;
 			str_fini = 0;
 		}
 	} else {
-		/* arg_begin argument was printed in the previous packet */
-		arg_begin++;
+		/* arg_first argument was printed in the previous packet */
+		arg_first++;
 	}
 
-	/* should we print EOL ? */
-	int print_eol;
-	if (arg_end == 7) {
-		print_eol = 1;
+	int end_of_syscall = 0;
+	if (arg_last == LAST_PACKET) {
+		end_of_syscall = 1;
 		/* and set the true value of the last argument */
-		arg_end = Syscall_array[event->sc_id].args_qty;
-	} else {
-		print_eol = 0;
+		arg_last = Syscall_array[event->sc_id].args_qty;
 	}
 
 	/* print syscall's arguments */
-	for (int i = (arg_begin - 1); i <= (arg_end - 1); i++) {
-		if ((i > arg_begin - 1) || !arg_cont || str_fini)
+	for (int i = (arg_first - 1); i <= (arg_last - 1); i++) {
+		if ((i > arg_first - 1) || !is_cont || str_fini)
 			fwrite_out_lf_fld_sep(f);
 		fprint_arg_hex(i, f, event, size, &n_str, &str_fini);
 	}
 
-	/* should we print EOL ? */
-	if (print_eol) {
+	if (event->info.bpf_read_error) {
+		fwrite(" [Warning: bpf read error occurred] ",
+			35 /* strlen of the message */, 1, f);
+	}
+
+	if (end_of_syscall) {
 		n_str = 0; /* reset counter of string arguments */
 		str_fini = 1;
 		fwrite("\n", 1, 1, f);
@@ -527,12 +522,12 @@ print_event_text(void *cb_cookie, void *data, int size)
 #define STR_LEN 30
 	const char *str = "ERROR: unknown type of event: ";
 	uint32_t *size_s = data;
-	uint32_t *packet_type = size_s + 1;
-	uint32_t type = *packet_type & 0x03; /* bits 0-1 */
+	uint32_t *info_all = size_s + 1;
+	uint32_t packet_type = *info_all & E_MASK; /* bits 0-1 */
 
 	(void) cb_cookie;
 
-	switch (type) {
+	switch (packet_type) {
 	case E_KP_ENTRY:
 		print_event_text_kp_entry(OutputFile, data, size);
 		break;
@@ -544,7 +539,7 @@ print_event_text(void *cb_cookie, void *data, int size)
 		break;
 	default:
 		fwrite(str, STR_LEN, 1, OutputFile);
-		fprint_i64(OutputFile, type);
+		fprint_i64(OutputFile, packet_type);
 		fwrite("\n", 1, 1, OutputFile);
 		break;
 	}

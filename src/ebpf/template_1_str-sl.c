@@ -53,7 +53,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		char _pad[_pad_size];
 	} u;
 
-	u.ev.packet_type = E_KP_ENTRY;
+	u.ev.info_all = E_KP_ENTRY;
 	u.ev.size = _pad_size;
 	u.ev.start_ts_nsec = bpf_ktime_get_ns();
 
@@ -73,7 +73,7 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	memset(dest, 0, BUF_SIZE);
 
 	if (bpf_probe_read(dest, length, (void *)src)) {
-		u.ev.packet_type |= READ_ERROR;
+		u.ev.info.bpf_read_error = 1;
 	}
 
 	events.perf_submit(ctx, &u.ev, _pad_size);
