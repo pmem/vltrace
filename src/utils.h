@@ -44,6 +44,8 @@
 
 #define INFO(str, ...) \
 	fprintf(stderr, str "\n", ##__VA_ARGS__);
+#define NOTICE(str, ...) \
+	fprintf(stderr, "Notice: " str "\n", ##__VA_ARGS__);
 
 #ifdef DEBUG
 
@@ -51,8 +53,6 @@
 	fprintf(stderr, "ERROR: %s:" str "\n", __func__, ##__VA_ARGS__);
 #define WARNING(str, ...) \
 	fprintf(stderr, "Warning: %s:" str "\n", __func__, ##__VA_ARGS__);
-#define NOTICE(str, ...) \
-	fprintf(stderr, "Notice: %s:" str "\n", __func__, ##__VA_ARGS__);
 #define DEBUG_NOTICE(str, ...) \
 	fprintf(stderr, "DEBUG Notice: %s:" str "\n", __func__, ##__VA_ARGS__);
 #define DEBUG_INFO(str, ...) \
@@ -64,8 +64,6 @@
 	fprintf(stderr, "ERROR: " str "\n", ##__VA_ARGS__);
 #define WARNING(str, ...) \
 	fprintf(stderr, "Warning: " str "\n", ##__VA_ARGS__);
-#define NOTICE(str, ...) \
-	fprintf(stderr, "Notice: " str "\n", ##__VA_ARGS__);
 #define DEBUG_NOTICE(str, ...)
 #define DEBUG_INFO(str, ...)
 
@@ -90,7 +88,7 @@ int str_replace_many(char **text, const char *templt, const char *str, int n);
 pid_t start_command(char *const argv[]);
 pid_t start_command_with_signals(int argc, char *const argv[]);
 
-void attach_signals_handlers(void);
+void attach_signal_handlers(void);
 
 FILE *setup_output(void);
 

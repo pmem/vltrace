@@ -31,19 +31,21 @@
 
 project(vltrace C)
 
-execute_process(COMMAND ../utils/copy_syscalls_64.sh
-		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-		RESULT_VARIABLE KERNEL_HEADER)
-
-if (NOT ${KERNEL_HEADER} EQUAL 0)
-	message( FATAL_ERROR "ERROR: missing kernel header. Aborting..." )
-endif ()
-
-add_custom_target(syscalls_64 ALL ../utils/copy_syscalls_64.sh make
-		  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+add_cstyle(src)
 
 find_package(PkgConfig)
 pkg_check_modules(LIBBCC REQUIRED libbcc)
+
+add_c_flag(-D_GNU_SOURCE)
+add_c_flag(-Wextra)
+
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+	# using Clang
+	add_c_flag(-Wno-initializer-overrides)
+else()
+	# using GCC
+	add_c_flag(-Wno-override-init)
+endif()
 
 set(SOURCES
 	vltrace.c
@@ -56,33 +58,16 @@ set(SOURCES
 	generate_ebpf.c
 	print_event_cb.c)
 
-link_directories(nondebug)
-include_directories(compat)
+include_directories(${PROJECT_BINARY_DIR}/..)
 include_directories(${LIBBCC_INCLUDE_DIRS})
+
 link_directories(${LIBBCC_LIBRARY_DIRS})
 
 add_executable(vltrace ${SOURCES})
 
-# XXX libbcc expects multi-treading safety. Currently it's required for
-# print_event_cb.o only, although we will apply it for overall application.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE")
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wextra")
-
-if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
-# using Clang
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-initializer-overrides")
-else()
-# using GCC
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-override-init")
-endif()
-
 add_subdirectory(ebpf)
 
 target_link_libraries(vltrace ebpf ${LIBBCC_LIBRARIES})
-
-add_cstyle(src)
 
 install(TARGETS vltrace
 	CONFIGURATIONS Release RelWithDebInfo Debug None

@@ -121,8 +121,8 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 	}
 
 	if (!pr_arr_check_quota(sbcp, (unsigned)cpu_qty)) {
-		ERROR("number of perf readers would exceed"
-			" global quota: %d", Args.pr_arr_max);
+		ERROR("number of perf readers would exceed global quota: %d",
+			Args.pr_arr_max);
 		return -1;
 	}
 
@@ -134,8 +134,9 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 		reader = bpf_open_perf_buffer(callback, NULL, NULL, -1, cpu,
 						Args.strace_reader_page_cnt);
 		if (reader == NULL) {
-			WARNING("cannot open perf buffer on CPU %d, "
-				"skipping this CPU", cpu);
+			WARNING(
+				"cannot open perf buffer on CPU %d, skipping this CPU",
+				cpu);
 			continue;
 		}
 
@@ -147,8 +148,9 @@ attach_callback_to_perf_output(struct bpf_ctx *sbcp,
 			 * Cannot create an element in the BPF map on this CPU,
 			 * so the CPU will not be used (skip it).
 			 */
-			WARNING("cannot update BPF map on CPU %d, "
-				"skipping this CPU: %m", cpu);
+			WARNING(
+				"cannot update BPF map on CPU %d, skipping this CPU: %m",
+				cpu);
 			perf_reader_free(reader);
 			continue;
 		}
@@ -178,8 +180,7 @@ detach_all(struct bpf_ctx *b)
 	char *tp_name;
 
 	INFO("Finished tracing.\n"
-		"Detaching probes... (please wait, it can take "
-		"few tens of seconds) ...");
+		"Detaching probes... (please wait, it can take few tens of seconds) ...");
 
 	for (unsigned i = 0; i < b->pr_arr_qty; i++) {
 		perf_reader_free(b->pr_arr[i]->pr);
@@ -215,7 +216,7 @@ detach_all(struct bpf_ctx *b)
 
 /*
  * load_obj_code_into_ebpf_vm -- load eBPF object code to kernel VM and
- *                               obtaining a fd
+ *                               obtain a file descriptor
  */
 static int
 load_obj_code_into_ebpf_vm(struct bpf_ctx *sbcp, const char *func_name,
@@ -272,7 +273,7 @@ chr_replace(char *str, const char tmpl, const char ch)
 		return;
 
 	for (; *str; str++)
-		if (tmpl == *str)
+		if (*str == tmpl)
 			*str = ch;
 }
 
@@ -282,22 +283,21 @@ chr_replace(char *str, const char tmpl, const char ch)
 static char *
 event2ev_name(enum bpf_prog_type type, const char *prefix, const char *name)
 {
-	char *ev_name = calloc(1, strlen(prefix) + strlen(name) + 2);
-	if (ev_name == NULL)
-		return NULL;
+	char *ev_name;
 
-	strcpy(ev_name, prefix);
-
-	if (type == BPF_PROG_TYPE_KPROBE)
-		strcat(ev_name, "_");
-	else if (type == BPF_PROG_TYPE_TRACEPOINT)
-		strcat(ev_name, ":");
-
-	strcat(ev_name, name);
-
-	if (type == BPF_PROG_TYPE_KPROBE) {
+	switch (type) {
+	case BPF_PROG_TYPE_KPROBE:
+		if (asprintf(&ev_name, "%s_%s", prefix, name) == -1)
+			return NULL;
 		chr_replace(ev_name, '+', '_');
 		chr_replace(ev_name, '.', '_');
+		break;
+	case BPF_PROG_TYPE_TRACEPOINT:
+		if (asprintf(&ev_name, "%s:%s", prefix, name) == -1)
+			return NULL;
+		break;
+	default:
+		return NULL;
 	}
 
 	return ev_name;
@@ -336,8 +336,8 @@ load_fn_and_attach_common(struct bpf_ctx *sbcp,
 
 	int ret = -1;
 	if (!pr_arr_check_quota(sbcp, 1)) {
-		ERROR("number of perf readers would exceed"
-			" global quota: %d", Args.pr_arr_max);
+		ERROR("number of perf readers would exceed global quota: %d",
+			Args.pr_arr_max);
 		goto exit_free;
 	}
 

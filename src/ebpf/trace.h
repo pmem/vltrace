@@ -34,9 +34,8 @@
  * trace.h -- data exchange packet between packet filter and reader callback
  */
 
-
-#ifndef TRACE_H
-#define TRACE_H
+#ifndef VLTRACE_TRACE_H
+#define VLTRACE_TRACE_H
 
 /* define it as empty for case when Args.n_str_packets <= 2 */
 #define READ_AND_SUBMIT_N_MINUS_2_PACKETS
@@ -147,4 +146,4 @@ struct data_exit_s {
 	int64_t ret;
 };
 
-#endif /* TRACE_H */
+#endif /* VLTRACE_TRACE_H */
