@@ -53,7 +53,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		char _pad[_pad_size];
 	} u;
 
-	u.ev.packet_type = E_KP_ENTRY;
+	u.ev.info_all = 0;
+	u.ev.info.packet_type = E_KP_ENTRY;
 	u.ev.size = _pad_size;
 	u.ev.start_ts_nsec = bpf_ktime_get_ns();
 
@@ -72,30 +73,37 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 
 	memset(dest, 0, BUF_SIZE);
 
-	/* from the beginning (0) to 1st string - contains 1st string */
-	u.ev.packet_type = E_KP_ENTRY | (0 << 2) + ((STR1 + 1) << 5);
+	/* from the beginning to 1st string - contains 1st string */
+	u.ev.info.arg_first = FIRST_PACKET;
+	u.ev.info.arg_last = STR1 + 1;
 
 	char *src = (char *)u.ev.args[STR1];
 	if (bpf_probe_read(dest, length, (void *)src)) {
-		u.ev.packet_type |= READ_ERROR;
+		u.ev.info.bpf_read_error = 1;
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
+	u.ev.info_all = 0;
+	u.ev.info.packet_type = E_KP_ENTRY;
 
 	/* from 1st to 2nd string argument - contains 2nd string */
-	u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + ((STR2 + 1) << 5);
+	u.ev.info.arg_first = STR1 + 1;
+	u.ev.info.arg_last = STR2 + 1;
 
 	src = (char *)u.ev.args[STR2];
 	if (bpf_probe_read(dest, length, (void *)src)) {
-		u.ev.packet_type |= READ_ERROR;
+		u.ev.info.bpf_read_error = 1;
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
+	u.ev.info_all = 0;
+	u.ev.info.packet_type = E_KP_ENTRY;
 
-	/* from 2nd string argument to the end (7) - contains 3rd string */
-	u.ev.packet_type = E_KP_ENTRY | ((STR2 + 1) << 2) + (7 << 5);
+	/* from 2nd string argument to the end - contains 3rd string */
+	u.ev.info.arg_first = STR2 + 1;
+	u.ev.info.arg_last = LAST_PACKET;
 
 	src = (char *)u.ev.args[STR3];
 	if (bpf_probe_read(dest, length, (void *)src)) {
-		u.ev.packet_type |= READ_ERROR;
+		u.ev.info.bpf_read_error = 1;
 	}
 	events.perf_submit(ctx, &u.ev, _pad_size);
 

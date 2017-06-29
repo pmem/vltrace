@@ -53,7 +53,8 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		char _pad[_pad_size];
 	} u;
 
-	u.ev.packet_type = E_KP_ENTRY;
+	u.ev.info_all = 0;
+	u.ev.info.packet_type = E_KP_ENTRY;
 	u.ev.size = _pad_size;
 	u.ev.start_ts_nsec = bpf_ktime_get_ns();
 
@@ -77,32 +78,32 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 	if (bpf_probe_read(dest, length, (void *)src)) {
 		/* read error occurred */
 		error_bpf_read = 1;
+		u.ev.info.bpf_read_error = 1;
 		/*
-		 * From the beginning (0) to the end (7) -
+		 * From the beginning to the end -
 		 * contains 1st string
 		 */
-		u.ev.packet_type = READ_ERROR | E_KP_ENTRY |
-					(0 << 2) +
-					(7 << 5);
+		u.ev.info.arg_first = FIRST_PACKET;
+		u.ev.info.arg_last = LAST_PACKET;
 	} else {
 		/* string is not completed */
 		error_bpf_read = 0;
-		/* from the beginning (0) to 1st string - contains 1st string */
-		u.ev.packet_type = E_KP_ENTRY |
-					(0 << 2) +
-					((STR1 + 1) << 5) +
-					(1 << 8); /* will be continued */
+		/* from the beginning to 1st string - contains 1st string */
+		u.ev.info.arg_first = FIRST_PACKET;
+		u.ev.info.arg_last = STR1 + 1;
+		u.ev.info.will_be_cont = 1;
 	}
 
 	events.perf_submit(ctx, &u.ev, _pad_size);
+	u.ev.info_all = 0;
+	u.ev.info.packet_type = E_KP_ENTRY;
 
 	if (!error_bpf_read) {
 		/* only 1st string argument */
-		u.ev.packet_type = E_KP_ENTRY |
-					((STR1 + 1) << 2) +
-					((STR1 + 1) << 5) +
-					(1 << 9) + /* it is a continuation */
-					(1 << 8);  /* and will be continued */
+		u.ev.info.arg_first = STR1 + 1;
+		u.ev.info.arg_last = STR1 + 1;
+		u.ev.info.will_be_cont = 1;
+		u.ev.info.is_cont = 1;
 
 		/*
 		 * It is a macro for sending (Args.n_str_packets-2) packets.
@@ -113,11 +114,13 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 		READ_AND_SUBMIT_N_MINUS_2_PACKETS
 
 		/*
-		 * From 1st string argument to the end (7) -
+		 * From 1st string argument to the end -
 		 * contains 1st string
 		 */
-		u.ev.packet_type = E_KP_ENTRY | ((STR1 + 1) << 2) + (7 << 5) +
-					(1 << 9); /* is a continuation */
+		u.ev.info.arg_first = STR1 + 1;
+		u.ev.info.arg_last = LAST_PACKET;
+		u.ev.info.will_be_cont = 0;
+		u.ev.info.is_cont = 1;
 		if (!error_bpf_read) {
 			src += length;
 			if (bpf_probe_read(dest, length, (void *)src)) {
@@ -125,8 +128,9 @@ kprobe__SYSCALL_NAME_filled_for_replace(struct pt_regs *ctx)
 				error_bpf_read = 1;
 			}
 		}
-		if (error_bpf_read)
-			u.ev.packet_type |= READ_ERROR;
+		if (error_bpf_read) {
+			u.ev.info.bpf_read_error = 1;
+		}
 		events.perf_submit(ctx, &u.ev, _pad_size);
 	}
 
