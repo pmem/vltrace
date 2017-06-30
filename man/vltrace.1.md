@@ -126,17 +126,17 @@ output logs format. Possible values: 'bin' or 'text':
 
    Default: 'text'
 
-`-K, --hex-separator <sep>`
+`--hex-separator <sep>`
 
 set field separator for hex logs. Default is a single space ' '.
 
 #Filtering:
 
-`-X, --failed`
+`--failed`
 
 only show failed syscalls
 
-`-e, --expr <expr>`
+`--expr <expr>`
 
 defines which syscalls should be traced:
 	1) Intercepting using both Kprobes and Tracepoints (requires kernel >= 4.7):
@@ -204,7 +204,7 @@ Note:
 ```
 syntax.
 
-`-N, --ebpf-src-dir <dir>`
+`--ebpf-src-dir <dir>`
 
 Enable checking of updated ebpf templates in directory \<dir\>\.
 
@@ -218,17 +218,17 @@ enable debug output
 
 print help
 
-`-L, --list`
+`--list`
 
 Print a list of all traceable syscalls of the running kernel.
 
-`-R, --ll-list`
+`--ll-list`
 
 Print a list of all traceable low-level funcs of the running kernel.
 
 WARNING: really long. ~45000 functions for 4.4 kernel.
 
-`-B, --builtin-list`
+`--builtin-list`
 
 Print a list of all known syscalls.
 

@@ -99,7 +99,7 @@ for release in Debug Release; do
 		echo "Notice: running basic tests available for kernels >= 4.4"
 		echo
 
-		VLTRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t -e kp-all"
+		VLTRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t --expr kp-all"
 		DATE=$(which date)
 
 		echo "$ sudo bash -c \"$VLTRACE $DATE\""

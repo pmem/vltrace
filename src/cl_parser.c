@@ -83,6 +83,7 @@ cl_parser(struct cl_options *const clo,
 			{"ll-list",		no_argument,	   0, 'R'},
 			{"builtin-list",	no_argument,	   0, 'B'},
 			{"no-progress",		no_argument,	   0, 'r'},
+			{"full-follow-fork",	no_argument,	   0, 'f'},
 			{"pid",			required_argument, 0, 'p'},
 			{"format",		required_argument, 0, 'l'},
 			{"string-args",		required_argument, 0, 's'},
@@ -90,11 +91,10 @@ cl_parser(struct cl_options *const clo,
 			{"output",		required_argument, 0, 'o'},
 			{"ebpf-src-dir",	required_argument, 0, 'N'},
 			{"hex-separator",	required_argument, 0, 'K'},
-			{"full-follow-fork",	optional_argument, 0, 'f'},
 			{0, 0, 0, 0}
 		};
 
-		c = getopt_long(argc, argv, "+tXhdLRBrp:l:s:e:o:N:K:f::",
+		c = getopt_long(argc, argv, "+thdrfp:l:s:o:",
 				long_options, &option_index);
 
 		if (c == -1)

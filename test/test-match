@@ -69,7 +69,7 @@ TEST_FILE=$1
 TEST_NUM=$2
 MAX_STR_LEN=$3
 
-OPT_VLTRACE="$OUTPUT_FORMAT -t -e all -r -s $MAX_STR_LEN"
+OPT_VLTRACE="$OUTPUT_FORMAT -t -r -s $MAX_STR_LEN"
 RUN_VLTRACE="ulimit -l 10240 && ulimit -n 10240 && $VLTRACE $OPT_VLTRACE"
 
 if [ ! -x $TEST_FILE ]; then

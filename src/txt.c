@@ -49,7 +49,7 @@ Startup:\n\
     -p, --pid    <pid>\n\
         Trace this PID only, <command> option should be missing.\n\
         Press (CTRL-C) to send interrupt signal to exit.\n\
-    -N, --ebpf-src-dir <dir>\n\
+    --ebpf-src-dir <dir>\n\
         Enable checking of updated ebpf templates in directory <dir>.\n\
 \n\
 Output format:\n\
@@ -63,13 +63,13 @@ Output format:\n\
                    allows the fastest operation,\n\
         - 'text' - the text format.\n\
         Default: 'text'\n\
-    -K, --hex-separator <sep>\n\
+    --hex-separator <sep>\n\
         set field separator for hex logs. Default is a single space ' '.\n\
 \n\
 Filtering:\n\
-    -X, --failed\n\
+    --failed\n\
         only show failed syscalls\n\
-    -e, --expr <expr>\n\
+    --expr <expr>\n\
         which syscalls should be traced (Default: 'all'):\n\
 	1) Intercepting using both Kprobes and Tracepoints (requires\n\
            kernel >= 4.7):\n\
@@ -132,12 +132,12 @@ Miscellaneous:\n\
         enable debug output\n\
     -h, --help\n\
         print help\n\
-    -L, --list\n\
+    --list\n\
         Print a list of all traceable syscalls of the running kernel.\n\
-    -R, --ll-list\n\
+    --ll-list\n\
         Print a list of all traceable low-level funcs of the running kernel.\n\
         WARNING: really long. ~45000 functions.\n\
-    -B, --builtin-list\n\
+    --builtin-list\n\
         Print a list of all known syscalls.\n\
 \n\
 Examples:\n\
