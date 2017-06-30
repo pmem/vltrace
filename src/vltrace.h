@@ -1,0 +1,137 @@
+/*
+ * Copyright 2016-2017, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ *     * Neither the name of the copyright holder nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * vltrace.h -- application-wide stuff
+ */
+
+#ifndef VLTRACE_H
+#define VLTRACE_H
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+enum out_format {
+	EOF_TEXT = 0,
+	EOF_BIN,
+
+	EOF_QTY, /* Should be last */
+};
+
+/* follow fork modes */
+enum ff_mode {
+	E_FF_DISABLED = 0,
+	E_FF_FULL,
+};
+
+/* modes of reading string arguments */
+enum fnr_mode {
+	E_STR_FAST = 0,		/* 1 packet per syscall */
+	E_STR_STR_MAX,		/* 1 packet per string argument */
+	E_STR_FULL_CONST_N,	/* always N packets per string argument */
+	E_STR_FULL,		/* <=N packets per string argument */
+};
+
+/* 8 Megabytes should be something close to reasonable */
+enum { OUT_BUF_SIZE = 8 * 1024 * 1024 };
+
+/*
+ * The default size of ring buffers in 4k pages. Must be a power of two.
+ *    The lowest possible value is 64. The compromise is 4096.
+ */
+enum { VLTRACE_READER_PAGE_CNT_DEFAULT = 4096 };
+
+/*
+ * This structure contains default and parsed values for command-line options
+ */
+struct cl_options {
+	/* Mark output lines with timestamp */
+	bool timestamp;
+	/* Print only failed syscalls */
+	bool failed;
+	/* We have command to run on command line */
+	bool command;
+
+	/* We run in debug mode */
+	unsigned debug;
+
+	/* Pid of process to trace */
+	pid_t pid;
+
+	/* The name of output log file */
+	const char *output_name;
+	/* string constant with type of output log format */
+	const char *out_fmt_str;
+	/* Field separator for hexadecimal logs */
+	char separator;
+	/* Expression */
+	const char *expr;
+
+	/* maximum number of perf readers */
+	unsigned pr_arr_max;
+	/* follow-fork mode */
+	enum ff_mode ff_mode;
+
+	/* filenames reading mode */
+	enum fnr_mode fnr_mode;
+
+	/* number of packets per one string argument */
+	unsigned n_str_packets;
+
+	/* size of output buffer passed to setvbuf() */
+	unsigned out_buf_size;
+
+	/* directory containing updated ebpf templates */
+	const char *ebpf_src_dir;
+
+	/*
+	 * The size of ring buffers in 4k pages. Must be a power of two.
+	 * The lowest possible value is 64.
+	 */
+	int strace_reader_page_cnt;
+
+	/* do not print progress of detaching probes */
+	int do_not_print_progress;
+};
+
+extern struct cl_options Args;
+extern int OutputError;
+extern int AbortTracing;
+extern pid_t PidToBeKilled;
+
+/* Output logfile */
+extern FILE *OutputFile;
+/* Output logfile format */
+extern enum out_format OutputFormat;
+
+#endif /* VLTRACE_H */

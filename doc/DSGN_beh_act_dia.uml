@@ -1,0 +1,22 @@
+@startuml
+scale 2.0
+start
+:Command Line Parsing;
+:Loading "command";
+note right
+Optional
+end note
+:Generating eBPF source code;
+:Compiling eBPF source code;
+:Attaching eBPF handlers to syscalls using Kprobe and eBPF VM;
+:Starting "command";
+note right
+Optional
+end note
+while (cont?) is (true)
+partition libbcc {
+	:poll() - wait for events;
+}
+endwhile (false)
+stop
+@enduml
