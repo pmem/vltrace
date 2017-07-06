@@ -42,10 +42,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <fcntl.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/prctl.h>
+#include <sys/stat.h>
 
 #include <linux/sched.h>
 #include <linux/limits.h>
@@ -64,6 +66,11 @@
 #include "generate_ebpf.h"
 #include "print_event_cb.h"
 #include "ebpf/ebpf_file_set.h"
+
+/* lock file - only one instance of vltrace can run at the time */
+#define VLTRACE_NAME		"vltrace"
+#define LEN_VLTRACE_NAME	7
+#define FILE_LOCK		"/var/lock/"VLTRACE_NAME".pid"
 
 /* name of file with dumped syscalls table in binary mode */
 #define FILE_SYSCALLS_TABLE	"syscalls_table.dat"
@@ -181,10 +188,112 @@ do_clean_up(void)
 		detach_all(Bpf);
 		free(Bpf);
 	}
+
+	/* remove the lock file */
+	unlink(FILE_LOCK);
+
 	if (PidToBeKilled) {
 		/* kill the started child */
 		kill(PidToBeKilled, SIGKILL);
 	}
+}
+
+/*
+ * try_to_read_lock_file -- try to read lock file
+ */
+static int
+try_to_read_lock_file()
+{
+	int pid = 0;
+	FILE *sfd;
+
+	sfd = fopen(FILE_LOCK, "r");
+	if (sfd == NULL) {
+		perror("fopen");
+		ERROR("error opening lock file for reading");
+		return -1;
+	}
+
+	/* read PID from the lock file */
+	int nread = fscanf(sfd, "%i", &pid);
+	fclose(sfd);
+	if (nread != 1) {
+		ERROR("error reading lock file");
+		return -1;
+	}
+
+	/* check if "/proc/<pid>/comm" == "vltrace" */
+	char *proc_path;
+	if (asprintf(&proc_path, "/proc/%i/comm", pid) == -1)
+		return -1;
+
+	sfd = fopen(proc_path, "r");
+	free(proc_path);
+	if (sfd == NULL) {
+		ERROR("error opening proc file");
+		return -1;
+	}
+
+	/* read command name from the proc file */
+	char name[LEN_VLTRACE_NAME];
+	nread = fread(name, LEN_VLTRACE_NAME, 1, sfd);
+	fclose(sfd);
+
+	if (nread != 1) {
+		ERROR("error reading proc file");
+		return -1;
+	}
+
+	if (strncmp(name, VLTRACE_NAME, LEN_VLTRACE_NAME) != 0) {
+		WARNING("command name in proc file does not match");
+		return -1;
+	}
+
+	return pid;
+}
+
+/*
+ * check_if_only_instance -- check if vltrace is already running
+ */
+static int
+check_if_only_instance(void)
+{
+	int pid = 0;
+	FILE *sfd;
+
+	int fd = open(FILE_LOCK, O_WRONLY | O_CREAT | O_EXCL, 0644);
+	if (fd == -1) {
+		/*
+		 * Could not create a new lock file,
+		 * so try to open and read it.
+		 */
+		pid = try_to_read_lock_file();
+		if (pid != -1)
+			/* vltrace is already running */
+			return pid;
+
+		/* reading lock file failed, so try to write the current pid */
+		WARNING(
+			"starting vltrace, however another instance may be running");
+		sfd = fopen(FILE_LOCK, "w");
+	} else {
+		sfd = fdopen(fd, "w");
+	}
+
+	if (sfd != NULL) {
+		/* write PID to the lock file */
+		pid = getpid();
+		if (fprintf(sfd, "%i \n", pid) < 0)
+			WARNING("error writing to the lock file");
+		fclose(sfd);
+	} else {
+		perror("fopen");
+		WARNING("error opening lock file for writing");
+	}
+
+	if (fd != -1)
+		close(fd);
+	return 0;
 }
 
 int
@@ -194,6 +303,12 @@ main(const int argc, char *const argv[])
 	enum tracing_type tracing = TRACING_ALL; /* what are we tracing ? */
 	int st_optind;
 	int ret = EXIT_FAILURE;
+	int pid;
+
+	if (pid = check_if_only_instance()) {
+		ERROR("vltrace is already running (pid %i), exiting...", pid);
+		return EXIT_FAILURE;
+	}
 
 	/* default values */
 	Args.pid = -1;
