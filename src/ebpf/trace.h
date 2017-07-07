@@ -37,14 +37,10 @@
 #ifndef VLTRACE_TRACE_H
 #define VLTRACE_TRACE_H
 
-/* define it as empty for case when Args.n_str_packets <= 2 */
-#define READ_AND_SUBMIT_N_MINUS_2_PACKETS
-
 #define MAX_STR_ARG	3 /* max number of supported string arguments */
 
 #define FIRST_PACKET	0 /* this is the first packet for this syscall */
 #define LAST_PACKET	7 /* this is the last packet for this syscall */
-#define READ_ERROR	(1 << 10) /* bpf_probe_read error occurred */
 #define ARG_MASK	(0b1111111100) /* arguments mask */
 
 #define BUF_SIZE	384 /* size of buffer for string arguments */
