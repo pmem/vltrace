@@ -87,11 +87,17 @@ char *syscall_names[SC_TBL_SIZE] = {
 	.args_qty = aq, \
 	.mask = EM_str_1 | EM_path_1 }
 
-#define EBPF_SYSCALL_FILEAT(nr, sym, aq)    [nr] = {\
+#define EBPF_SYSCALL_FILEAT(nr, sym, flags, aq)    [nr] = {\
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.mask = EM_fd_1 | EM_str_2 | EM_path_2 | EM_fileat }
+	.mask = EM_fd_1 | EM_str_2 | EM_path_2 | EM_fileat | flags }
+
+#define EBPF_SYSCALL_FILEAT2(nr, sym, aq)    [nr] = {\
+	.num = nr, \
+	.handler_name = #sym, \
+	.args_qty = aq, \
+	.mask = EM_fd_1_3 | EM_str_2_4 | EM_path_2_4 | EM_fileat2 }
 
 #define EBPF_SYSCALL_DESC(nr, sym, aq)    [nr] = {\
 	.num = nr, \
@@ -389,23 +395,20 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 				EM_fd_1 | EM_str_2, 3),
 	EBPF_SYSCALL_DESC(__NR_inotify_rm_watch, SyS_inotify_rm_watch, 2),
 	EBPF_SYSCALL(__NR_migrate_pages, SyS_migrate_pages, 4),
-	EBPF_SYSCALL_FLAGS(__NR_openat, SyS_openat,
-			EM_fd_1 | EM_str_2 | EM_path_2 | EM_fileat | EM_rfd, 4),
-	EBPF_SYSCALL_FILEAT(__NR_mkdirat, SyS_mkdirat, 3),
-	EBPF_SYSCALL_FILEAT(__NR_mknodat, SyS_mknodat, 4),
-	EBPF_SYSCALL_FILEAT(__NR_fchownat, SyS_fchownat, 5),
-	EBPF_SYSCALL_FILEAT(__NR_futimesat, SyS_futimesat, 3),
-	EBPF_SYSCALL_FILEAT(__NR_newfstatat, SyS_newfstatat, 4),
-	EBPF_SYSCALL_FILEAT(__NR_unlinkat, SyS_unlinkat, 3),
-	EBPF_SYSCALL_FLAGS(__NR_renameat, SyS_renameat,
-			EM_fd_1_3 | EM_str_2_4 | EM_path_2_4 | EM_fileat2, 4),
-	EBPF_SYSCALL_FLAGS(__NR_linkat, SyS_linkat,
-			EM_str_2_4 | EM_path_2_4, 5),
+	EBPF_SYSCALL_FILEAT(__NR_openat, SyS_openat, EM_rfd, 4),
+	EBPF_SYSCALL_FILEAT(__NR_mkdirat, SyS_mkdirat, 0, 3),
+	EBPF_SYSCALL_FILEAT(__NR_mknodat, SyS_mknodat, 0, 4),
+	EBPF_SYSCALL_FILEAT(__NR_fchownat, SyS_fchownat, 0, 5),
+	EBPF_SYSCALL_FILEAT(__NR_futimesat, SyS_futimesat, 0, 3),
+	EBPF_SYSCALL_FILEAT(__NR_newfstatat, SyS_newfstatat, 0, 4),
+	EBPF_SYSCALL_FILEAT(__NR_unlinkat, SyS_unlinkat, 0, 3),
+	EBPF_SYSCALL_FILEAT2(__NR_renameat, SyS_renameat, 4),
+	EBPF_SYSCALL_FILEAT2(__NR_linkat, SyS_linkat, 5),
 	EBPF_SYSCALL_FLAGS(__NR_symlinkat, SyS_symlinkat,
-			EM_str_1_3 | EM_path_1_3, 3),
-	EBPF_SYSCALL_FILEAT(__NR_readlinkat, SyS_readlinkat, 4),
-	EBPF_SYSCALL_FILEAT(__NR_fchmodat, SyS_fchmodat, 3),
-	EBPF_SYSCALL_FILEAT(__NR_faccessat, SyS_faccessat, 3),
+				EM_str_1_3 | EM_path_1_3 | EM_fd_2, 3),
+	EBPF_SYSCALL_FILEAT(__NR_readlinkat, SyS_readlinkat, 0, 4),
+	EBPF_SYSCALL_FILEAT(__NR_fchmodat, SyS_fchmodat, 0, 3),
+	EBPF_SYSCALL_FILEAT(__NR_faccessat, SyS_faccessat, 0, 3),
 	EBPF_SYSCALL(__NR_pselect6, SyS_pselect6, 6),
 	EBPF_SYSCALL(__NR_ppoll, SyS_ppoll, 5),
 	EBPF_SYSCALL(__NR_unshare, SyS_unshare, 1),
@@ -416,7 +419,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_DESC(__NR_sync_file_range, SyS_sync_file_range, 4),
 	EBPF_SYSCALL_DESC(__NR_vmsplice, SyS_vmsplice, 4),
 	EBPF_SYSCALL(__NR_move_pages, SyS_move_pages, 6),
-	EBPF_SYSCALL_FILEAT(__NR_utimensat, SyS_utimensat, 4),
+	EBPF_SYSCALL_FILEAT(__NR_utimensat, SyS_utimensat, 0, 4),
 	EBPF_SYSCALL_DESC(__NR_epoll_pwait, SyS_epoll_pwait, 5),
 	EBPF_SYSCALL_DESC(__NR_signalfd, SyS_signalfd, 3),
 	EBPF_SYSCALL(__NR_timerfd_create, SyS_timerfd_create, 2),
@@ -439,9 +442,10 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_FLAGS(__NR_fanotify_mark, SyS_fanotify_mark,
 				EM_fd_4 | EM_str_5, 5),
 	EBPF_SYSCALL(__NR_prlimit64, SyS_prlimit64, 4),
-	EBPF_SYSCALL_FILEAT(__NR_name_to_handle_at, SyS_name_to_handle_at, 5),
+	EBPF_SYSCALL_FILEAT(__NR_name_to_handle_at, SyS_name_to_handle_at,
+				EM_rhandle_3, 5),
 	EBPF_SYSCALL_FLAGS(__NR_open_by_handle_at, SyS_open_by_handle_at,
-				EM_fd_1 | EM_rfd, 3),
+				EM_fd_1 | EM_handle_2 | EM_rfd, 3),
 	EBPF_SYSCALL(__NR_clock_adjtime, SyS_clock_adjtime, 2),
 	EBPF_SYSCALL_DESC(__NR_syncfs, SyS_syncfs, 1),
 	EBPF_SYSCALL_DESC(__NR_sendmmsg, SyS_sendmmsg, 4),
@@ -453,15 +457,14 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_DESC(__NR_finit_module, SyS_finit_module, 3),
 	EBPF_SYSCALL(__NR_sched_setattr, SyS_sched_setattr, 3),
 	EBPF_SYSCALL(__NR_sched_getattr, SyS_sched_getattr, 4),
-	EBPF_SYSCALL_FLAGS(__NR_renameat2, SyS_renameat2,
-			EM_fd_1_3 | EM_str_2_4 | EM_path_2_4 | EM_fileat2, 5),
+	EBPF_SYSCALL_FILEAT2(__NR_renameat2, SyS_renameat2, 5),
 	EBPF_SYSCALL(__NR_seccomp, SyS_seccomp, 3),
 	EBPF_SYSCALL(__NR_getrandom, SyS_getrandom, 3),
 	EBPF_SYSCALL_FILE(__NR_memfd_create, SyS_memfd_create, 2),
 	EBPF_SYSCALL_FLAGS(__NR_kexec_file_load, SyS_kexec_file_load,
 				EM_str_4, 5),
 	EBPF_SYSCALL(__NR_bpf, SyS_bpf, 3),
-	EBPF_SYSCALL_FILEAT(__NR_execveat, SyS_execveat, 5),
+	EBPF_SYSCALL_FILEAT(__NR_execveat, SyS_execveat, 0, 5),
 	EBPF_SYSCALL(__NR_userfaultfd, SyS_userfaultfd, 1),
 	EBPF_SYSCALL(__NR_membarrier, SyS_membarrier, 2),
 	EBPF_SYSCALL(__NR_mlock2, SyS_mlock2, 3),
@@ -520,7 +523,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL(__NR_fillrect, SyS_fillrect, 6),
 	EBPF_SYSCALL(__NR_copyarea, SyS_copyarea, 6),
 	EBPF_SYSCALL(__NR_imageblit, SyS_imageblit, 6),
-	EBPF_SYSCALL_FILEAT(__NR_statx, SyS_statx, 5),
+	EBPF_SYSCALL_FILEAT(__NR_statx, SyS_statx, 0, 5),
 
 	/* mmap_pgoff is a 32-bit-only syscall */
 	EBPF_SYSCALL_FLAGS(__NR_mmap_pgoff, SyS_mmap_pgoff, EM_DISABLED, 6),
