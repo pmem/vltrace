@@ -40,7 +40,7 @@
 #include <stdio.h>
 
 enum masks_t {
-	/* syscall has string as a first arg */
+	/* syscall has string as first arg */
 	EM_str_1 = 1 << 0,
 	/* syscall has string as second arg */
 	EM_str_2 = 1 << 1,
@@ -56,7 +56,7 @@ enum masks_t {
 	EM_strings = EM_str_1 | EM_str_2 | EM_str_3 |
 			EM_str_4 | EM_str_5 | EM_str_6,
 
-	/* syscall has fd as a first arg */
+	/* syscall has fd as first arg */
 	EM_fd_1 = 1 << 6,
 	/* syscall has fd as second arg */
 	EM_fd_2 = 1 << 7,
@@ -69,7 +69,7 @@ enum masks_t {
 	/* syscall has fd as sixth arg */
 	EM_fd_6 = 1 << 11,
 
-	/* syscall has path as a first arg */
+	/* syscall has path as first arg */
 	EM_path_1 = 1 << 12,
 	/* syscall has path as second arg */
 	EM_path_2 = 1 << 13,
@@ -93,6 +93,11 @@ enum masks_t {
 	EM_rfd = 1 << 21,
 	/* syscall returns a PID */
 	EM_rpid = 1 << 22,
+
+	/* syscall returns a file handle as third arg: name_to_handle_at() */
+	EM_rhandle_3 = 1 << 23,
+	/* syscall takes a file handle as second arg: open_by_handle_at() */
+	EM_handle_2 = 1 << 24,
 
 	/* syscall has strings as first and second args. rename() */
 	EM_str_1_2 = EM_str_1 | EM_str_2,
