@@ -50,20 +50,20 @@
 #ifdef DEBUG
 
 #define ERROR(str, ...) \
-	fprintf(stderr, "ERROR: %s:" str "\n", __func__, ##__VA_ARGS__);
+	fprintf(stderr, "ERROR(%s): " str "\n", __func__, ##__VA_ARGS__);
 #define WARNING(str, ...) \
-	fprintf(stderr, "Warning: %s:" str "\n", __func__, ##__VA_ARGS__);
+	fprintf(stderr, "WARNING(%s): " str "\n", __func__, ##__VA_ARGS__);
 #define DEBUG_NOTICE(str, ...) \
-	fprintf(stderr, "DEBUG Notice: %s:" str "\n", __func__, ##__VA_ARGS__);
+	fprintf(stderr, "DEBUG Notice(%s): " str "\n", __func__, ##__VA_ARGS__);
 #define DEBUG_INFO(str, ...) \
-	fprintf(stderr, "DEBUG: %s:" str "\n", __func__, ##__VA_ARGS__);
+	fprintf(stderr, "DEBUG(%s): " str "\n", __func__, ##__VA_ARGS__);
 
 #else /* DEBUG */
 
 #define ERROR(str, ...) \
 	fprintf(stderr, "ERROR: " str "\n", ##__VA_ARGS__);
 #define WARNING(str, ...) \
-	fprintf(stderr, "Warning: " str "\n", ##__VA_ARGS__);
+	fprintf(stderr, "WARNING: " str "\n", ##__VA_ARGS__);
 #define DEBUG_NOTICE(str, ...)
 #define DEBUG_INFO(str, ...)
 
