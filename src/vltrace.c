@@ -280,9 +280,6 @@ main(const int argc, char *const argv[])
 	if (Args.debug)
 		fprint_ebpf_code_with_debug_marks(stderr, bpf_str);
 
-	/* save embedded trace.h for eBPF compiler */
-	save_trace_h();
-
 	/* initialize BPF */
 	Bpf = calloc(1, sizeof(*Bpf));
 	if (Bpf == NULL) {

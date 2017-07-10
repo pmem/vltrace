@@ -313,8 +313,8 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 	if (start_ts_nsec == 0)
 		start_ts_nsec = event->start_ts_nsec;
 
-	int arg_first = 0;
-	int arg_last = 7;
+	int arg_first = FIRST_PACKET;
+	int arg_last = LAST_PACKET;
 	int is_cont = 0;
 
 	if (event->info_all & ARG_MASK) {
@@ -338,7 +338,7 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 	}
 
 	/* print timestamp, PID_TID and syscall's name */
-	if (arg_first == 0) {
+	if (arg_first == FIRST_PACKET) {
 		if (Args.timestamp) {
 			unsigned long long delta_nsec =
 				event->start_ts_nsec - start_ts_nsec;

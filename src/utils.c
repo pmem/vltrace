@@ -93,35 +93,6 @@ out:
 }
 
 /*
- * save_trace_h -- export embedded trace.h to file for eBPF compiler,
- *                 eBPF compiler expects this file to be
- *                 in the current directory
- */
-void
-save_trace_h(void)
-{
-	int res, fd;
-
-	fd = open(ebpf_trace_h_file, O_WRONLY | O_CREAT, 0666);
-	if (fd == -1) {
-		perror("open");
-		WARNING("cannot create the file: %s", ebpf_trace_h_file);
-		return;
-	}
-
-	res = write(fd, _binary_trace_h_start, BINARY_FILE_SIZE(trace_h));
-	if (res != (int)BINARY_FILE_SIZE(trace_h)) {
-		perror("write");
-		WARNING("error while saving the file: %s", ebpf_trace_h_file);
-		close(fd);
-		unlink(ebpf_trace_h_file);
-		return;
-	}
-
-	close(fd);
-}
-
-/*
  * load_file -- load 'virtual' file
  */
 char *

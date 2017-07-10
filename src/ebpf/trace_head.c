@@ -40,6 +40,13 @@
 
 #include "trace.h"
 
+/*
+ * It is an empty define. The "it_will_be_removed_" part of the string
+ * is cut out when Args.n_str_packets == 2, in order to define the rest
+ * as empty string in templates.
+ */
+#define READ_AND_SUBMIT_it_will_be_removed_N_MINUS_2_PACKETS
+
 /* The set of our children_pid */
 BPF_HASH(children_map, uint64_t, uint64_t);
 
