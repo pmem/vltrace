@@ -228,11 +228,14 @@ try_to_read_lock_file()
 		return -1;
 
 	sfd = fopen(proc_path, "r");
-	free(proc_path);
 	if (sfd == NULL) {
-		ERROR("error opening proc file");
+		perror("fopen");
+		WARNING("cannot open the proc file: %s", proc_path);
+		free(proc_path);
 		return -1;
 	}
+
+	free(proc_path);
 
 	/* read command name from the proc file */
 	char name[LEN_VLTRACE_NAME];
@@ -306,6 +309,12 @@ main(const int argc, char *const argv[])
 	int ret = EXIT_FAILURE;
 	int pid;
 
+	if (atexit(do_clean_up)) {
+		perror("atexit");
+		ERROR("failed to register at-exit function");
+		return EXIT_FAILURE;
+	}
+
 	if (pid = check_if_only_instance()) {
 		ERROR("vltrace is already running (pid %i), exiting...", pid);
 		return EXIT_FAILURE;
@@ -331,12 +340,6 @@ main(const int argc, char *const argv[])
 
 	/* check input arguments */
 	tracing = check_args(&Args);
-
-	if (atexit(do_clean_up)) {
-		perror("atexit");
-		ERROR("failed to register at-exit function");
-		return EXIT_FAILURE;
-	}
 
 	OutputFile = setup_output();
 	if (OutputFile == NULL) {
