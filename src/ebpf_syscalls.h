@@ -99,6 +99,14 @@ enum masks_t {
 	/* syscall takes a file handle as second arg: open_by_handle_at() */
 	EM_handle_2 = 1 << 24,
 
+	/* AT_EMPTY_PATH can be at the 4th argument (fstatat and newfstatat) */
+	EM_aep_arg_4 = 1 << 25,
+	/* AT_EMPTY_PATH can be at the 5th argument (linkat and fchownat) */
+	EM_aep_arg_5 = 1 << 26,
+
+	/* disabled syscall */
+	EM_DISABLED = 1 << 31,
+
 	/* syscall has strings as first and second args. rename() */
 	EM_str_1_2 = EM_str_1 | EM_str_2,
 	/* syscall has strings as first and third args. linkat() */
@@ -117,9 +125,6 @@ enum masks_t {
 
 	/* syscall has fd as first and third args. renameat() */
 	EM_fd_1_3 = EM_fd_1 | EM_fd_3,
-
-	/* disabled syscall */
-	EM_DISABLED = 1 << 31,
 };
 
 enum {

@@ -703,6 +703,9 @@ enum {
 #ifndef __NR_fstat
 	__NR_fstat,
 #endif
+#ifndef __NR_fstatat
+	__NR_fstatat,
+#endif
 #ifndef __NR_newstat
 	__NR_newstat,
 #endif

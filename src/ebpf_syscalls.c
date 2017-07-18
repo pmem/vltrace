@@ -93,11 +93,11 @@ char *syscall_names[SC_TBL_SIZE] = {
 	.args_qty = aq, \
 	.mask = EM_fd_1 | EM_str_2 | EM_path_2 | EM_fileat | flags }
 
-#define EBPF_SYSCALL_FILEAT2(nr, sym, aq)    [nr] = {\
+#define EBPF_SYSCALL_FILEAT2(nr, sym, flags, aq)    [nr] = {\
 	.num = nr, \
 	.handler_name = #sym, \
 	.args_qty = aq, \
-	.mask = EM_fd_1_3 | EM_str_2_4 | EM_path_2_4 | EM_fileat2 }
+	.mask = EM_fd_1_3 | EM_str_2_4 | EM_path_2_4 | EM_fileat2 | flags }
 
 #define EBPF_SYSCALL_DESC(nr, sym, aq)    [nr] = {\
 	.num = nr, \
@@ -398,12 +398,13 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_FILEAT(__NR_openat, SyS_openat, EM_rfd, 4),
 	EBPF_SYSCALL_FILEAT(__NR_mkdirat, SyS_mkdirat, 0, 3),
 	EBPF_SYSCALL_FILEAT(__NR_mknodat, SyS_mknodat, 0, 4),
-	EBPF_SYSCALL_FILEAT(__NR_fchownat, SyS_fchownat, 0, 5),
+	EBPF_SYSCALL_FILEAT(__NR_fchownat, SyS_fchownat, EM_aep_arg_5, 5),
 	EBPF_SYSCALL_FILEAT(__NR_futimesat, SyS_futimesat, 0, 3),
-	EBPF_SYSCALL_FILEAT(__NR_newfstatat, SyS_newfstatat, 0, 4),
+	EBPF_SYSCALL_FILEAT(__NR_fstatat, SyS_fstatat, EM_aep_arg_4, 4),
+	EBPF_SYSCALL_FILEAT(__NR_newfstatat, SyS_newfstatat, EM_aep_arg_4, 4),
 	EBPF_SYSCALL_FILEAT(__NR_unlinkat, SyS_unlinkat, 0, 3),
-	EBPF_SYSCALL_FILEAT2(__NR_renameat, SyS_renameat, 4),
-	EBPF_SYSCALL_FILEAT2(__NR_linkat, SyS_linkat, 5),
+	EBPF_SYSCALL_FILEAT2(__NR_renameat, SyS_renameat, 0, 4),
+	EBPF_SYSCALL_FILEAT2(__NR_linkat, SyS_linkat, EM_aep_arg_5, 5),
 	EBPF_SYSCALL_FLAGS(__NR_symlinkat, SyS_symlinkat,
 				EM_str_1_3 | EM_path_1_3 | EM_fd_2, 3),
 	EBPF_SYSCALL_FILEAT(__NR_readlinkat, SyS_readlinkat, 0, 4),
@@ -457,7 +458,7 @@ struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
 	EBPF_SYSCALL_DESC(__NR_finit_module, SyS_finit_module, 3),
 	EBPF_SYSCALL(__NR_sched_setattr, SyS_sched_setattr, 3),
 	EBPF_SYSCALL(__NR_sched_getattr, SyS_sched_getattr, 4),
-	EBPF_SYSCALL_FILEAT2(__NR_renameat2, SyS_renameat2, 5),
+	EBPF_SYSCALL_FILEAT2(__NR_renameat2, SyS_renameat2, 0, 5),
 	EBPF_SYSCALL(__NR_seccomp, SyS_seccomp, 3),
 	EBPF_SYSCALL(__NR_getrandom, SyS_getrandom, 3),
 	EBPF_SYSCALL_FILE(__NR_memfd_create, SyS_memfd_create, 2),
