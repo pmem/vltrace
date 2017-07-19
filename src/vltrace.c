@@ -84,6 +84,7 @@ int AbortTracing;		/* terminating signal received */
 
 pid_t PidToBeKilled;		/* PID of started traced process */
 static struct bpf_ctx *Bpf;	/* BPF handle */
+static int Created_file_lock;	/* FILE_LOCK was created */
 
 /* what are we tracing ? */
 enum tracing_type {
@@ -189,8 +190,10 @@ do_clean_up(void)
 		free(Bpf);
 	}
 
-	/* remove the lock file */
-	unlink(FILE_LOCK);
+	if (Created_file_lock) {
+		/* remove the lock file */
+		unlink(FILE_LOCK);
+	}
 
 	if (PidToBeKilled) {
 		/* kill the started child */
@@ -281,6 +284,8 @@ check_if_only_instance(void)
 			"starting vltrace, however another instance may be running");
 		sfd = fopen(FILE_LOCK, "w");
 	} else {
+		/* FILE_LOCK was created */
+		Created_file_lock = 1;
 		sfd = fdopen(fd, "w");
 	}
 
