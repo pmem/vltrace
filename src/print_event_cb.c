@@ -45,6 +45,7 @@
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
 #include "utils.h"
+#include "config.h"
 
 #include "ebpf/trace.h"
 
@@ -552,6 +553,19 @@ print_header_bin(int argc, char *const argv[])
 
 	char cwd[PATH_MAX];
 	if (getcwd(cwd, PATH_MAX) == NULL) {
+		return -1;
+	}
+
+	char signature[] = VLTRACE_LOG_SIGNATURE;
+	unsigned major = VLTRACE_VERSION_MAJOR;
+	unsigned minor = VLTRACE_VERSION_MINOR;
+	unsigned patch = VLTRACE_VERSION_PATCH;
+
+	/* save signature and version number */
+	if (fwrite(signature, sizeof(signature), 1, OutputFile) != 1 ||
+	    fwrite(&major, sizeof(major), 1, OutputFile) != 1 ||
+	    fwrite(&minor, sizeof(minor), 1, OutputFile) != 1 ||
+	    fwrite(&patch, sizeof(patch), 1, OutputFile) != 1) {
 		return -1;
 	}
 

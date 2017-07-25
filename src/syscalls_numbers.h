@@ -46,7 +46,7 @@
 #define SYSCALLS_UNKNOWN_H
 
 /* include syscalls numbers defined in the running kernel */
-#include <syscalls_64_num.h_gen>
+#include "syscalls_64_num.h_gen"
 
 /*
  * Define syscalls numbers '__NR_syscall_name'
