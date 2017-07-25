@@ -41,6 +41,9 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#define VLTRACE_TAB_SIGNATURE	"VLTRACE_TAB"
+#define VLTRACE_LOG_SIGNATURE	"VLTRACE_LOG"
+
 enum out_format {
 	EOF_TEXT = 0,
 	EOF_BIN,

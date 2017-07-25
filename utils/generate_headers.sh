@@ -36,8 +36,8 @@
 #                        from the syscalls_64.h kernel header
 #
 
-HEADER_MOD="syscalls_64_mod.h_gen"
-HEADER_NUM="syscalls_64_num.h_gen"
+HEADER_MOD="src/syscalls_64_mod.h_gen"
+HEADER_NUM="src/syscalls_64_num.h_gen"
 
 DEFINE_MOD="SYSCALLS_64_MOD_H_GEN"
 DEFINE_NUM="SYSCALLS_64_NUM_H_GEN"

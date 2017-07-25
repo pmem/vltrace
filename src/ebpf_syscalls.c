@@ -41,6 +41,7 @@
 #include "syscalls_numbers.h"
 #include "ebpf_syscalls.h"
 #include "utils.h"
+#include "config.h"
 
 #ifdef __SYSCALL_X32
 #undef __SYSCALL_X32
@@ -705,13 +706,22 @@ dump_syscalls_table(const char *path)
 	int size = sizeof(struct syscall_descriptor);
 	int ret = 0;
 
+	char signature[] = VLTRACE_TAB_SIGNATURE;
+	unsigned major = VLTRACE_VERSION_MAJOR;
+	unsigned minor = VLTRACE_VERSION_MINOR;
+	unsigned patch = VLTRACE_VERSION_PATCH;
+
 	FILE *file = fopen(path, "w");
 	if (!file) {
 		perror("fopen");
 		return -1;
 	}
 
-	if (fwrite(&size, sizeof(int), 1, file) != 1 ||
+	if (fwrite(signature, sizeof(signature), 1, file) != 1 ||
+	    fwrite(&major, sizeof(major), 1, file) != 1 ||
+	    fwrite(&minor, sizeof(minor), 1, file) != 1 ||
+	    fwrite(&patch, sizeof(patch), 1, file) != 1 ||
+	    fwrite(&size, sizeof(int), 1, file) != 1 ||
 	    fwrite(Syscall_array, sizeof(Syscall_array), 1, file) != 1) {
 		perror("fwrite");
 		ret = -1;
