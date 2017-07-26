@@ -72,9 +72,6 @@
 #define LEN_VLTRACE_NAME	7
 #define FILE_LOCK		"/var/lock/"VLTRACE_NAME".pid"
 
-/* name of file with dumped syscalls table in binary mode */
-#define FILE_SYSCALLS_TABLE	"syscalls_table.dat"
-
 struct cl_options Args;		/* command-line arguments */
 FILE *OutputFile;		/* output file */
 enum out_format OutputFormat;	/* format of output */
@@ -421,18 +418,6 @@ main(const int argc, char *const argv[])
 	}
 
 	Bpf->debug  = Args.debug;
-
-	/* if printing in binary format, dump syscalls table */
-	if (OutputFormat == EOF_BIN) {
-		if (dump_syscalls_table(FILE_SYSCALLS_TABLE)) {
-			ERROR(
-				"error during saving syscalls table to the file: '%s'",
-				FILE_SYSCALLS_TABLE);
-			return EXIT_FAILURE;
-		}
-		NOTICE("saved syscalls table to the file: '%s'",
-			FILE_SYSCALLS_TABLE);
-	}
 
 	INFO("Attaching probes...");
 	if (attach_probes(Bpf)) {

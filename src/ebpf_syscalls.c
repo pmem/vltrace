@@ -700,23 +700,17 @@ print_syscalls_table(FILE *f)
  * dump_syscalls_table -- dump the table of syscalls
  */
 int
-dump_syscalls_table(const char *path)
+dump_syscalls_table(FILE *file)
 {
 	int size = sizeof(struct syscall_descriptor);
-	int ret = 0;
+	int count = SC_TBL_SIZE;
 
-	FILE *file = fopen(path, "w");
-	if (!file) {
-		perror("fopen");
+	if (fwrite(&size, sizeof(size), 1, file) != 1 ||
+	    fwrite(&count, sizeof(count), 1, file) != 1 ||
+	    fwrite(Syscall_array, sizeof(Syscall_array), 1, file) != 1) {
+		perror("fwrite");
 		return -1;
 	}
 
-	if (fwrite(&size, sizeof(int), 1, file) != 1 ||
-	    fwrite(Syscall_array, sizeof(Syscall_array), 1, file) != 1) {
-		perror("fwrite");
-		ret = -1;
-	}
-
-	fclose(file);
-	return ret;
+	return 0;
 }
