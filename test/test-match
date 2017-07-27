@@ -114,8 +114,8 @@ fi
 set +e
 if [ "$OUTPUT_FORMAT" == "-l bin" ]; then
 	# binary output format
-	echo "$ $BIN2TXT -t syscalls_table.dat -b $OUT_VLT > $OUT_TXT"
-	$BIN2TXT -t syscalls_table.dat -b $OUT_VLT > $OUT_TXT
+	echo "$ $BIN2TXT -b $OUT_VLT > $OUT_TXT"
+	$BIN2TXT -b $OUT_VLT > $OUT_TXT
 	RV=$?
 	[ $RV -ne 0 ] \
 		&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \

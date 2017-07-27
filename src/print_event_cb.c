@@ -555,6 +555,11 @@ print_header_bin(int argc, char *const argv[])
 		return -1;
 	}
 
+	/* save syscall table */
+	if (dump_syscalls_table(OutputFile)) {
+		return -1;
+	}
+
 	/* save BUF_SIZE */
 	int buf_size = BUF_SIZE;
 	if (fwrite(&buf_size, sizeof(int), 1, OutputFile) != 1) {
