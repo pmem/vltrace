@@ -180,6 +180,6 @@ extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
 
 void init_syscalls_table(void);
 int print_syscalls_table(FILE *f);
-int dump_syscalls_table(const char *path);
+int dump_syscalls_table(FILE *file);
 
 #endif /* EBPF_SYSCALLS_H */
