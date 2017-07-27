@@ -117,7 +117,7 @@ char *syscall_names[SC_TBL_SIZE] = {
 	.handler_name = NULL }
 
 /* table of syscalls */
-struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
+struct sc_desc Syscall_array[SC_TBL_SIZE] = {
 	[0 ... SC_TBL_SIZE - 1] = SC_EMPTY,
 
 	EBPF_SYSCALL_DESC(__NR_read, SyS_read, 3),
@@ -702,7 +702,7 @@ print_syscalls_table(FILE *f)
 int
 dump_syscalls_table(FILE *file)
 {
-	int size = sizeof(struct syscall_descriptor);
+	int size = sizeof(struct sc_desc);
 	int count = SC_TBL_SIZE;
 
 	if (fwrite(&size, sizeof(size), 1, file) != 1 ||
