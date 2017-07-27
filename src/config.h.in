@@ -31,7 +31,7 @@
  */
 
 /*
- * config.h -- Configuration
+ * config.h -- vltrace configuration information
  */
 
 
@@ -39,8 +39,9 @@
 #define CONFIG_H
 
 enum {
-	VLTRACE_VERSION_MAJOR = @VLTRACE_VERSION_MAJOR@,
-	VLTRACE_VERSION_MINOR = @VLTRACE_VERSION_MINOR@,
+	VLTRACE_VERSION_MAJOR = @VERSION_MAJOR@,
+	VLTRACE_VERSION_MINOR = @VERSION_MINOR@,
+	VLTRACE_VERSION_PATCH = @VERSION_PATCH@,
 };
 
 #endif /* CONFIG_H */

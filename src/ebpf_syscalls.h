@@ -142,8 +142,8 @@ enum {
 	SC_NAME_LEN = 31
 };
 
-/* properties of syscall with number 'num' */
-struct syscall_descriptor {
+/* properties of syscall with number 'num' (syscall descriptor) */
+struct sc_desc {
 
 	/* syscall number */
 	uint32_t num;
@@ -176,7 +176,7 @@ struct syscall_descriptor {
 	char positions[SC_ARGS_MAX];
 };
 
-extern struct syscall_descriptor Syscall_array[SC_TBL_SIZE];
+extern struct sc_desc Syscall_array[SC_TBL_SIZE];
 
 void init_syscalls_table(void);
 int print_syscalls_table(FILE *f);
