@@ -45,8 +45,19 @@
 #include "ebpf_syscalls.h"
 #include "print_event_cb.h"
 #include "utils.h"
+#include "config.h"
 
 #include "ebpf/trace.h"
+
+/* vltrace syscall table signature */
+#define VLTRACE_TAB_SIGNATURE	"VLTRACE_TAB"
+
+/* vltrace log signature */
+#define VLTRACE_LOG_SIGNATURE	"VLTRACE_LOG"
+
+#define STR_ARCH_x86_64		"x86_64"
+
+#define COMPILE_ERROR_ON(cond) ((void)sizeof(char[(cond) ? -1 : 1]))
 
 static char *Str_entry; /* will be initialized by init_printing_events() */
 static size_t Len_str_entry; /* will be initialized by init_printing_events() */
@@ -532,13 +543,14 @@ print_header_bin(int argc, char *const argv[])
 #define MAX_LEN_STR 4096
 
 	struct header_s {
-		int argc;
+		uint32_t argc;
 		char argv[MAX_LEN_STR];
 	} header;
 
-	int data_size = 0;
-	int next_size = 0;
+	uint32_t data_size = 0;
+	uint32_t next_size = 0;
 
+	/* save command line in struct header */
 	for (int i = 0; i < argc; i++) {
 		next_size = strlen(argv[i]) + 1;
 		if (data_size + next_size >= MAX_LEN_STR)
@@ -550,30 +562,111 @@ print_header_bin(int argc, char *const argv[])
 	header.argc = argc;
 	data_size += offsetof(struct header_s, argv);
 
+	/* get current working directory */
 	char cwd[PATH_MAX];
 	if (getcwd(cwd, PATH_MAX) == NULL) {
+		perror("getcwd");
+		return -1;
+	}
+
+	/* get hardware identifier (utsname.machine) */
+	struct utsname buf;
+	if (uname(&buf)) {
+		perror("uname");
+		return -1;
+	}
+
+	/* check architecture - currently only x86_64 is supported */
+	uint32_t architecture;
+	if (strcmp(buf.machine, STR_ARCH_x86_64) == 0) {
+		architecture = ARCH_x86_64;
+	} else {
+		ERROR("unknown architecture: %s", buf.machine);
+		return -1;
+	}
+
+	/*
+	 *               *** FORMAT OF VLTRACE BINARY LOG ***
+	 *
+	 *	* first 80036 bytes is the same for all logs:
+	 *
+	 *	char [12]		- syscall table signature "VLTRACE_TAB"
+	 *	uint32_t		- major version number
+	 *	uint32_t		- minor version number
+	 *	uint32_t		- patch version number
+	 *	uint32_t		- hardware architecture
+	 *	struct sc_desc [1000]	- syscall table
+	 *
+	 *	* offset 80036 bytes is here
+	 *
+	 *	char [12]		- log signature "VLTRACE_LOG"
+	 *	uint32_t		- BUF_SIZE
+	 *	uint32_t		- length of CWD (cwd_len)
+	 *	char [cwd_len]		- current working directory
+	 *	uint32_t		- size of the following struct header
+	 *	struct header		- structure containing the command line
+	 *
+	 *	* Here follows actual log consisting of pairs:
+	 *
+	 *	uint32_t		- size of the packet
+	 *	struct data_*		- data packet
+	 */
+
+	/* save syscall table signature */
+	char tab_signature[] = VLTRACE_TAB_SIGNATURE;
+	COMPILE_ERROR_ON(sizeof(tab_signature) != 12);
+	if (fwrite(tab_signature, sizeof(tab_signature), 1, OutputFile) != 1) {
+		return -1;
+	}
+
+	/* save version number */
+	uint32_t major = VLTRACE_VERSION_MAJOR;
+	uint32_t minor = VLTRACE_VERSION_MINOR;
+	uint32_t patch = VLTRACE_VERSION_PATCH;
+	if (fwrite(&major, sizeof(major), 1, OutputFile) != 1 ||
+	    fwrite(&minor, sizeof(minor), 1, OutputFile) != 1 ||
+	    fwrite(&patch, sizeof(patch), 1, OutputFile) != 1) {
+		return -1;
+	}
+
+	/* save hardware architecture */
+	if (fwrite(&architecture, sizeof(architecture), 1, OutputFile) != 1) {
+		return -1;
+	}
+
+	/* save syscall table */
+	if (dump_syscalls_table(OutputFile)) {
+		return -1;
+	}
+
+	/*   *** HERE COMES LOG ***   */
+
+	/* save log signature */
+	char log_signature[] = VLTRACE_LOG_SIGNATURE;
+	COMPILE_ERROR_ON(sizeof(log_signature) != 12);
+	if (fwrite(log_signature, sizeof(log_signature), 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save BUF_SIZE */
-	int buf_size = BUF_SIZE;
-	if (fwrite(&buf_size, sizeof(int), 1, OutputFile) != 1) {
+	uint32_t buf_size = BUF_SIZE;
+	if (fwrite(&buf_size, sizeof(buf_size), 1, OutputFile) != 1) {
 		return -1;
 	}
 
-	/* save CWD's size */
-	buf_size = strlen(cwd);
-	if (fwrite(&buf_size, sizeof(int), 1, OutputFile) != 1) {
+	/* save length of CWD */
+	uint32_t cwd_len = strlen(cwd) + 1;
+	if (fwrite(&cwd_len, sizeof(cwd_len), 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save CWD */
-	if (fwrite(cwd, buf_size, 1, OutputFile) != 1) {
+	if (fwrite(cwd, cwd_len, 1, OutputFile) != 1) {
 		return -1;
 	}
 
 	/* save header's size */
-	if (fwrite(&data_size, sizeof(int), 1, OutputFile) != 1) {
+	if (fwrite(&data_size, sizeof(data_size), 1, OutputFile) != 1) {
 		return -1;
 	}
 
