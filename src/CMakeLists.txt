@@ -58,6 +58,7 @@ set(SOURCES
 	generate_ebpf.c
 	print_event_cb.c)
 
+include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_BINARY_DIR}/..)
 include_directories(${LIBBCC_INCLUDE_DIRS})
 

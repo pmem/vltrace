@@ -36,7 +36,7 @@
  *
  * The syscalls numbers '__NR_syscall_name' are indices in the syscalls table:
  *
- *     struct syscall_descriptor Syscall_array[SC_TBL_SIZE]
+ *     struct sc_desc Syscall_array[SC_TBL_SIZE]
  *
  * defined in the file 'src/ebpf_syscalls.c', so all syscalls numbers contained
  * in this table have to be defined.
