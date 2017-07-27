@@ -160,7 +160,7 @@ function check() {
 			SC_ACTUA=$(echo $NAMES | cut -d" " -f2)
 			RS_MATCH=$(echo $RESLT | cut -d" " -f1)
 			RS_ACTUA=$(echo $RESLT | cut -d" " -f2)
-			if [ "$RS_MATCH" == "----------------" ]; then
+			if [ "$RS_MATCH" == "------------------" ]; then
 				NUM="1" && TYPE="ENTRY"
 			else
 				NUM="2" && TYPE="EXIT"

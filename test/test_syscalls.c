@@ -72,22 +72,22 @@
 
 #define F_ADD_SEALS		1033
 #define F_GET_SEALS		1034
-#define ANY_STR			"any-string"
+#define ANY_STR			"any string"
 
-#define PATTERN_START		0x12345678
-#define PATTERN_END		0x87654321
+#define PATTERN_START		((int)0x12345678)
+#define PATTERN_END		((int)0x87654321)
 #define BUF_SIZE		0x100
 
 #define MARK_START()		close(PATTERN_START)
 #define MARK_END()		close(PATTERN_END)
 
 #define FILE_EXIST		"/etc/fstab"
-#define FILE_CREATE		"/tmp/tmp-vltrace"
+#define FILE_CREATE		"/tmp/tmp vltrace"
 
-#define NON_EXIST_PATH_1	"111_non_exist"
-#define NON_EXIST_PATH_2	"222_non_exist"
+#define NON_EXIST_PATH_1	"111 non exist"
+#define NON_EXIST_PATH_2	"222 non exist"
 
-/* used to test unsupported flags (almost all bits are set) */
+/* used to test all flags set */
 #define FLAGS_SET		0x0FFFFFFFFFFFFFFF
 
 #define STRING_10		"1234567890"
@@ -98,29 +98,25 @@
 #define STRING_840		STRING_420 STRING_420
 #define STRING_1260		STRING_420 STRING_420 STRING_420
 
-#define STRING_126_1		"START_111_"STRING_10"_111_END"
-#define STRING_126_2		"START_222_"STRING_10"_222_END"
-#define STRING_126_3		"START_333_"STRING_10"_333_END"
+#define STRING_126_1		"START 111 "STRING_10" 111 END"
+#define STRING_126_2		"START 222 "STRING_10" 222 END"
+#define STRING_126_3		"START 333 "STRING_10" 333 END"
 
-#define STRING_382_1		"START_111_"STRING_120"_111_END"
-#define STRING_382_2		"START_222_"STRING_120"_222_END"
-#define STRING_382_3		"START_333_"STRING_120"_333_END"
+#define STRING_382_1		"START 111 "STRING_120" 111 END"
+#define STRING_382_2		"START 222 "STRING_120" 222 END"
+#define STRING_382_3		"START 333 "STRING_120" 333 END"
 
-#define STRING_765_1		"START_111_"STRING_420"_111_END"
-#define STRING_765_2		"START_222_"STRING_420"_222_END"
-#define STRING_765_3		"START_333_"STRING_420"_333_END"
+#define STRING_765_1		"START 111 "STRING_420" 111 END"
+#define STRING_765_2		"START 222 "STRING_420" 222 END"
+#define STRING_765_3		"START 333 "STRING_420" 333 END"
 
-#define STRING_1148_1		"START_111_"STRING_840"_111_END"
-#define STRING_1148_2		"START_222_"STRING_840"_222_END"
-#define STRING_1148_3		"START_333_"STRING_840"_333_END"
+#define STRING_1148_1		"START 111 "STRING_840" 111 END"
+#define STRING_1148_2		"START 222 "STRING_840" 222 END"
+#define STRING_1148_3		"START 333 "STRING_840" 333 END"
 
-#define STRING_1531_1		"START_111_"STRING_1260"_111_END"
-#define STRING_1531_2		"START_222_"STRING_1260"_222_END"
-#define STRING_1531_3		"START_333_"STRING_1260"_333_END"
-
-#define N_ITERATIONS		1000000
-
-static int counter;
+#define STRING_1531_1		"START 111 "STRING_1260" 111 END"
+#define STRING_1531_2		"START 222 "STRING_1260" 222 END"
+#define STRING_1531_3		"START 333 "STRING_1260" 333 END"
 
 static char *strings[5][3] = {
 	{
@@ -149,6 +145,9 @@ static char *strings[5][3] = {
 		STRING_1531_3,
 	},
 };
+
+#define N_ITERATIONS		1000000
+static int counter;
 
 /*
  * s -- busy wait for a while
@@ -230,6 +229,8 @@ s();
 static void
 test_unsupported_syscalls(void)
 {
+	char buf[BUF_SIZE];
+
 s();
 	chroot(NON_EXIST_PATH_1);
 
@@ -304,35 +305,32 @@ s();
 	umount2(NON_EXIST_PATH_2, 0x123);
 
 s();
-	setxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2,
-			(const void *)0x101, 0x102, 0x103);
+	setxattr(NON_EXIST_PATH_1, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
 s();
-	lsetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1,
-			(const void *)0x104, 0x105, 0x106);
+	lsetxattr(NON_EXIST_PATH_2, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
 s();
-	fsetxattr(0x107, NON_EXIST_PATH_2,
-			(const void *)0x108, 0x109, 0x110);
+	fsetxattr(0x107, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
 
 s();
-	getxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, (void *)0x101, 0x102);
+	getxattr(NON_EXIST_PATH_1, ANY_STR, buf, BUF_SIZE);
 s();
-	lgetxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, (void *)0x103, 0x104);
+	lgetxattr(NON_EXIST_PATH_2, ANY_STR, buf, BUF_SIZE);
 s();
-	fgetxattr(0x105, NON_EXIST_PATH_2, (void *)0x106, 0x107);
+	fgetxattr(0x105, ANY_STR, buf, BUF_SIZE);
 
 s();
-	listxattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2, 0x101);
+	listxattr(NON_EXIST_PATH_1, ANY_STR, 0x101);
 s();
-	llistxattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1, 0x102);
+	llistxattr(NON_EXIST_PATH_2, ANY_STR, 0x102);
 s();
-	flistxattr(0x103, NON_EXIST_PATH_2, 0x104);
+	flistxattr(0x103, ANY_STR, 0x104);
 
 s();
-	removexattr(NON_EXIST_PATH_1, NON_EXIST_PATH_2);
+	removexattr(NON_EXIST_PATH_1, ANY_STR);
 s();
-	lremovexattr(NON_EXIST_PATH_2, NON_EXIST_PATH_1);
+	lremovexattr(NON_EXIST_PATH_2, ANY_STR);
 s();
-	fremovexattr(0x101, NON_EXIST_PATH_2);
+	fremovexattr(0x101, ANY_STR);
 
 s();
 	syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);

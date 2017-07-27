@@ -148,9 +148,11 @@ b2hex(char b)
 static inline void
 fprint_i64(FILE *f, uint64_t x)
 {
-	char str[2 * sizeof(x)];
-
+	char str[2 * sizeof(x) + 2];
 	const char *const px = (const char *)&x;
+
+	str[0] = '0';
+	str[1] = 'x';
 
 	for (unsigned i = 0; i < sizeof(x); i++) {
 		str[sizeof(str) - 1 - 2 * i - 0] = b2hex(px[i]);
@@ -259,7 +261,11 @@ fprint_path(unsigned path, int *str_fini, FILE *f,
 		*str_fini = 1;
 	}
 
+	if (!event->info.is_cont)
+		fwrite("\"", 1, 1, f);
 	fwrite(str, len, 1, f);
+	if (*str_fini)
+		fwrite("\"", 1, 1, f);
 }
 
 /*
@@ -296,11 +302,11 @@ fwrite_out_lf_fld_sep(FILE *f)
 void
 init_printing_events(void)
 {
-	static char str[] = "_----------------_----------------_";
+	static char str[] = "_------------------_------------------_";
+	char *c;
 
-	str[0]  = Args.separator;
-	str[17] = Args.separator;
-	str[34] = Args.separator;
+	while (c = strchr(str, '_'))
+		*c = Args.separator;
 
 	Str_entry = str;
 	Len_str_entry = strlen(str);
@@ -342,8 +348,10 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 			unsigned max_len = BUF_SIZE - 1;
 			unsigned len = strnlen(event->aux_str, max_len);
 			fwrite(event->aux_str, len, 1, f);
-			if (len < max_len)
+			if (len < max_len) {
 				str_fini = 1;
+				fwrite("\"", 1, 1, f);
+			}
 		}
 		return;
 	}
@@ -360,7 +368,7 @@ print_event_text_kp_entry(FILE *f, void *data, int size)
 		/* PID & TID */
 		fprint_i64(f, event->pid_tid);
 
-		/* "_----------------_----------------_" */
+		/* "_------------------_------------------_" */
 		fwrite(Str_entry, Len_str_entry, 1, f);
 
 		/* syscall's name */
