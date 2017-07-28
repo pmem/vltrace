@@ -36,6 +36,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "syscalls_numbers.h"
@@ -117,7 +118,7 @@ char *syscall_names[SC_TBL_SIZE] = {
 	.handler_name = NULL }
 
 /* table of syscalls */
-struct syscall_descriptor Syscall_array[SC_TBL_SIZE] = {
+struct sc_desc Syscall_array[SC_TBL_SIZE] = {
 	[0 ... SC_TBL_SIZE - 1] = SC_EMPTY,
 
 	EBPF_SYSCALL_DESC(__NR_read, SyS_read, 3),
@@ -700,23 +701,17 @@ print_syscalls_table(FILE *f)
  * dump_syscalls_table -- dump the table of syscalls
  */
 int
-dump_syscalls_table(const char *path)
+dump_syscalls_table(FILE *file)
 {
-	int size = sizeof(struct syscall_descriptor);
-	int ret = 0;
+	uint32_t size = sizeof(struct sc_desc);
+	uint32_t count = SC_TBL_SIZE;
 
-	FILE *file = fopen(path, "w");
-	if (!file) {
-		perror("fopen");
+	if (fwrite(&size, sizeof(size), 1, file) != 1 ||
+	    fwrite(&count, sizeof(count), 1, file) != 1 ||
+	    fwrite(Syscall_array, sizeof(Syscall_array), 1, file) != 1) {
+		perror("fwrite");
 		return -1;
 	}
 
-	if (fwrite(&size, sizeof(int), 1, file) != 1 ||
-	    fwrite(Syscall_array, sizeof(Syscall_array), 1, file) != 1) {
-		perror("fwrite");
-		ret = -1;
-	}
-
-	fclose(file);
-	return ret;
+	return 0;
 }

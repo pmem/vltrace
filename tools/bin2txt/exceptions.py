@@ -1,5 +1,6 @@
+#!/usr/bin/python3
 #
-# Copyright 2017, Intel Corporation
+# Copyright (c) 2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -13,7 +14,7 @@
 #       the documentation and/or other materials provided with the
 #       distribution.
 #
-#     * Neither the name of the copyright holder nor the names of its
+#     * Neither the name of Intel Corporation nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -29,48 +30,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-project(vltrace C)
 
-add_cstyle(src)
+class EndOfFile(Exception):
+    def __init__(self):
+        Exception.__init__(self)
 
-find_package(PkgConfig)
-pkg_check_modules(LIBBCC REQUIRED libbcc)
 
-add_c_flag(-D_GNU_SOURCE)
-add_c_flag(-Wextra)
+class CriticalError(Exception):
+    def __init__(self, string):
+        self.message = string
 
-if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
-	# using Clang
-	add_c_flag(-Wno-initializer-overrides)
-else()
-	# using GCC
-	add_c_flag(-Wno-override-init)
-endif()
-
-set(SOURCES
-	vltrace.c
-	txt.c
-	cl_parser.c
-	bpf_ctx.c
-	utils.c
-	attach_probes.c
-	ebpf_syscalls.c
-	generate_ebpf.c
-	print_event_cb.c)
-
-include_directories(${PROJECT_BINARY_DIR})
-include_directories(${PROJECT_BINARY_DIR}/..)
-include_directories(${LIBBCC_INCLUDE_DIRS})
-
-link_directories(${LIBBCC_LIBRARY_DIRS})
-
-add_executable(vltrace ${SOURCES})
-
-add_subdirectory(ebpf)
-
-target_link_libraries(vltrace ebpf ${LIBBCC_LIBRARIES})
-
-install(TARGETS vltrace
-	CONFIGURATIONS Release RelWithDebInfo Debug None
-	DESTINATION ${CMAKE_INSTALL_BINDIR}
-	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+    def __str__(self):
+        return repr(self.message)

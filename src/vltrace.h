@@ -41,6 +41,13 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+/* hardware architecture */
+enum arch {
+	ARCH_NONE = 0,
+	ARCH_x86_64 = 1,
+};
+
+/* vltrace output format */
 enum out_format {
 	EOF_TEXT = 0,
 	EOF_BIN,

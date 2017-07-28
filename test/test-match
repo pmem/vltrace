@@ -89,8 +89,8 @@ FUNCT=$TEST_DIR/helper_functions.sh
 
 source $FUNCT
 
-PATTERN_START="---------------- close 0000000012345678"
-PATTERN_END="---------------- close 0000000087654321"
+PATTERN_START="---------------- close 0x0000000012345678"
+PATTERN_END="---------------- close 0x0000000087654321"
 
 OUT_BIN=output-bin-$TEST_NUM.log
 OUT_TXT=output-txt-$TEST_NUM.log
@@ -114,8 +114,8 @@ fi
 set +e
 if [ "$OUTPUT_FORMAT" == "-l bin" ]; then
 	# binary output format
-	echo "$ $BIN2TXT -t syscalls_table.dat -b $OUT_VLT > $OUT_TXT"
-	$BIN2TXT -t syscalls_table.dat -b $OUT_VLT > $OUT_TXT
+	echo "$ $BIN2TXT -b $OUT_VLT > $OUT_TXT"
+	$BIN2TXT -b $OUT_VLT > $OUT_TXT
 	RV=$?
 	[ $RV -ne 0 ] \
 		&& save_logs "*-$TEST_NUM.log" "match-$(basename $TEST_FILE)-$TEST_NUM" \

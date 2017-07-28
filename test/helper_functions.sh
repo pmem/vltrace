@@ -104,16 +104,14 @@ function split_forked_file() {
 
 	cp $1 $INPUT
 
-	local N=0
-	local PID="fork"
+	local N=1
+	local PID=$(head -n1 $INPUT | cut -d" " -f2)
 	while true; do
 		NAME="${NAME1}-${N}-${NAME2}"
 		touch $NAME
 		set +e
-		[ "$PID" == "fork" ] \
-			&& grep "$PID" $INPUT | sort -k3 -r > $NAME \
-			|| grep "$PID" $INPUT > $NAME
-		grep -v "$PID" $INPUT > $GREP
+		grep -e "$PID" $INPUT > $NAME
+		grep -v -e "$PID" $INPUT > $GREP
 		cp $GREP $INPUT
 		set -e
 		[ $(cat $INPUT | wc -l) -eq 0 ] && break
@@ -160,7 +158,7 @@ function check() {
 			SC_ACTUA=$(echo $NAMES | cut -d" " -f2)
 			RS_MATCH=$(echo $RESLT | cut -d" " -f1)
 			RS_ACTUA=$(echo $RESLT | cut -d" " -f2)
-			if [ "$RS_MATCH" == "----------------" ]; then
+			if [ "$RS_MATCH" == "------------------" ]; then
 				NUM="1" && TYPE="ENTRY"
 			else
 				NUM="2" && TYPE="EXIT"
