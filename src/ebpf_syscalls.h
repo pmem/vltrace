@@ -38,6 +38,7 @@
 #define EBPF_SYSCALLS_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 enum masks_t {
 	/* syscall has string as first arg */
@@ -145,7 +146,7 @@ enum {
 struct syscall_descriptor {
 
 	/* syscall number */
-	unsigned num;
+	uint32_t num;
 
 	/* syscall number as string */
 	char num_str[SC_NUM_LEN + 1];
@@ -157,19 +158,19 @@ struct syscall_descriptor {
 	char syscall_name[SC_NAME_LEN + 1];
 
 	/* length of the syscall's name */
-	unsigned name_length;
+	uint32_t name_length;
 
 	/* number of syscall's arguments */
-	unsigned args_qty;
+	uint32_t args_qty;
 
 	/* mask of flags */
-	unsigned mask;
+	uint32_t mask;
 
 	/* syscall is available in current kernel */
-	int available;
+	int32_t available;
 
 	/* number of string arguments */
-	unsigned nstrings;
+	uint32_t nstrings;
 
 	/* positions of string arguments */
 	char positions[SC_ARGS_MAX];
