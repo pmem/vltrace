@@ -99,6 +99,9 @@ for release in Debug Release; do
 		echo "Notice: running basic tests available for kernels >= 4.4"
 		echo
 
+		# create /run/lock directory, because it may not exist
+		sudo mkdir -p /run/lock
+
 		VLTRACE="ulimit -l 10240 && ulimit -n 10240 && src/vltrace -t --expr kp-all"
 		DATE=$(which date)
 
