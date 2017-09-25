@@ -43,12 +43,15 @@ RUN apt-get update && apt-get install -y apt-transport-https apt-utils
 RUN apt-get update && apt-get install -y \
 	clang \
 	cmake \
+	curl \
+	debhelper \
+	devscripts \
 	git \
 	pandoc \
 	pkg-config \
-	debhelper \
-	devscripts \
+	ruby \
 	sudo \
+	wget \
 	whois
 
 RUN apt-get install -y linux-headers-4.8.0-46-generic
