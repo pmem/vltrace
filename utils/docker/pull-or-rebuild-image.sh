@@ -47,6 +47,18 @@
 # Docker Hub.
 #
 
+if [[ "$TRAVIS_EVENT_TYPE" == "cron" || "$TRAVIS_BRANCH" == "coverity_scan" ]]; then
+	if [[ $TYPE != "coverity" ]]; then
+		echo "Skipping non-Coverity job for cron/Coverity build"
+		exit 0
+	fi
+else
+	if [[ $TYPE = "coverity" ]]; then
+		echo "Skipping Coverity job for non cron/Coverity build"
+		exit 0
+	fi
+fi
+
 if [[ -z "$OS" || -z "$OS_VER" ]]; then
 	echo "ERROR: The variables OS and OS_VER have to be set properly " \
              "(eg. OS=ubuntu, OS_VER=16.04)."
@@ -122,4 +134,3 @@ done
 # Getting here means rebuilding the Docker image is not required.
 # Pull the image from Docker Hub.
 sudo docker pull pmem/vltrace:${OS}-${OS_VER}
-
