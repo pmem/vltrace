@@ -47,7 +47,7 @@ if [[ -z "$HOST_WORKDIR" ]]; then
 	exit 1
 fi
 
-imageName=pmem/vltrace:${OS}-${OS_VER}
+imageName=${DOCKER_REPO}:${OS}-${OS_VER}
 containerName=vltrace-${OS}-${OS_VER}
 
 if [[ $MAKE_PKG -eq 0 ]] ; then command="./run-build.sh"; fi
