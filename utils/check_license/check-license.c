@@ -100,7 +100,7 @@ static const char *help_str =
  * read_pattern -- read the pattern from the 'path_pattern' file to 'pattern'
  */
 static int
-read_pattern(const char *path_pattern, char *pattern)
+read_pattern(const char *path_pattern, char *pattern, size_t len_pattern)
 {
 	int file_pattern;
 	ssize_t ret;
@@ -110,13 +110,13 @@ read_pattern(const char *path_pattern, char *pattern)
 		return -1;
 	}
 
-	ret = read(file_pattern, pattern, LICENSE_MAX_LEN);
+	ret = read(file_pattern, pattern, len_pattern);
 	close(file_pattern);
 
 	if (ret == -1) {
 		ERROR("read(): %s: %s", strerror(errno), path_pattern);
 		return -1;
-	} else if (ret != LICENSE_MAX_LEN) {
+	} else if (ret != len_pattern) {
 		ERROR("read(): incorrect format of the license pattern"
 			" file (%s)", path_pattern);
 		return -1;
@@ -170,11 +170,14 @@ strstr2(const char *str, const char *sub1, const char *sub2,
 static void
 format_license(char *license, size_t length)
 {
-	char comment_str[COMMENT_STR_LEN];
+	char comment_str[COMMENT_STR_LEN + 1];
 	char *comment = license;
 	size_t comment_len;
 	int was_space;
 	size_t w, r;
+
+	/* make sure comment_str will be null-terminated */
+	comment_str[COMMENT_STR_LEN] = 0;
 
 	/* detect a comment string */
 	while (*comment != '\n')
@@ -264,7 +267,7 @@ analyze_license(const char *path_to_check,
 static int
 create_pattern(const char *path_license, char *pattern)
 {
-	char buffer[LICENSE_MAX_LEN];
+	char buffer[LICENSE_MAX_LEN + 1];
 	char *license;
 	ssize_t ret;
 	int file_license;
@@ -321,7 +324,7 @@ print_diff(char *license, char *pattern, size_t len)
 static int
 verify_license(const char *path_to_check, char *pattern, const char *filename)
 {
-	char buffer[LICENSE_MAX_LEN];
+	char buffer[LICENSE_MAX_LEN + 1];
 	char *license, *copyright;
 	int file_to_check;
 	ssize_t ret;
@@ -470,9 +473,12 @@ static int
 mode_check_license(const char *path_pattern, const char *path_to_check,
 		const char *filename)
 {
-	char pattern[LICENSE_MAX_LEN];
+	char pattern[LICENSE_MAX_LEN + 1];
 
-	if (read_pattern(path_pattern, pattern) == -1)
+	/* fill the pattern with zeros */
+	memset(pattern, 0, sizeof(pattern));
+
+	if (read_pattern(path_pattern, pattern, LICENSE_MAX_LEN) == -1)
 		return -1;
 
 	return verify_license(path_to_check, pattern, filename);
