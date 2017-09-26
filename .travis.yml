@@ -9,6 +9,8 @@ env:
     - OS=ubuntu OS_VER=16.04
 
 before_install:
+  - export GITHUB_REPO=pmem/vltrace
+  - export DOCKER_REPO=pmem/vltrace
   - uname -r
   - sudo apt-get install -y linux-headers-$(uname -r)
   - sudo find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated'

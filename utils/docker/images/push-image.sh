@@ -43,7 +43,7 @@ function usage {
 	echo "Usage:"
 	echo "    push-image.sh <OS-VER>"
 	echo "where <OS-VER>, for example, can be 'ubuntu-16.04', provided " \
-		"a Docker image tagged with pmem/vltrace:ubuntu-16.04 exists " \
+		"a Docker image tagged with ${DOCKER_REPO}:ubuntu-16.04 exists " \
 		"locally."
 }
 
@@ -53,8 +53,8 @@ if [[ -z "$1" ]]; then
 	exit 1
 fi
 
-# Check if the image tagged with vltrace/OS-VER exists locally
-if [[ ! $(sudo docker images -a | awk -v pattern="^pmem/vltrace:$1\$" \
+# Check if the image tagged with ${DOCKER_REPO}:OS-VER exists locally
+if [[ ! $(docker images -a | awk -v pattern="^${DOCKER_REPO}:$1\$" \
 	'$1":"$2 ~ pattern') ]]
 then
 	echo "ERROR: wrong argument."
@@ -63,7 +63,7 @@ then
 fi
 
 # Log in to the Docker Hub
-sudo docker login -u="$DOCKER_USER" -p="$DOCKER_PASSWORD"
+docker login -u="${DOCKER_USER}" -p="${DOCKER_PASSWORD}"
 
 # Push the image to the repository
-sudo docker push pmem/vltrace:$1
+docker push ${DOCKER_REPO}:$1
