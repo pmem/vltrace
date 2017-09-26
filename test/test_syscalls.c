@@ -180,46 +180,47 @@ s();
 s();
 	fd = open(FILE_CREATE, O_RDWR | O_CREAT, 0666);
 s();
-	write(fd, buffer, BUF_SIZE);
+	(void) write(fd, buffer, BUF_SIZE);
 s();
-	lseek(fd, 0, SEEK_SET);
+	(void) lseek(fd, 0, SEEK_SET);
 s();
-	read(fd, buffer, BUF_SIZE);
+	(void) read(fd, buffer, BUF_SIZE);
 s();
-	fstat(fd, &buf);
+	(void) fstat(fd, &buf);
 s();
 	close(fd);
 s();
-	unlink(FILE_CREATE);
+	(void) unlink(FILE_CREATE);
 
 s();
-	execve(FILE_CREATE, (char * const *)0x123456, (char * const *)0x654321);
+	(void) execve(FILE_CREATE, (char * const *)0x123456,
+			(char * const *)0x654321);
 
 s();
-	stat(FILE_EXIST, &buf);
+	(void) stat(FILE_EXIST, &buf);
 s();
-	lstat(FILE_EXIST, &buf);
+	(void) lstat(FILE_EXIST, &buf);
 
 s();
-	uname(&name);
+	(void) uname(&name);
 
 s();
-	syscall(SYS_getpid); /* getpid */
+	(void) syscall(SYS_getpid); /* getpid */
 s();
-	syscall(SYS_gettid); /* gettid */
+	(void) syscall(SYS_gettid); /* gettid */
 
 	/* PART #2 - test arguments */
 
 s();
-	write(0x101, buffer, 1);
+	(void) write(0x101, buffer, 1);
 s();
-	read(0x102, buffer, 2);
+	(void) read(0x102, buffer, 2);
 s();
-	lseek(0x103, 3, SEEK_END);
+	(void) lseek(0x103, 3, SEEK_END);
 s();
-	fstat(0x104, &buf);
+	(void) fstat(0x104, &buf);
 s();
-	syscall(SYS_futex, 1, FUTEX_WAKE_OP, 3, 4, 5, FLAGS_SET); /* futex */
+	(void) syscall(SYS_futex, 1, FUTEX_WAKE_OP, 3, 4, 5, FLAGS_SET);
 s();
 }
 
@@ -232,51 +233,55 @@ test_unsupported_syscalls(void)
 	char buf[BUF_SIZE];
 
 s();
-	chroot(NON_EXIST_PATH_1);
+	(void) chroot(NON_EXIST_PATH_1);
 
 	/* fcntl - unsupported flags */
 s();
-	syscall(SYS_fcntl, 0x104, FLAGS_SET, FLAGS_SET, 0x105, 0x106, 0x107);
+	(void) syscall(SYS_fcntl, 0x104, FLAGS_SET, FLAGS_SET, 0x105, 0x106,
+			0x107);
 
 s();
-	flock(0x108, 0x109);
+	(void) flock(0x108, 0x109);
 
 s();
-	setsockopt(0x101, 0x102, 0x103, (void *)0x104, (socklen_t)0x105);
+	(void) setsockopt(0x101, 0x102, 0x103, (void *)0x104, (socklen_t)0x105);
 s();
-	getsockopt(0x106, 0x107, 0x108, (void *)0x109, (socklen_t *)0x110);
+	(void) getsockopt(0x106, 0x107, 0x108, (void *)0x109,
+				(socklen_t *)0x110);
 s();
 	struct sockaddr addr;
 	socklen_t addrlen = sizeof(addr);
-	getsockname(0x101, &addr, &addrlen);
+	(void) getsockname(0x101, &addr, &addrlen);
 s();
-	inotify_add_watch(0x104, NON_EXIST_PATH_1, 0x105);
+	(void) inotify_add_watch(0x104, NON_EXIST_PATH_1, 0x105);
 s();
-	inotify_rm_watch(0x106, 0x107);
+	(void) inotify_rm_watch(0x106, 0x107);
 
 s();
-	syscall(SYS_io_cancel, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
+	(void) syscall(SYS_io_cancel, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 s();
-	syscall(SYS_io_destroy, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
+	(void) syscall(SYS_io_destroy, 0x102, 0x103, 0x104, 0x105, 0x106,
+			0x107);
 s();
-	syscall(SYS_io_getevents, 0x103, 0x104, 0x105, 0x106, 0x107, 0x108);
+	(void) syscall(SYS_io_getevents, 0x103, 0x104, 0x105, 0x106, 0x107,
+			0x108);
 s();
-	syscall(SYS_io_setup, 0x104, 0x105, 0x106, 0x107, 0x108, 0x109);
+	(void) syscall(SYS_io_setup, 0x104, 0x105, 0x106, 0x107, 0x108, 0x109);
 s();
-	syscall(SYS_io_submit, 0x105, 0x106, 0x107, 0x108, 0x109, 0x110);
+	(void) syscall(SYS_io_submit, 0x105, 0x106, 0x107, 0x108, 0x109, 0x110);
 
 s();
-	syscall(SYS_ioctl, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
+	(void) syscall(SYS_ioctl, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
 s();
-	mknod(FILE_EXIST, 0x101, 0x102);
+	(void) mknod(FILE_EXIST, 0x101, 0x102);
 s();
-	mknodat(0x103, FILE_EXIST, 0x104, 0x105);
+	(void) mknodat(0x103, FILE_EXIST, 0x104, 0x105);
 
 s();
-	mmap((void *)0x101, 0x102, 0x103, 0xFFFF, 0x105, 0x106);
+	(void) mmap((void *)0x101, 0x102, 0x103, 0xFFFF, 0x105, 0x106);
 s();
-	munmap((void *)0x102, 0x103);
+	(void) munmap((void *)0x102, 0x103);
 
 	struct timeval time1;
 	struct timespec time2;
@@ -284,74 +289,77 @@ s();
 	memset(&time2, 0, sizeof(time2));
 
 s();
-	select(0, (fd_set *)0x104, (fd_set *)0x105, (fd_set *)0x106, &time1);
+	(void) select(0, (fd_set *)0x104, (fd_set *)0x105, (fd_set *)0x106,
+			&time1);
 s();
-	pselect(0, (fd_set *)0x105, (fd_set *)0x106, (fd_set *)0x107, &time2,
-		(const sigset_t *)0x108);
+	(void) pselect(0, (fd_set *)0x105, (fd_set *)0x106, (fd_set *)0x107,
+			&time2, (const sigset_t *)0x108);
 
 s();
-	swapon(NON_EXIST_PATH_1, 0x101);
+	(void) swapon(NON_EXIST_PATH_1, 0x101);
 s();
-	swapoff(NON_EXIST_PATH_2);
+	(void) swapoff(NON_EXIST_PATH_2);
 
 s();
-	syscall(SYS_poll, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
+	(void) syscall(SYS_poll, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
 
 s();
-	mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3", 0x101, (void *)0x102);
+	(void) mount(NON_EXIST_PATH_1, NON_EXIST_PATH_2, "ext3", 0x101,
+			(void *)0x102);
 s();
-	umount(NON_EXIST_PATH_1);
+	(void) umount(NON_EXIST_PATH_1);
 s();
-	umount2(NON_EXIST_PATH_2, 0x123);
+	(void) umount2(NON_EXIST_PATH_2, 0x123);
 
 s();
-	setxattr(NON_EXIST_PATH_1, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	(void) setxattr(NON_EXIST_PATH_1, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
 s();
-	lsetxattr(NON_EXIST_PATH_2, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	(void) lsetxattr(NON_EXIST_PATH_2, ANY_STR, buf, BUF_SIZE,
+				XATTR_CREATE);
 s();
-	fsetxattr(0x107, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
+	(void) fsetxattr(0x107, ANY_STR, buf, BUF_SIZE, XATTR_CREATE);
 
 s();
-	getxattr(NON_EXIST_PATH_1, ANY_STR, buf, BUF_SIZE);
+	(void) getxattr(NON_EXIST_PATH_1, ANY_STR, buf, BUF_SIZE);
 s();
-	lgetxattr(NON_EXIST_PATH_2, ANY_STR, buf, BUF_SIZE);
+	(void) lgetxattr(NON_EXIST_PATH_2, ANY_STR, buf, BUF_SIZE);
 s();
-	fgetxattr(0x105, ANY_STR, buf, BUF_SIZE);
+	(void) fgetxattr(0x105, ANY_STR, buf, BUF_SIZE);
 
 s();
-	listxattr(NON_EXIST_PATH_1, ANY_STR, 0x101);
+	(void) listxattr(NON_EXIST_PATH_1, ANY_STR, 0x101);
 s();
-	llistxattr(NON_EXIST_PATH_2, ANY_STR, 0x102);
+	(void) llistxattr(NON_EXIST_PATH_2, ANY_STR, 0x102);
 s();
-	flistxattr(0x103, ANY_STR, 0x104);
+	(void) flistxattr(0x103, ANY_STR, 0x104);
 
 s();
-	removexattr(NON_EXIST_PATH_1, ANY_STR);
+	(void) removexattr(NON_EXIST_PATH_1, ANY_STR);
 s();
-	lremovexattr(NON_EXIST_PATH_2, ANY_STR);
+	(void) lremovexattr(NON_EXIST_PATH_2, ANY_STR);
 s();
-	fremovexattr(0x101, ANY_STR);
+	(void) fremovexattr(0x101, ANY_STR);
 
 s();
-	syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
+	(void) syscall(SYS_ppoll, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
 s();
-	epoll_ctl(0x101, 0x102, 0x103, (struct epoll_event *)0x104);
+	(void) epoll_ctl(0x101, 0x102, 0x103, (struct epoll_event *)0x104);
 s();
-	epoll_wait(0x102, (struct epoll_event *)0x103, 0x104, 0x105);
+	(void) epoll_wait(0x102, (struct epoll_event *)0x103, 0x104, 0x105);
 s();
-	epoll_pwait(0x103, (struct epoll_event *)0x104, 0x105, 0x106,
+	(void) epoll_pwait(0x103, (struct epoll_event *)0x104, 0x105, 0x106,
 			(const sigset_t *)0x107);
 
 	/* open - unsupported flags */
 s();
-	syscall(SYS_open, NON_EXIST_PATH_2, FLAGS_SET, FLAGS_SET, FLAGS_SET,
-		FLAGS_SET, FLAGS_SET);
+	(void) syscall(SYS_open, NON_EXIST_PATH_2, FLAGS_SET, FLAGS_SET,
+			FLAGS_SET, FLAGS_SET, FLAGS_SET);
 
 	/* clone - unsupported flags */
 s();
-	syscall(SYS_clone, FLAGS_SET, FLAGS_SET, FLAGS_SET, FLAGS_SET,
-		FLAGS_SET, FLAGS_SET);
+	(void) syscall(SYS_clone, FLAGS_SET, FLAGS_SET, FLAGS_SET, FLAGS_SET,
+			FLAGS_SET, FLAGS_SET);
 
 	/* vfork - moved to test_4 */
 }
@@ -364,47 +372,50 @@ test_strings(char *string[3])
 {
 	/* string args: 1 (open) */
 s();
-	syscall(SYS_open, string[0], 0x102, 0x103, 0x104, 0x105, 0x106);
+	(void) syscall(SYS_open, string[0], 0x102, 0x103, 0x104, 0x105, 0x106);
 
 	/* string args: 2 (openat) */
 s();
-	syscall(SYS_openat, 0x101, string[1], 0x103, 0x104, 0x105, 0x106);
+	(void) syscall(SYS_openat, 0x101, string[1], 0x103, 0x104, 0x105,
+			0x106);
 
 	/* string args: 1 2 (rename) */
 s();
-	rename(string[0], string[1]);
+	(void) rename(string[0], string[1]);
 
 	/* string args: 1 2 (llistxattr) */
 s();
-	llistxattr(string[1], string[0], 0x103);
+	(void) llistxattr(string[1], string[0], 0x103);
 
 	/* string args: 1 3 (symlinkat) */
 s();
-	syscall(SYS_symlinkat, string[0], 0x102, string[1]);
+	(void) syscall(SYS_symlinkat, string[0], 0x102, string[1]);
 
 	/* string args: 2 4 (renameat) */
 s();
-	syscall(SYS_renameat, 0x101, string[0], 0x103, string[1]);
+	(void) syscall(SYS_renameat, 0x101, string[0], 0x103, string[1]);
 
 	/* string args: 1 2 3 (mount) */
 s();
-	mount(string[0], string[1], string[2], 0x101, (void *)0x102);
+	(void) mount(string[0], string[1], string[2], 0x101, (void *)0x102);
 
 	/* string args: 1 2 3 (request_key) */
 s();
-	syscall(SYS_request_key, string[0], string[1], string[2], 0x104);
+	(void) syscall(SYS_request_key, string[0], string[1], string[2], 0x104);
 
 	/* string args: 3 (init_module) */
 s();
-	syscall(SYS_init_module, 0x101, 0x102, string[0]);
+	(void) syscall(SYS_init_module, 0x101, 0x102, string[0]);
 
 	/* string args: 4 (kexec_file_load) */
 s();
-	syscall(SYS_kexec_file_load, 0x101, 0x102, 0x103, string[1], 0x105);
+	(void) syscall(SYS_kexec_file_load, 0x101, 0x102, 0x103, string[1],
+			0x105);
 
 	/* string args: 5 (fanotify_mark) */
 s();
-	syscall(SYS_fanotify_mark, 0x101, 0x102, 0x103, 0x104, string[0]);
+	(void) syscall(SYS_fanotify_mark, 0x101, 0x102, 0x103, 0x104,
+			string[0]);
 s();
 }
 
@@ -439,7 +450,7 @@ test_signal(void)
 
 	Signalled = 0;
 
-	raise(SIGUSR1);
+	(void) raise(SIGUSR1);
 
 	while (Signalled == 0)
 		sleep(1);
@@ -501,14 +512,15 @@ static void test_4(char *a, char *b, char *c)
 	 * when vfork is present
 	 */
 s();
-	syscall(SYS_open, NON_EXIST_PATH_1, 0x101, 0x102, 0x103, 0x104, 0x105);
+	(void) syscall(SYS_open, NON_EXIST_PATH_1, 0x101, 0x102, 0x103, 0x104,
+			0x105);
 s();
-	syscall(SYS_close, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
+	(void) syscall(SYS_close, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
 s();
 	switch (vfork()) {
 	case 0: /* handle child */
-		execve(NON_EXIST_PATH_1, (char * const *)0x123456,
+		(void) execve(NON_EXIST_PATH_1, (char * const *)0x123456,
 					(char * const *)0x654321);
 		_exit(1);
 	case -1:
@@ -521,9 +533,10 @@ s();
 	 * when vfork is present
 	 */
 s();
-	syscall(SYS_open, NON_EXIST_PATH_2, 0x102, 0x103, 0x104, 0x105, 0x106);
+	(void) syscall(SYS_open, NON_EXIST_PATH_2, 0x102, 0x103, 0x104, 0x105,
+			0x106);
 s();
-	syscall(SYS_close, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
+	(void) syscall(SYS_close, 0x102, 0x103, 0x104, 0x105, 0x106, 0x107);
 s();
 
 	MARK_END();
