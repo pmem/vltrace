@@ -199,12 +199,16 @@ cl_parser(struct cl_options *const clo,
 			fprint_help(stderr);
 			exit(EXIT_FAILURE);
 
-		default:
-			ERROR("unknown option: '-%c'", c);
 		case '?':
 			fprint_help(stderr);
 			exit(EXIT_FAILURE);
+
+		default:
+			ERROR("unknown option: '-%c'", c);
+			fprint_help(stderr);
+			exit(EXIT_FAILURE);
 		}
+
 	}
 
 	if (optind < argc)
