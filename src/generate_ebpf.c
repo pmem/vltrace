@@ -209,22 +209,16 @@ generate_ebpf()
 	    str_replace_all(&head_file,
 			"READ_AND_SUBMIT_it_will_be_removed_N_MINUS_2_PACKETS",
 			"READ_AND_SUBMIT_N_MINUS_2_PACKETS"))
-		goto error_load_file_2;
+		goto error_free_all;
 
 	if (str_replace_all(&head_file, "#include \"trace.h\"", trace_h_file))
-		goto error_str_replace_all;
-
-	free(trace_h_file);
-	trace_h_file = NULL;
+		goto error_free_all;
 
 	size_t fw_res = fwrite(head_file, strlen(head_file), 1, ts);
 	if (fw_res < 1) {
 		perror("fwrite");
-		goto error_load_file_2;
+		goto error_free_all;
 	}
-
-	free(head_file);
-	head_file = NULL;
 
 	if (Args.expr == NULL) {
 		NOTICE("defaulting to 'all'");
@@ -243,7 +237,7 @@ generate_ebpf()
 		ERROR("unknown option: '%s'", Args.expr);
 	}
 
-error_str_replace_all:
+error_free_all:
 	if (trace_h_file)
 		free(trace_h_file);
 error_load_file_2:
