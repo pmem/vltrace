@@ -174,11 +174,19 @@ test_basic_syscalls(void)
 
 s();
 	fd = open(FILE_EXIST, O_RDONLY);
+	if (fd == -1) {
+		perror("open");
+		exit(-1);
+	}
 s();
 	(void) close(fd);
 
 s();
 	fd = open(FILE_CREATE, O_RDWR | O_CREAT, 0666);
+	if (fd == -1) {
+		perror("open");
+		exit(-1);
+	}
 s();
 	(void) write(fd, buffer, BUF_SIZE);
 s();
