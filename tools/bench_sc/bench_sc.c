@@ -106,7 +106,7 @@ main(int argc, char *argv[])
 	}
 
 	iters_qty = atol(argv[1]);
-	if (iters_qty == 0) {
+	if (iters_qty <= 0) {
 		printf("Error: number of iterations must be greater than 0\n");
 		return 1;
 	}
