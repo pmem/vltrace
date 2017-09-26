@@ -5,8 +5,8 @@ language: c
 
 env:
   matrix:
-    - OS=fedora OS_VER=25
-    - OS=ubuntu OS_VER=16.04
+    - OS=fedora OS_VER=25    PUSH_IMAGE=1
+    - OS=ubuntu OS_VER=16.04 PUSH_IMAGE=1
 
 before_install:
   - export GITHUB_REPO=pmem/vltrace
@@ -16,7 +16,6 @@ before_install:
   - sudo find /usr -name "syscalls_64.h" 2>/dev/null | grep -e 'generated'
   - export HOST_WORKDIR=`pwd`
   - cd utils/docker
-  - ./prepare-environment.sh
   - ./pull-or-rebuild-image.sh
   - if [[ -f push_image_to_repo_flag ]]; then PUSH_THE_IMAGE=1; fi
   - rm -f push_image_to_repo_flag
