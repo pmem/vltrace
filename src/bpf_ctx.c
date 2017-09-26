@@ -364,7 +364,10 @@ load_fn_and_attach_common(struct bpf_ctx *sbcp,
 		goto exit_free;
 	}
 
-	if (append_item_to_pr_arr(sbcp, ev_name, probe, prog_type)) {
+	enum perf_reader_type_t perf_reader_type =
+					(enum perf_reader_type_t) prog_type;
+
+	if (append_item_to_pr_arr(sbcp, ev_name, probe, perf_reader_type)) {
 		perf_reader_free(probe);
 		goto exit_free;
 	}
