@@ -5,8 +5,9 @@ language: c
 
 env:
   matrix:
-    - OS=fedora OS_VER=25
-    - OS=ubuntu OS_VER=16.04
+    - TYPE=normal OS=fedora OS_VER=25
+    - TYPE=normal OS=ubuntu OS_VER=16.04
+    - TYPE=coverity OS=ubuntu OS_VER=16.04
 
 before_install:
   - uname -r
