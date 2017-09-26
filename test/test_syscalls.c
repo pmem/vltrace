@@ -460,7 +460,10 @@ static void test_0(char *a, char *b, char *c)
  */
 static void test_1(char *a, char *b, char *c)
 {
-	syscall(SYS_fork);
+	if (syscall(SYS_fork) == -1) {
+		perror("fork");
+		exit(-1);
+	}
 	test_0(a, b, c);
 }
 
@@ -479,7 +482,10 @@ static void test_2(char *a, char *b, char *c)
  */
 static void test_3(char *a, char *b, char *c)
 {
-	syscall(SYS_fork);
+	if (syscall(SYS_fork) == -1) {
+		perror("fork");
+		exit(-1);
+	}
 	test_2(a, b, c);
 }
 
@@ -500,10 +506,14 @@ s();
 	syscall(SYS_close, 0x101, 0x102, 0x103, 0x104, 0x105, 0x106);
 
 s();
-	if (vfork() == 0) { /* vfork - handle child */
+	switch (vfork()) {
+	case 0: /* handle child */
 		execve(NON_EXIST_PATH_1, (char * const *)0x123456,
 					(char * const *)0x654321);
 		_exit(1);
+	case -1:
+		perror("vfork");
+		exit(-1);
 	}
 
 	/*
@@ -525,7 +535,10 @@ s();
  */
 static void test_5(char *a, char *b, char *c)
 {
-	syscall(SYS_fork);
+	if (syscall(SYS_fork) == -1) {
+		perror("fork");
+		exit(-1);
+	}
 	test_1(a, b, c);
 }
 
@@ -534,7 +547,10 @@ static void test_5(char *a, char *b, char *c)
  */
 static void test_6(char *a, char *b, char *c)
 {
-	syscall(SYS_fork);
+	if (syscall(SYS_fork) == -1) {
+		perror("fork");
+		exit(-1);
+	}
 	test_3(a, b, c);
 }
 
@@ -604,7 +620,10 @@ static void test_12(char *a, char *b, char *c)
  */
 static void test_13(char *a, char *b, char *c)
 {
-	syscall(SYS_fork);
+	if (syscall(SYS_fork) == -1) {
+		perror("fork");
+		exit(-1);
+	}
 	test_12(a, b, c);
 }
 
@@ -614,7 +633,10 @@ static void test_13(char *a, char *b, char *c)
  */
 static void test_14(char *a, char *b, char *c)
 {
-	syscall(SYS_fork);
+	if (syscall(SYS_fork) == -1) {
+		perror("fork");
+		exit(-1);
+	}
 	test_13(a, b, c);
 }
 
