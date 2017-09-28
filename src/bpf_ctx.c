@@ -347,14 +347,17 @@ load_fn_and_attach_common(struct bpf_ctx *sbcp,
 	}
 
 	struct perf_reader *probe = NULL;
+	enum perf_reader_type_t perf_reader_type = PERF_TYPE_NONE;
 	switch (prog_type) {
 	case BPF_PROG_TYPE_KPROBE:
 		probe = bpf_attach_kprobe(fn_fd, probe_type, ev_name, event,
 					pid, (int)cpu, group_fd, NULL, NULL);
+		perf_reader_type = PERF_TYPE_KPROBE;
 		break;
 	case BPF_PROG_TYPE_TRACEPOINT:
 		probe = bpf_attach_tracepoint(fn_fd, category, event,
 					pid, (int)cpu, group_fd, NULL, NULL);
+		perf_reader_type = PERF_TYPE_TRACEPOINT;
 		break;
 	}
 
@@ -364,7 +367,7 @@ load_fn_and_attach_common(struct bpf_ctx *sbcp,
 		goto exit_free;
 	}
 
-	if (append_item_to_pr_arr(sbcp, ev_name, probe, prog_type)) {
+	if (append_item_to_pr_arr(sbcp, ev_name, probe, perf_reader_type)) {
 		perf_reader_free(probe);
 		goto exit_free;
 	}
