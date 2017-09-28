@@ -2,6 +2,7 @@ vltrace: syscall tracer using eBPF
 ==================================
 
 [![Build Status](https://travis-ci.org/pmem/vltrace.svg)](https://travis-ci.org/pmem/vltrace)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/13758/badge.svg)](https://scan.coverity.com/projects/pmem-vltrace)
 
 This is the top-level README.md of vltrace.
 
