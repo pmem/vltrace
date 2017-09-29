@@ -148,13 +148,17 @@ static char *strings[5][3] = {
 
 #define N_ITERATIONS		1000000
 static int counter;
+static int do_wait;
 
 /*
  * s -- busy wait for a while
  */
-static void
+static inline void
 s()
 {
+	if (!do_wait)
+		return;
+
 	for (int i = 0; i < N_ITERATIONS; i++)
 		counter += rand();
 }
@@ -702,13 +706,20 @@ main(int argc, char *argv[])
 {
 	int max = sizeof(run_test) / sizeof(run_test[0]) - 1;
 
-	if (argc < 2) {
-		fprintf(stderr, "usage: %s <test-number: 0..%i>\n",
-				argv[0], max);
+	if (argc < 3) {
+		fprintf(stderr,
+			"usage: %s <wait|do-not-wait> <test-number>\n"
+			"      wait         - busy wait between syscalls ('wait' or 'do-not-wait')\n"
+			"      test-number  - test number from the range: [0...%i]\n",
+			argv[0], max);
 		return -1;
 	}
 
-	int n = atoi(argv[1]);
+	do_wait = (strncmp(argv[1], "wait", 5) == 0);
+	printf("Notice: busy wait between syscall is %s\n",
+		do_wait ? "ON" : "OFF");
+
+	int n = atoi(argv[2]);
 	if (n < 0 || n > max) {
 		fprintf(stderr,
 			"Error: test number can take only following values: 0..%i (%i is not allowed)\n",
