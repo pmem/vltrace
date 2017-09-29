@@ -46,6 +46,7 @@
 #include <signal.h>
 #include <utime.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -69,6 +70,8 @@
 #include <linux/falloc.h>
 
 #include "../src/syscalls_numbers.h"
+
+#define N_WORKERS		10
 
 #define F_ADD_SEALS		1033
 #define F_GET_SEALS		1034
@@ -681,6 +684,44 @@ test_14(void)
 }
 
 /*
+ * worker_15 -- worker for test_15
+ */
+static void *
+worker_15(void *arg)
+{
+	MARK_START();
+	test_strings(strings[0]);
+	MARK_END();
+
+	return NULL;
+}
+
+/*
+ * test_15 -- multithreaded test
+ */
+static void
+test_15()
+{
+	pthread_t workers[N_WORKERS];
+	int i;
+
+	MARK_START();
+
+	for (i = 0; i < N_WORKERS; ++i) {
+		if (pthread_create(&workers[i], NULL, worker_15, NULL)) {
+			perror("pthread_create");
+			exit(-1);
+		}
+	}
+
+	MARK_END();
+
+	for (i = i - 1; i >= 0; --i) {
+		pthread_join(workers[i], NULL);
+	}
+}
+
+/*
  * run_test -- array of tests
  */
 static void (*run_test[])(void) = {
@@ -698,7 +739,8 @@ static void (*run_test[])(void) = {
 	test_11,
 	test_12,
 	test_13,
-	test_14
+	test_14,
+	test_15
 };
 
 int

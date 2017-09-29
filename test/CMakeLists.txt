@@ -32,8 +32,12 @@
 add_cstyle(test)
 
 add_c_flag(-Wno-unused-result)
+
 include_directories(${PROJECT_BINARY_DIR})
+include(FindThreads)
+
 add_executable(test_syscalls test_syscalls.c)
+target_link_libraries(test_syscalls ${CMAKE_THREAD_LIBS_INIT})
 
 # check if the running kernel meets version requirements
 execute_process(COMMAND utils/check-kernel.sh ${VLTRACE_MINIMUM_KERNEL_VERSION}
@@ -137,4 +141,7 @@ else ()
 			COMMAND ${TEST_DIR}/test-match ${FMT} -f ${TEST_APP} ${WAIT} 14 1531)
 
 	endforeach(OUTPUT_FORMAT)
+
+	add_test(NAME "binary-126-multithreaded-string-arguments-126"
+		COMMAND ${TEST_DIR}/test-match -f ${TEST_APP} "do-not-wait" 15 126)
 endif ()
