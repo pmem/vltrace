@@ -270,9 +270,9 @@ check_if_only_instance(void)
 	 */
 	(void) ftruncate(FD_lock, 0);
 	(void) asprintf(&buf, "%10i\n", getpid());
-	(void) write(FD_lock, buf, strlen(buf) + 1);
 
 	if (buf != NULL) {
+		(void) write(FD_lock, buf, strlen(buf) + 1);
 		free(buf);
 	}
 

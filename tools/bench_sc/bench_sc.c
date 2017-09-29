@@ -58,6 +58,10 @@ open_close()
 	int x;
 
 	fd = open("/dev/null", O_RDONLY);
+	if (fd == -1) {
+		perror("open");
+		exit(-1);
+	}
 	x = read(fd, &x, sizeof(x));
 	x = write(fd, &x, sizeof(x));
 	(void) close(fd);
