@@ -467,7 +467,8 @@ test_signal(void)
 /*
  * test_0 -- test basic syscalls
  */
-static void test_0(char *a, char *b, char *c)
+static void
+test_0(void)
 {
 	MARK_START();
 	test_basic_syscalls();
@@ -477,19 +478,21 @@ static void test_0(char *a, char *b, char *c)
 /*
  * test_1 -- test basic syscalls with fork()
  */
-static void test_1(char *a, char *b, char *c)
+static void
+test_1(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_0(a, b, c);
+	test_0();
 }
 
 /*
  * test_2 -- test unsupported syscalls
  */
-static void test_2(char *a, char *b, char *c)
+static void
+test_2(void)
 {
 	MARK_START();
 	test_unsupported_syscalls();
@@ -499,19 +502,21 @@ static void test_2(char *a, char *b, char *c)
 /*
  * test_3 -- test unsupported syscalls with fork()
  */
-static void test_3(char *a, char *b, char *c)
+static void
+test_3(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_2(a, b, c);
+	test_2();
 }
 
 /*
  * test_4 -- test vfork()
  */
-static void test_4(char *a, char *b, char *c)
+static void
+test_4(void)
 {
 	MARK_START();
 
@@ -554,31 +559,34 @@ s();
 /*
  * test_5 -- test basic syscalls after double fork()
  */
-static void test_5(char *a, char *b, char *c)
+static void
+test_5(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_1(a, b, c);
+	test_1();
 }
 
 /*
  * test_6 -- test unsupported syscalls after double fork()
  */
-static void test_6(char *a, char *b, char *c)
+static void
+test_6(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_3(a, b, c);
+	test_3();
 }
 
 /*
  * test_7 -- test the syscall 'signal'
  */
-static void test_7(char *a, char *b, char *c)
+static void
+test_7(void)
 {
 	MARK_START();
 	test_signal();
@@ -588,7 +596,8 @@ static void test_7(char *a, char *b, char *c)
 /*
  * test_8 -- test syscalls with string arguments of length < 126
  */
-static void test_8(char *a, char *b, char *c)
+static void
+test_8(void)
 {
 	MARK_START();
 	test_strings(strings[0]);
@@ -598,7 +607,8 @@ static void test_8(char *a, char *b, char *c)
 /*
  * test_9 -- test syscalls with string arguments of length < 382
  */
-static void test_9(char *a, char *b, char *c)
+static void
+test_9(void)
 {
 	MARK_START();
 	test_strings(strings[1]);
@@ -608,7 +618,8 @@ static void test_9(char *a, char *b, char *c)
 /*
  * test_10 -- test syscalls with string arguments of length < 765
  */
-static void test_10(char *a, char *b, char *c)
+static void
+test_10(void)
 {
 	MARK_START();
 	test_strings(strings[2]);
@@ -618,7 +629,8 @@ static void test_10(char *a, char *b, char *c)
 /*
  * test_11 -- test syscalls with string arguments of length < 1148
  */
-static void test_11(char *a, char *b, char *c)
+static void
+test_11(void)
 {
 	MARK_START();
 	test_strings(strings[3]);
@@ -628,7 +640,8 @@ static void test_11(char *a, char *b, char *c)
 /*
  * test_12 -- test syscalls with string arguments of length < 1531
  */
-static void test_12(char *a, char *b, char *c)
+static void
+test_12(void)
 {
 	MARK_START();
 	test_strings(strings[4]);
@@ -639,32 +652,34 @@ static void test_12(char *a, char *b, char *c)
  * test_13 -- test syscalls with string arguments of length < 1531
  *            with single fork
  */
-static void test_13(char *a, char *b, char *c)
+static void
+test_13(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_12(a, b, c);
+	test_12();
 }
 
 /*
  * test_14 -- test syscalls with string arguments of length < 1531
  *            with double fork
  */
-static void test_14(char *a, char *b, char *c)
+static void
+test_14(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_13(a, b, c);
+	test_13();
 }
 
 /*
  * run_test -- array of tests
  */
-static void (*run_test[])(char *, char *, char *) = {
+static void (*run_test[])(void) = {
 	test_0,
 	test_1,
 	test_2,
@@ -703,9 +718,7 @@ main(int argc, char *argv[])
 
 	printf("Starting: test_%i ...\n", n);
 
-	run_test[n](argc > 2 ? argv[2] : NULL,
-			argc > 3 ? argv[3] : NULL,
-			argc > 4 ? argv[4] : NULL);
+	run_test[n]();
 
 	printf("Done (test_%i)\n", n);
 }
