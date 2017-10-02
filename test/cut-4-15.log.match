@@ -1,0 +1,25 @@
+$(XX) $(XX) ------------------ ------------------ close 0x0000000012345678
+$(XX) $(XX) $(XX) $(XX) close
+$(XX) $(XX) ------------------ ------------------ open "START 111 1234567890 111 END" 0x0000000000000102 0x0000000000000103
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF open
+$(XX) $(XX) ------------------ ------------------ openat 0x0000000000000101 "START 222 1234567890 222 END" 0x0000000000000103 0x0000000000000104
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF openat
+$(XX) $(XX) ------------------ ------------------ rename "START 111 1234567890 111 END" "START 222 1234567890 222 END"
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF rename
+$(XX) $(XX) ------------------ ------------------ llistxattr "START 222 1234567890 222 END" $(XX) 0x0000000000000103
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF llistxattr
+$(XX) $(XX) ------------------ ------------------ symlinkat "START 111 1234567890 111 END" 0x0000000000000102 "START 222 1234567890 222 END"
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF symlinkat
+$(XX) $(XX) ------------------ ------------------ renameat 0x0000000000000101 "START 111 1234567890 111 END" 0x0000000000000103 "START 222 1234567890 222 END"
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF renameat
+$(XX) $(XX) ------------------ ------------------ mount "START 111 1234567890 111 END" "START 222 1234567890 222 END" "START 333 1234567890 333 END" 0x0000000000000101 0x0000000000000102
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF mount
+$(XX) $(XX) ------------------ ------------------ request_key "START 111 1234567890 111 END" "START 222 1234567890 222 END" "START 333 1234567890 333 END" 0x0000000000000104
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF request_key
+$(XX) $(XX) ------------------ ------------------ init_module 0x0000000000000101 0x0000000000000102 "START 111 1234567890 111 END"
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF init_module
+$(XX) $(XX) ------------------ ------------------ kexec_file_load 0x0000000000000101 0x0000000000000102 0x0000000000000103 "START 222 1234567890 222 END" 0x0000000000000105
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF kexec_file_load
+$(XX) $(XX) ------------------ ------------------ fanotify_mark 0x0000000000000101 0x0000000000000102 0x0000000000000103 0x0000000000000104 "START 111 1234567890 111 END"
+$(XX) $(XX) $(XX) 0xFFFFFFFFFFFFFFFF fanotify_mark
+$(XX) $(XX) ------------------ ------------------ close 0x0000000087654321

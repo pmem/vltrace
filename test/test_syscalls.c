@@ -46,6 +46,7 @@
 #include <signal.h>
 #include <utime.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -69,6 +70,8 @@
 #include <linux/falloc.h>
 
 #include "../src/syscalls_numbers.h"
+
+#define N_WORKERS		10
 
 #define F_ADD_SEALS		1033
 #define F_GET_SEALS		1034
@@ -148,13 +151,17 @@ static char *strings[5][3] = {
 
 #define N_ITERATIONS		1000000
 static int counter;
+static int do_wait;
 
 /*
  * s -- busy wait for a while
  */
-static void
+static inline void
 s()
 {
+	if (!do_wait)
+		return;
+
 	for (int i = 0; i < N_ITERATIONS; i++)
 		counter += rand();
 }
@@ -467,7 +474,8 @@ test_signal(void)
 /*
  * test_0 -- test basic syscalls
  */
-static void test_0(char *a, char *b, char *c)
+static void
+test_0(void)
 {
 	MARK_START();
 	test_basic_syscalls();
@@ -477,19 +485,21 @@ static void test_0(char *a, char *b, char *c)
 /*
  * test_1 -- test basic syscalls with fork()
  */
-static void test_1(char *a, char *b, char *c)
+static void
+test_1(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_0(a, b, c);
+	test_0();
 }
 
 /*
  * test_2 -- test unsupported syscalls
  */
-static void test_2(char *a, char *b, char *c)
+static void
+test_2(void)
 {
 	MARK_START();
 	test_unsupported_syscalls();
@@ -499,19 +509,21 @@ static void test_2(char *a, char *b, char *c)
 /*
  * test_3 -- test unsupported syscalls with fork()
  */
-static void test_3(char *a, char *b, char *c)
+static void
+test_3(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_2(a, b, c);
+	test_2();
 }
 
 /*
  * test_4 -- test vfork()
  */
-static void test_4(char *a, char *b, char *c)
+static void
+test_4(void)
 {
 	MARK_START();
 
@@ -554,31 +566,34 @@ s();
 /*
  * test_5 -- test basic syscalls after double fork()
  */
-static void test_5(char *a, char *b, char *c)
+static void
+test_5(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_1(a, b, c);
+	test_1();
 }
 
 /*
  * test_6 -- test unsupported syscalls after double fork()
  */
-static void test_6(char *a, char *b, char *c)
+static void
+test_6(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_3(a, b, c);
+	test_3();
 }
 
 /*
  * test_7 -- test the syscall 'signal'
  */
-static void test_7(char *a, char *b, char *c)
+static void
+test_7(void)
 {
 	MARK_START();
 	test_signal();
@@ -588,7 +603,8 @@ static void test_7(char *a, char *b, char *c)
 /*
  * test_8 -- test syscalls with string arguments of length < 126
  */
-static void test_8(char *a, char *b, char *c)
+static void
+test_8(void)
 {
 	MARK_START();
 	test_strings(strings[0]);
@@ -598,7 +614,8 @@ static void test_8(char *a, char *b, char *c)
 /*
  * test_9 -- test syscalls with string arguments of length < 382
  */
-static void test_9(char *a, char *b, char *c)
+static void
+test_9(void)
 {
 	MARK_START();
 	test_strings(strings[1]);
@@ -608,7 +625,8 @@ static void test_9(char *a, char *b, char *c)
 /*
  * test_10 -- test syscalls with string arguments of length < 765
  */
-static void test_10(char *a, char *b, char *c)
+static void
+test_10(void)
 {
 	MARK_START();
 	test_strings(strings[2]);
@@ -618,7 +636,8 @@ static void test_10(char *a, char *b, char *c)
 /*
  * test_11 -- test syscalls with string arguments of length < 1148
  */
-static void test_11(char *a, char *b, char *c)
+static void
+test_11(void)
 {
 	MARK_START();
 	test_strings(strings[3]);
@@ -628,7 +647,8 @@ static void test_11(char *a, char *b, char *c)
 /*
  * test_12 -- test syscalls with string arguments of length < 1531
  */
-static void test_12(char *a, char *b, char *c)
+static void
+test_12(void)
 {
 	MARK_START();
 	test_strings(strings[4]);
@@ -639,32 +659,72 @@ static void test_12(char *a, char *b, char *c)
  * test_13 -- test syscalls with string arguments of length < 1531
  *            with single fork
  */
-static void test_13(char *a, char *b, char *c)
+static void
+test_13(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_12(a, b, c);
+	test_12();
 }
 
 /*
  * test_14 -- test syscalls with string arguments of length < 1531
  *            with double fork
  */
-static void test_14(char *a, char *b, char *c)
+static void
+test_14(void)
 {
 	if (syscall(SYS_fork) == -1) {
 		perror("fork");
 		exit(-1);
 	}
-	test_13(a, b, c);
+	test_13();
+}
+
+/*
+ * worker_15 -- worker for test_15
+ */
+static void *
+worker_15(void *arg)
+{
+	MARK_START();
+	test_strings(strings[0]);
+	MARK_END();
+
+	return NULL;
+}
+
+/*
+ * test_15 -- multithreaded test
+ */
+static void
+test_15()
+{
+	pthread_t workers[N_WORKERS];
+	int i;
+
+	MARK_START();
+
+	for (i = 0; i < N_WORKERS; ++i) {
+		if (pthread_create(&workers[i], NULL, worker_15, NULL)) {
+			perror("pthread_create");
+			exit(-1);
+		}
+	}
+
+	MARK_END();
+
+	for (i = i - 1; i >= 0; --i) {
+		pthread_join(workers[i], NULL);
+	}
 }
 
 /*
  * run_test -- array of tests
  */
-static void (*run_test[])(char *, char *, char *) = {
+static void (*run_test[])(void) = {
 	test_0,
 	test_1,
 	test_2,
@@ -679,7 +739,8 @@ static void (*run_test[])(char *, char *, char *) = {
 	test_11,
 	test_12,
 	test_13,
-	test_14
+	test_14,
+	test_15
 };
 
 int
@@ -687,13 +748,20 @@ main(int argc, char *argv[])
 {
 	int max = sizeof(run_test) / sizeof(run_test[0]) - 1;
 
-	if (argc < 2) {
-		fprintf(stderr, "usage: %s <test-number: 0..%i>\n",
-				argv[0], max);
+	if (argc < 3) {
+		fprintf(stderr,
+			"usage: %s <wait|do-not-wait> <test-number>\n"
+			"      wait         - busy wait between syscalls ('wait' or 'do-not-wait')\n"
+			"      test-number  - test number from the range: [0...%i]\n",
+			argv[0], max);
 		return -1;
 	}
 
-	int n = atoi(argv[1]);
+	do_wait = (strncmp(argv[1], "wait", 5) == 0);
+	printf("Notice: busy wait between syscall is %s\n",
+		do_wait ? "ON" : "OFF");
+
+	int n = atoi(argv[2]);
 	if (n < 0 || n > max) {
 		fprintf(stderr,
 			"Error: test number can take only following values: 0..%i (%i is not allowed)\n",
@@ -703,9 +771,7 @@ main(int argc, char *argv[])
 
 	printf("Starting: test_%i ...\n", n);
 
-	run_test[n](argc > 2 ? argv[2] : NULL,
-			argc > 3 ? argv[3] : NULL,
-			argc > 4 ? argv[4] : NULL);
+	run_test[n]();
 
 	printf("Done (test_%i)\n", n);
 }
