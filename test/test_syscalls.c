@@ -149,8 +149,8 @@ static char *strings[5][3] = {
 	},
 };
 
-#define N_ITERATIONS		1000000
-static int counter;
+#define N_ITERATIONS		4000000
+volatile unsigned counter;
 static int do_wait;
 
 /*
@@ -163,7 +163,7 @@ s()
 		return;
 
 	for (int i = 0; i < N_ITERATIONS; i++)
-		counter += rand();
+		counter++;
 }
 
 /*
