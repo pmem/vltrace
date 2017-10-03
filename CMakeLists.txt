@@ -133,8 +133,8 @@ add_c_flag(-DDEBUG DEBUG)
 add_c_flag(-ggdb RELWITHDEBINFO)
 add_c_flag(-fno-omit-frame-pointer RELWITHDEBINFO)
 
-add_executable(check_license utils/check_license/check-license.c)
-add_executable(bench_sc tools/bench_sc/bench_sc.c)
+add_executable(check_license EXCLUDE_FROM_ALL utils/check_license/check-license.c)
+add_executable(bench_sc EXCLUDE_FROM_ALL tools/bench_sc/bench_sc.c)
 
 add_custom_target(checkers ALL)
 add_custom_target(cstyle)
