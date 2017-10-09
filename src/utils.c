@@ -323,7 +323,7 @@ str_replace_all(char **const text, const char *templt, const char *str)
 	char *occ;
 
 	if (str_len <= templt_len) {
-		char *new_str = malloc(templt_len);
+		char *new_str = malloc(templt_len + 1);
 		if (new_str == NULL) {
 			ERROR("out of memory");
 			return -1;
@@ -416,7 +416,7 @@ str_replace_with_char(char *const text, const char *templt, const char c)
 {
 	size_t len = strlen(templt);
 
-	char *new_str = malloc(len);
+	char *new_str = malloc(len + 1);
 	if (new_str == NULL) {
 		ERROR("out of memory");
 		return -1;
