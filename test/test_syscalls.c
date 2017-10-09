@@ -177,6 +177,8 @@ test_basic_syscalls(void)
 	struct stat buf;
 	int fd;
 
+	memset(buffer, 0xFF, BUF_SIZE);
+
 	/* PART #1 - real arguments */
 
 s();
