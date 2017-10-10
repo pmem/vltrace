@@ -332,10 +332,8 @@ str_replace_all(char **const text, const char *templt, const char *str)
 		memcpy(new_str, str, str_len);
 
 		/* fill the rest with spaces */
-		if (templt_len - str_len > 1) {
+		if (templt_len - str_len) {
 			memset(new_str + str_len, ' ', templt_len - str_len);
-		} else {
-			new_str[str_len] = ' ';
 		}
 
 		/* replace all */
