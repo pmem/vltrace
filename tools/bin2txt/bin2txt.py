@@ -56,7 +56,9 @@ def main():
     parser.add_argument("-v", "--verbose", action='count', required=False,
                         help="verbose mode (-v: verbose, -vv: very verbose)")
     parser.add_argument("-d", "--debug", action='store_true', required=False, help="debug mode")
-    parser.add_argument("-f", "--offline", action='store_true', required=False, help="offline analysis mode")
+    parser.add_argument("-f", "--offline", action='store_true', required=False,
+                        help="offline mode (first all packets are read, then sorted by time and finally printed out,"
+                             "while in the default 'online' mode packets are printed out as they come)")
 
     args = parser.parse_args()
 
