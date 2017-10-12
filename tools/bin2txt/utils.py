@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (c) 2017, Intel Corporation
+# Copyright 2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,7 +14,7 @@
 #       the documentation and/or other materials provided with the
 #       distribution.
 #
-#     * Neither the name of Intel Corporation nor the names of its
+#     * Neither the name of the copyright holder nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -61,7 +61,7 @@ def open_file(path, flags):
     except FileNotFoundError:
         print("ERROR: file not found: {0:s}".format(path), file=stderr)
         exit(-1)
-    except:
+    except:  # pragma: no cover
         print("ERROR: unexpected error", file=stderr)
         raise
     # noinspection PyUnboundLocalVariable
@@ -72,7 +72,7 @@ def open_file(path, flags):
 # read_bdata - read binary data from file
 ####################################################################################################################
 def read_bdata(fh, size):
-    assert_msg(size >= 0, "attempt to read data of negative size, input file can be corrupted")
+    assert_msg(size >= 0, "attempt to read data of negative size, input file may be corrupted")
     bdata = fh.read(size)
     length = len(bdata)
     if length == 0:
