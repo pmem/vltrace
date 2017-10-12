@@ -72,6 +72,9 @@ def main():
     if args.offline:
         conv.print_log()
 
+    if args.debug:
+        conv.print_other_lists()
+
 
 if __name__ == "__main__":  # pragma: no cover
     main()

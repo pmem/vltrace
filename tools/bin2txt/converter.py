@@ -107,21 +107,22 @@ class Converter:
             syscall.print_always()
 
     ####################################################################################################################
+    def print_other_lists(self):
+        if len(self.list_no_entry):
+            print("\nWARNING: list 'list_no_entry' is not empty!")
+            self.print_always(self.list_no_entry)
+
+        if len(self.list_no_exit):
+            print("\nWARNING: list 'list_no_exit' is not empty!")
+            self.print_always(self.list_no_exit)
+
+        if len(self.list_others):
+            print("\nWARNING: list 'list_others' is not empty!")
+            self.print_always(self.list_others)
+
+    ####################################################################################################################
     def print_log(self):
         self.print_always(self.list_ok)
-
-        if self.debug_mode:
-            if len(self.list_no_entry):
-                print("\nWARNING: list 'list_no_entry' is not empty!")
-                self.print_always(self.list_no_entry)
-
-            if len(self.list_no_exit):
-                print("\nWARNING: list 'list_no_exit' is not empty!")
-                self.print_always(self.list_no_exit)
-
-            if len(self.list_others):
-                print("\nWARNING: list 'list_others' is not empty!")
-                self.print_always(self.list_others)
 
     ####################################################################################################################
     def process_complete_syscall(self, syscall):  # pragma: no cover - overloaded method cannot be tested
@@ -392,3 +393,11 @@ class Converter:
 
         if self.print_progress:
             print("\rDone (read {0:d} packets).".format(n))
+
+        if len(self.list_no_entry):
+            self.list_ok += self.list_no_entry
+        if len(self.list_no_exit):
+            self.list_ok += self.list_no_exit
+        if len(self.list_others):
+            self.list_ok += self.list_others
+        self.list_ok.sort()
