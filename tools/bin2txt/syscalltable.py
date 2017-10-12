@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (c) 2017, Intel Corporation
+# Copyright 2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -14,7 +14,7 @@
 #       the documentation and/or other materials provided with the
 #       distribution.
 #
-#     * Neither the name of Intel Corporation nor the names of its
+#     * Neither the name of the copyright holder nor the names of its
 #       contributors may be used to endorse or promote products derived
 #       from this software without specific prior written permission.
 #
@@ -61,7 +61,6 @@ class SyscallTable:
     ####################################################################################################################
     def name(self, ind):
         i = self.valid_index(ind)
-        # noinspection PyUnresolvedReferences
         return self.table[i].name
 
     ####################################################################################################################
@@ -101,7 +100,7 @@ class SyscallTable:
                 print("ERROR: {0:s}".format(err.message), file=stderr)
                 exit(-1)
 
-            except:
+            except:  # pragma: no cover
                 print("ERROR: unexpected error", file=stderr)
                 raise
 
