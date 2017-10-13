@@ -34,7 +34,16 @@ project(vltrace C)
 add_cstyle(src)
 
 find_package(PkgConfig)
-pkg_check_modules(LIBBCC REQUIRED libbcc)
+
+if(PKG_CONFIG_FOUND)
+	pkg_check_modules(LIBBCC REQUIRED libbcc)
+else()
+	find_package(LIBBCC QUIET REQUIRED)
+endif()
+
+if(NOT LIBBCC_FOUND)
+	message(FATAL_ERROR "libbcc not found - needed by vltrace")
+endif()
 
 add_c_flag(-D_GNU_SOURCE)
 add_c_flag(-Wextra)
