@@ -31,10 +31,38 @@
 
 project(vltrace C)
 
+include(CheckCSourceRuns)
+
 add_cstyle(src)
 
 find_package(PkgConfig)
-pkg_check_modules(LIBBCC REQUIRED libbcc)
+
+if(PKG_CONFIG_FOUND)
+	pkg_check_modules(LIBBCC REQUIRED libbcc)
+else()
+	find_package(LIBBCC REQUIRED)
+endif()
+
+if(LIBBCC_FOUND)
+	set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} -lbcc")
+
+	CHECK_C_SOURCE_RUNS("
+#include <stdint.h>
+#include <unistd.h>
+#include <bcc/perf_reader.h>
+int main(void)
+{
+	perf_reader_raw_cb callback;
+	struct perf_reader *reader;
+	reader = bpf_open_perf_buffer(callback, NULL, NULL, -1, 0, 64);
+	return 0;
+}
+	" LIBBCC_RIGHT_VERSION)
+
+	if(NOT LIBBCC_RIGHT_VERSION)
+		message(FATAL_ERROR "libbcc v0.3.0-150-g3263805 or later is required")
+	endif()
+endif()
 
 add_c_flag(-D_GNU_SOURCE)
 add_c_flag(-Wextra)
