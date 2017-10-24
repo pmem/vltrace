@@ -56,9 +56,9 @@ RUN apt-get update && apt-get install -y \
 
 RUN apt-get install -y linux-headers-4.8.0-46-generic
 
-RUN echo "deb [trusted=yes] https://repo.iovisor.org/apt/xenial xenial-nightly main" \
+RUN echo "deb [trusted=yes] https://repo.iovisor.org/apt/xenial xenial main" \
 	| tee /etc/apt/sources.list.d/iovisor.list
-RUN apt-get update && apt-get install -y bcc-tools
+RUN apt-get update && apt-get install -y bcc-tools=0.4.0-*
 
 # Add user
 ENV USER user

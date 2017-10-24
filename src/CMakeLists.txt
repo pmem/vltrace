@@ -38,9 +38,9 @@ add_cstyle(src)
 find_package(PkgConfig)
 
 if(PKG_CONFIG_FOUND)
-	pkg_check_modules(LIBBCC REQUIRED libbcc)
+	pkg_check_modules(LIBBCC REQUIRED libbcc=0.4.0)
 else()
-	find_package(LIBBCC REQUIRED)
+	find_package(LIBBCC 0.4.0 REQUIRED)
 endif()
 
 if(LIBBCC_FOUND)
@@ -78,7 +78,7 @@ int main(void)
 	" LIBBCC_RIGHT_VERSION)
 
 	if(NOT LIBBCC_RIGHT_VERSION)
-		message(FATAL_ERROR "libbcc v0.3.0-150-g3263805 or later is required")
+		message(FATAL_ERROR "libbcc v0.4.0 is required")
 	endif()
 endif()
 

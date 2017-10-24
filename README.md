@@ -24,7 +24,7 @@ The installation guide of libbcc can be found [here](https://github.com/iovisor/
  - kernel headers installed:
     - 'kernel-devel' package on RHEL, Fedora and CentOS or
     - 'linux-headers' package on Debian and Ubuntu
- - libbcc v0.3.0-150-g3263805 or later
+ - libbcc v0.4.0
  - CAP_SYS_ADMIN capability (required by the bpf() syscall)
  - mounted debugfs and tracefs
 
