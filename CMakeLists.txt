@@ -53,11 +53,20 @@ endif ()
 
 # generate headers
 set(GENERATE_HEADER ${PROJECT_SOURCE_DIR}/utils/generate_headers.sh)
+
+message(STATUS "Looking for kernel header syscalls_64.h")
+
 execute_process(COMMAND ${GENERATE_HEADER}
+		OUTPUT_VARIABLE OUTPUT_GENERATE_HEADER
+		OUTPUT_STRIP_TRAILING_WHITESPACE
 		RESULT_VARIABLE KERNEL_HEADER)
-if (NOT ${KERNEL_HEADER} EQUAL 0)
-	message(FATAL_ERROR "ERROR: missing kernel header. Aborting...")
+
+if (${KERNEL_HEADER} EQUAL 0)
+	message(STATUS ${OUTPUT_GENERATE_HEADER})
+else ()
+	message(FATAL_ERROR ${OUTPUT_GENERATE_HEADER})
 endif ()
+
 add_custom_target(syscalls_64 ALL ${GENERATE_HEADER} make)
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in
