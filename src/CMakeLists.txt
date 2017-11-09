@@ -50,11 +50,29 @@ if(LIBBCC_FOUND)
 #include <stdint.h>
 #include <unistd.h>
 #include <bcc/perf_reader.h>
+int check_API(void)
+{
+	/* check API of bpf_open_perf_buffer() */
+	perf_reader_raw_cb raw_cb;
+	perf_reader_lost_cb lost_cb;
+	void *cb_cookie;
+	int pid, cpu, page_cnt;
+	void *buff = bpf_open_perf_buffer(raw_cb, lost_cb, cb_cookie,
+						pid, cpu, page_cnt);
+	/* check API of bpf_prog_load() */
+	enum bpf_prog_type prog_type;
+	const struct bpf_insn *insns;
+	int insn_len;
+	const char *license;
+	unsigned kern_version;
+	char *log_buf;
+	unsigned log_buf_size;
+	int fd = bpf_prog_load(prog_type, insns, insn_len, license,
+				kern_version, log_buf, log_buf_size);
+	return 0;
+}
 int main(void)
 {
-	perf_reader_raw_cb callback;
-	struct perf_reader *reader;
-	reader = bpf_open_perf_buffer(callback, NULL, NULL, -1, 0, 64);
 	return 0;
 }
 	" LIBBCC_RIGHT_VERSION)
