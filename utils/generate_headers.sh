@@ -51,15 +51,13 @@ if [ "$1" != "-f" -a -f $HEADER_MOD -a -f $HEADER_NUM ]; then
 	RV2=$?
 	if [ $RV1 -eq 0 -a $RV2 -eq 0 ]; then
 		if [ "$1" != "make" ]; then
-			echo "-- Found header: $HEADER_MOD";
-			echo "-- Found header: $HEADER_NUM";
+			echo "Looking for kernel header syscalls_64.h - done"
+			echo "--   Found header: $HEADER_MOD"
+			echo "--   Found header: $HEADER_NUM"
 		fi
 		exit 0 # headers $HEADER_MOD and $HEADER_NUM exists
 	fi
 fi
-
-[ "$1" != "make" ] \
-	&& echo -n "-- Looking for kernel header syscalls_64.h "
 
 FILES=$(mktemp)
 FILES_ALL=$(mktemp)
@@ -76,8 +74,7 @@ grep -e "$KERNEL" $FILES_ALL > $FILES
 [ $(cat $FILES | wc -l) -eq 0 ] \
 	&& echo \
 	&& echo "ERROR: missing kernel header 'arch/x86/include/generated/asm/syscalls_64.h'" \
-	&& echo \
-	&& echo "Hint:  install 'kernel-devel' (RHEL, Fedora, CentOS) or 'linux-headers' (Debian, Ubuntu) package" \
+	&& echo "Hint:  install the 'kernel-devel' package (RHEL, Fedora, CentOS) or the 'linux-headers' package (Debian, Ubuntu)" \
 	&& echo \
 	&& exit 1
 
@@ -90,8 +87,8 @@ HEADER=$(cat $FILES | tail -n1)
 	&& exit 1
 
 [ "$1" != "make" ] \
-	&& echo "- done"
-echo "-- Found kernel header: $HEADER"
+	&& echo "Looking for kernel header syscalls_64.h - done"
+echo "--   Found kernel header: $HEADER"
 
 # generate two new headers
 rm -f $HEADER_MOD $HEADER_NUM $FILES_ALL $FILES
@@ -109,7 +106,7 @@ echo "#ifndef $DEFINE_MOD"            >> $HEADER_MOD
 echo "#define $DEFINE_MOD"            >> $HEADER_MOD
 cat $HEADER | sed 's/\ sys_/\ SyS_/g' >> $HEADER_MOD
 echo "#endif /* $DEFINE_MOD */  "     >> $HEADER_MOD
-echo "-- Generated header: $HEADER_MOD"
+echo "--   Generated header: $HEADER_MOD"
 
 # generate new header with defines of syscall numbers
 echo "#ifndef $DEFINE_NUM"        >> $HEADER_NUM
@@ -125,4 +122,4 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 	echo "#endif"                       >> $HEADER_NUM
 done
 echo "#endif /* $DEFINE_NUM */  " >> $HEADER_NUM
-echo "-- Generated header: $HEADER_NUM"
+echo "--   Generated header: $HEADER_NUM"
