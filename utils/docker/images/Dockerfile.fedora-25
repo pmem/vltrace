@@ -39,7 +39,7 @@ FROM fedora:25
 MAINTAINER lukasz.dorau@intel.com
 
 # Install basic tools
-RUN echo -e '[iovisor]\nbaseurl=https://repo.iovisor.org/yum/nightly/f25/$basearch\nenabled=1\ngpgcheck=0' \
+RUN echo -e '[iovisor]\nbaseurl=https://repo.iovisor.org/yum/main/f25/$basearch\nenabled=1\ngpgcheck=0' \
 	| tee /etc/yum.repos.d/iovisor.repo
 RUN dnf install -y \
 	clang \
@@ -55,7 +55,7 @@ RUN dnf install -y \
 	whois
 
 RUN dnf install -y kernel-devel
-RUN dnf install -y bcc-tools
+RUN dnf install -y bcc-tools-0.4.0-1
 
 # Add user
 ENV USER user
